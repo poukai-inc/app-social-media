@@ -13,7 +13,7 @@
 
 import { PageContentStrategy } from '@/lib/openai';
 import { PlatformType } from '@/lib/platforms/types';
-import { createChatCompletion, groqClient } from '@/lib/ai-client';
+import { createChatCompletion } from '@/lib/ai-client';
 
 export interface ReviewCriteria {
   authenticity: {

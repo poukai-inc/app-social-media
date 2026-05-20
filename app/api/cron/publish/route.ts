@@ -249,14 +249,7 @@ export async function GET(request: Request) {
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret) {
     const authHeader = request.headers.get('authorization') ?? '';
-    const xCronSecret = request.headers.get('x-cron-secret') ?? '';
-    const url = new URL(request.url);
-    const querySecret = url.searchParams.get('key') ?? url.searchParams.get('cron_secret') ?? url.searchParams.get('token') ?? '';
-
-    const bearerToken = authHeader.toLowerCase().startsWith('bearer ') ? authHeader.slice(7) : '';
-    const authorized = bearerToken === cronSecret || xCronSecret === cronSecret || querySecret === cronSecret;
-
-    if (!authorized) {
+    if (authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
   }

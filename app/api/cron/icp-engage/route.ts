@@ -24,13 +24,9 @@ import { IPlatformConnection } from '@/lib/models/Page';
 function verifyCronSecret(request: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) return true; // Allow if no secret configured (dev)
-  
+
   const authHeader = request.headers.get('authorization') ?? '';
-  const url = new URL(request.url);
-  const querySecret = url.searchParams.get('key') ?? url.searchParams.get('cron_secret') ?? url.searchParams.get('token') ?? '';
-  const bearerToken = authHeader.toLowerCase().startsWith('bearer ') ? authHeader.slice(7) : '';
-  
-  return bearerToken === cronSecret || querySecret === cronSecret;
+  return authHeader === `Bearer ${cronSecret}`;
 }
 
 export async function GET(request: NextRequest) {

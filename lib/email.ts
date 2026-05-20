@@ -11,7 +11,7 @@ interface EmailConfig {
 
 const config: EmailConfig = {
   apiKey: process.env.RESEND_API_KEY,
-  fromEmail: process.env.EMAIL_FROM || 'noreply@schedular.primestrides.com',
+  fromEmail: process.env.EMAIL_FROM || '',
   fromName: process.env.EMAIL_FROM_NAME || 'AutoPost',
 };
 
@@ -35,6 +35,10 @@ export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
     console.log(`  Subject: ${subject}`);
     console.log(`  Body: ${text || html.slice(0, 200)}...`);
     return true;
+  }
+
+  if (!config.fromEmail) {
+    throw new Error('EMAIL_FROM env is required to send email');
   }
 
   try {

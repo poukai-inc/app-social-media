@@ -22,18 +22,9 @@ import { monitorAndRespondToConversations, getConversationStats } from '@/lib/en
 function verifyCronSecret(request: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) return true; // Allow if no secret configured (dev)
-  
-  // Allow localhost in development
-  const host = request.headers.get('host') || '';
-  const isDev = process.env.NODE_ENV !== 'production' && (host.includes('localhost') || host.includes('127.0.0.1'));
-  if (isDev) return true;
-  
+
   const authHeader = request.headers.get('authorization') ?? '';
-  const url = new URL(request.url);
-  const querySecret = url.searchParams.get('key') ?? url.searchParams.get('cron_secret') ?? url.searchParams.get('token') ?? '';
-  const bearerToken = authHeader.toLowerCase().startsWith('bearer ') ? authHeader.slice(7) : '';
-  
-  return bearerToken === cronSecret || querySecret === cronSecret;
+  return authHeader === `Bearer ${cronSecret}`;
 }
 
 export async function GET(request: NextRequest) {

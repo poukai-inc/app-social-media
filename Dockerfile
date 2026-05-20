@@ -13,22 +13,7 @@ RUN npm ci
 COPY . .
 
 # Build the application
-# Dummy env vars for build time (real values injected at runtime)
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV MONGODB_URI="mongodb://localhost:27017/placeholder"
-ENV AUTH_SECRET="placeholder-secret-key-at-least-32-chars"
-ENV NEXTAUTH_URL="http://localhost:3000"
-ENV OPENAI_API_KEY="sk-placeholder"
-ENV AI_PROVIDER="ollama"
-ENV OLLAMA_BASE_URL="http://localhost:11434"
-ENV OLLAMA_MODEL="qwen2.5:7b"
-ENV S3_ENDPOINT="http://localhost:9000"
-ENV S3_ACCESS_KEY="placeholder"
-ENV S3_SECRET_KEY="placeholder"
-ENV S3_BUCKET="placeholder"
-ENV LINKEDIN_CLIENT_ID="placeholder"
-ENV LINKEDIN_CLIENT_SECRET="placeholder"
-ENV CRON_SECRET="placeholder"
 
 RUN npm run build
 
