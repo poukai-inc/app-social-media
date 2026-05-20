@@ -1,13 +1,16 @@
 # Build stage
 FROM node:20-alpine AS builder
 
+# Enable pnpm via corepack (ships with Node 16.13+)
+RUN corepack enable
+
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy lockfile + manifest + npmrc (engine-strict=false; future @poukai-inc registry config)
+COPY package.json pnpm-lock.yaml .npmrc ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies — frozen lockfile enforces R-066
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
@@ -15,7 +18,7 @@ COPY . .
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm run build
+RUN pnpm run build
 
 # Production stage
 FROM node:20-alpine AS runner
