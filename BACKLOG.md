@@ -117,6 +117,8 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 55 | `[ ]` | Pin all prod deps to exact versions (R-065) | `package.json` |
 | 56 | `[ ]` | `.gitignore` entries for `.omc/`, `.vercel/`, `.next/`, IDE | `.gitignore` |
 | 57 | `[ ]` | Axe a11y test on top 5 dashboard routes | `tests/a11y/` (new) |
+| 104 | `[ ]` | Fix 61 ESLint errors blocking lint CI gate; remove `continue-on-error` from `.github/workflows/ci.yml` lint job | repo-wide |
+| 105 | `[ ]` | Fix `tsc --noEmit` errors (TokenAlert.pageId query mismatch + others); remove `continue-on-error` from typecheck job | `lib/models/TokenAlert.ts`, `app/api/cron/token-refresh/route.ts`, repo-wide |
 
 ---
 
