@@ -101,13 +101,15 @@ TokenAlertSchema.statics.recentAlertExists = async function(
   withinHours: number = 24
 ): Promise<boolean> {
   const cutoff = new Date(Date.now() - withinHours * 60 * 60 * 1000);
+  // safe: platform and alertType are validated enum strings from the callers;
+  // cast to FilterQuery to satisfy Mongoose 9 strict enum conditions
   const count = await this.countDocuments({
     pageId,
     platform,
     alertType,
     emailSent: true,
     alertedAt: { $gte: cutoff },
-  });
+  } as mongoose.QueryFilter<ITokenAlert>);
   return count > 0;
 };
 

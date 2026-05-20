@@ -27,10 +27,14 @@ export async function GET(request: NextRequest) {
     const postId = searchParams.get('postId');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    const query: { userId: typeof user._id; status?: string; postId?: string } = { 
-      userId: user._id 
+    const ALLOWED_REPLY_STATUSES: ReadonlyArray<ReplyStatus> = ['pending', 'approved', 'replied', 'skipped', 'failed'];
+    const query: { userId: typeof user._id; status?: ReplyStatus; postId?: string } = {
+      userId: user._id
     };
-    if (status) query.status = status;
+    // safe: validated against ALLOWED_REPLY_STATUSES before assigning
+    if (status && ALLOWED_REPLY_STATUSES.includes(status as ReplyStatus)) {
+      query.status = status as ReplyStatus;
+    }
     if (postId) query.postId = postId;
 
     const replies = await CommentReply.find(query)

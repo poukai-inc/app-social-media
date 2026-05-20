@@ -2,11 +2,13 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
 import User from '@/lib/models/User';
-import { 
-  EngagementTarget, 
-  CommentReply, 
+import {
+  EngagementTarget,
+  CommentReply,
   EngagementSettings,
-  getOrCreateEngagementSettings 
+  EngagementStatus,
+  ReplyStatus,
+  getOrCreateEngagementSettings
 } from '@/lib/models/Engagement';
 import { 
   engageWithPost, 
@@ -94,7 +96,8 @@ export async function GET(request: Request) {
 
         if (remainingEngagements > 0) {
           // Get pending engagements (approved or auto-approved based on settings)
-          const statusFilter = settings.requireApproval ? ['approved'] : ['pending', 'approved'];
+          // safe: values are hard-coded EngagementStatus literals, not user input
+          const statusFilter: EngagementStatus[] = settings.requireApproval ? ['approved'] : ['pending', 'approved'];
           
           const pendingEngagements = await EngagementTarget.find({
             userId: user._id,
@@ -240,8 +243,9 @@ export async function GET(request: Request) {
         const remainingReplies = settings.dailyReplyLimit - todayReplies;
 
         if (remainingReplies > 0) {
-          const statusFilter = settings.requireApproval ? ['approved'] : ['pending', 'approved'];
-          
+          // safe: values are hard-coded ReplyStatus literals, not user input
+          const statusFilter: ReplyStatus[] = settings.requireApproval ? ['approved'] : ['pending', 'approved'];
+
           const pendingReplies = await CommentReply.find({
             userId: user._id,
             status: { $in: statusFilter },

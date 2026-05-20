@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
-import { 
-  EngagementTarget, 
+import {
+  EngagementTarget,
   IEngagementTarget,
-  EngagementType 
+  EngagementType,
+  EngagementStatus
 } from '@/lib/models/Engagement';
 import { extractPostUrn, getPostDetails, scrapeLinkedInPost } from '@/lib/linkedin-engagement';
 import { generateComment, generateCommentVariations } from '@/lib/openai';
@@ -29,9 +30,11 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    const query: { userId: typeof user._id; status?: string } = { userId: user._id };
-    if (status) {
-      query.status = status;
+    const ALLOWED_ENGAGEMENT_STATUSES: ReadonlyArray<EngagementStatus> = ['pending', 'approved', 'engaged', 'failed', 'skipped'];
+    const query: { userId: typeof user._id; status?: EngagementStatus } = { userId: user._id };
+    // safe: validated against ALLOWED_ENGAGEMENT_STATUSES before assigning
+    if (status && ALLOWED_ENGAGEMENT_STATUSES.includes(status as EngagementStatus)) {
+      query.status = status as EngagementStatus;
     }
 
     const engagements = await EngagementTarget.find(query)

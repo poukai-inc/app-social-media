@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
-import CommentSuggestion from '@/lib/models/CommentSuggestion';
+import CommentSuggestion, { CommentStatus } from '@/lib/models/CommentSuggestion';
 import { generateComment, generateCommentVariations, EngagementStyle } from '@/lib/openai';
 
 // GET /api/comments/suggestions - Get pending comment suggestions
@@ -20,8 +20,14 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status') || 'pending';
+    const rawStatus = searchParams.get('status') || 'pending';
     const limit = parseInt(searchParams.get('limit') || '20');
+
+    // Validate against allowed CommentStatus values before passing to Mongoose query
+    const ALLOWED_COMMENT_STATUSES: ReadonlyArray<CommentStatus> = ['pending', 'approved', 'posted', 'skipped'];
+    const status: CommentStatus = ALLOWED_COMMENT_STATUSES.includes(rawStatus as CommentStatus)
+      ? (rawStatus as CommentStatus)
+      : 'pending';
 
     const suggestions = await CommentSuggestion.find({
       userId: user._id,

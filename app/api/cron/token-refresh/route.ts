@@ -238,9 +238,17 @@ export async function GET(request: Request) {
         continue;
       }
       
+      // TokenAlert only tracks these three platforms; instagram is not tracked here
+      type TokenAlertPlatform = 'linkedin' | 'facebook' | 'twitter';
+      const TOKEN_ALERT_PLATFORMS: ReadonlyArray<TokenAlertPlatform> = ['linkedin', 'facebook', 'twitter'];
+
       for (const connection of page.connections) {
         if (!connection.isActive) continue;
-        
+
+        // Narrow platform to TokenAlertPlatform; skip platforms not tracked by TokenAlert (e.g. instagram)
+        if (!TOKEN_ALERT_PLATFORMS.includes(connection.platform as TokenAlertPlatform)) continue;
+        const narrowedPlatform = connection.platform as TokenAlertPlatform;
+
         const result: TokenCheckResult = {
           pageId: page._id.toString(),
           pageName: page.name,
@@ -309,7 +317,7 @@ export async function GET(request: Request) {
           await TokenAlert.create({
             pageId: pageObjectId,
             userId: userObjectId,
-            platform: connection.platform,
+            platform: narrowedPlatform, // safe: narrowed to TokenAlertPlatform above
             platformId: connection.platformId,
             alertType,
             tokenExpiresAt: connection.tokenExpiresAt,
@@ -353,7 +361,7 @@ export async function GET(request: Request) {
           await TokenAlert.create({
             pageId: pageObjectId,
             userId: userObjectId,
-            platform: connection.platform,
+            platform: narrowedPlatform, // safe: narrowed to TokenAlertPlatform above
             platformId: connection.platformId,
             alertType,
             tokenExpiresAt: connection.tokenExpiresAt,
@@ -399,7 +407,7 @@ export async function GET(request: Request) {
             await TokenAlert.create({
               pageId: pageObjectId,
               userId: userObjectId,
-              platform: connection.platform,
+              platform: narrowedPlatform, // safe: narrowed to TokenAlertPlatform above
               platformId: connection.platformId,
               alertType: 'refresh_failed',
               tokenExpiresAt: connection.tokenExpiresAt,

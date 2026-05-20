@@ -48,8 +48,6 @@ jobs:
     name: Typecheck
     runs-on: ubuntu-latest
     needs: install
-    # TODO(BACKLOG-105): remove continue-on-error once existing tsc errors fixed
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

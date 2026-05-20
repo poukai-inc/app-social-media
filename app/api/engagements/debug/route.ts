@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
-import { EngagementTarget, EngagementSettings } from '@/lib/models/Engagement';
+import { EngagementTarget, EngagementSettings, EngagementStatus } from '@/lib/models/Engagement';
 import User from '@/lib/models/User';
 
 // Debug endpoint to check engagement data
@@ -32,7 +32,8 @@ export async function GET() {
     };
 
     // What the cron would query
-    const statusFilter = settings?.requireApproval ? ['approved'] : ['pending', 'approved'];
+    // safe: values are hard-coded EngagementStatus literals, not user input
+    const statusFilter: EngagementStatus[] = settings?.requireApproval ? ['approved'] : ['pending', 'approved'];
     const wouldProcess = await EngagementTarget.find({
       userId: user._id,
       status: { $in: statusFilter },
