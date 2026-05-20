@@ -1,24 +1,32 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
-import Page, { DatabaseSource } from '@/lib/models/Page';
+import type { DatabaseSource } from '@/lib/models/Page';
+import Page from '@/lib/models/Page';
 import Post from '@/lib/models/Post';
 import User from '@/lib/models/User';
-import { PostAngle } from '@/lib/models/Post';
-import { generatePostWithStrategy, PageContentStrategy } from '@/lib/openai';
+import type { PostAngle } from '@/lib/models/Post';
+import type { PageContentStrategy } from '@/lib/openai';
+import { generatePostWithStrategy } from '@/lib/openai';
 import mongoose from 'mongoose';
-import { fetchContentForGeneration, ContentItem } from '@/lib/data-sources/database';
-import { PlatformType } from '@/lib/platforms/types';
+import type { ContentItem } from '@/lib/data-sources/database';
+import { fetchContentForGeneration } from '@/lib/data-sources/database';
+import type { PlatformType } from '@/lib/platforms/types';
+import type {
+  ReviewDecision} from '@/lib/learning';
 import { 
   getPlatformLearningContext, 
   generateLearningPromptAdditions,
   getRecommendedAngle,
   getOptimalPostingTime,
   reviewContentForPublishing,
-  meetsAutoPublishCriteria,
-  ReviewDecision,
+  meetsAutoPublishCriteria
 } from '@/lib/learning';
 import { withLock } from '@/lib/distributed-lock';
 import { sendApprovalEmail, generateApprovalToken, getTokenExpiration } from '@/lib/email';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('cron:auto-generate');
 
 // This cron job runs daily to auto-generate posts for pages that have auto-generation enabled
 // It checks each page's schedule and posting frequency to determine if a new post should be generated
@@ -221,7 +229,7 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
 `.trim();
             }
           } catch (dataSourceError) {
-            console.error(`Failed to fetch from data source for page ${page._id}:`, dataSourceError);
+            log.error('Failed to fetch from data source', { pageId: page._id, error: dataSourceError instanceof Error ? dataSourceError.message : String(dataSourceError) });
             // Continue without data source - will generate from strategy only
           }
         }
@@ -253,7 +261,7 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
             });
 
             if (existingPlatformPost) {
-              console.log(`Skipping ${platform} for ${page.name} - already created today`);
+              log.info('Skipping platform, already created today', { platform, pageName: page.name });
               platformResults.push({
                 platform,
                 status: 'skipped',
@@ -311,7 +319,7 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
               });
 
               // AI REVIEWER: Autonomous quality assessment and publish decision
-              console.log(`AI reviewing content for ${platform} (attempt ${attempt}/${MAX_GENERATION_ATTEMPTS})...`);
+              log.info('AI reviewing content', { platform, attempt, maxAttempts: MAX_GENERATION_ATTEMPTS });
               
               reviewDecision = await reviewContentForPublishing({
                 content: generatedResult.content,
@@ -330,7 +338,7 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
                 } : undefined,
               });
 
-              console.log(`AI Review for ${platform} (attempt ${attempt}): ${reviewDecision.decision} (Score: ${reviewDecision.criteria.overallScore}, Confidence: ${reviewDecision.confidence})`);
+              log.info('AI review result', { platform, attempt, decision: reviewDecision.decision, score: reviewDecision.criteria.overallScore, confidence: reviewDecision.confidence });
 
               // If not rejected, break out of retry loop
               if (reviewDecision.decision !== 'reject') {
@@ -346,7 +354,7 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
                 rejectionFeedback += `\nAI RED FLAGS DETECTED: ${reviewDecision.criteria.authenticity.aiRedFlagsFound.join(', ')}`;
               }
 
-              console.log(`Attempt ${attempt} rejected for ${platform}, ${attempt < MAX_GENERATION_ATTEMPTS ? 'retrying with feedback...' : 'giving up after max retries'}`);
+              log.info('Attempt rejected', { platform, attempt, willRetry: attempt < MAX_GENERATION_ATTEMPTS });
             }
 
             // Use the final review decision (from last attempt)
@@ -378,7 +386,7 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
             if (reviewDecision.decision === 'reject') {
               // AI rejected - mark as rejected, don't schedule
               status = 'rejected';
-              console.log(`AI REJECTED post for ${platform}: ${reviewDecision.reasoning}`);
+              log.info('AI rejected post', { platform, reasoning: reviewDecision.reasoning });
             } else if (reviewDecision.decision === 'publish' && canAutoPublish) {
               // AI approved and meets all thresholds - schedule automatically
               status = 'scheduled';
@@ -392,7 +400,7 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
               
               if (optimalTime && optimalTime.confidence > 0.5) {
                 scheduledFor = getNextOccurrence(optimalTime.day, optimalTime.hour, page.schedule?.timezone);
-                console.log(`AI scheduled for ${platform} using learned optimal time: Day ${optimalTime.day}, Hour ${optimalTime.hour}`);
+                log.info('AI scheduled using learned optimal time', { platform, day: optimalTime.day, hour: optimalTime.hour });
               } else {
                 // Use preferred times from settings
                 const preferredTimes = page.schedule?.preferredTimes || ['09:00'];
@@ -407,11 +415,11 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
                 }
               }
               
-              console.log(`AI AUTO-APPROVED and scheduled for ${platform}: Score ${reviewDecision.criteria.overallScore}`);
+              log.info('AI auto-approved and scheduled', { platform, score: reviewDecision.criteria.overallScore });
             } else {
               // AI says needs revision OR auto-approve not enabled - needs human review
               status = 'pending_approval';
-              console.log(`AI flagged for human review on ${platform}: ${reviewDecision.decision}`);
+              log.info('AI flagged for human review', { platform, decision: reviewDecision.decision });
             }
 
             // Create the post with platform-specific targeting
@@ -518,15 +526,15 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
                   approvalToken,
                 });
                 
-                console.log(`Approval email sent for post ${post._id} to ${user.email}`);
+                log.info('Approval email sent', { postId: post._id, email: user.email });
               } catch (emailError) {
-                console.error('Failed to send approval email:', emailError);
+                log.error('Failed to send approval email', { error: emailError instanceof Error ? emailError.message : String(emailError) });
                 // Don't fail the generation if email fails
               }
             }
             
           } catch (platformError) {
-            console.error(`Failed to generate for platform ${platform}:`, platformError);
+            log.error('Failed to generate for platform', { platform, error: platformError instanceof Error ? platformError.message : String(platformError) });
             platformResults.push({
               platform,
               status: 'failed',
@@ -553,7 +561,7 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
         });
 
       } catch (pageError) {
-        console.error(`Error processing page ${page._id}:`, pageError);
+        log.error('Error processing page', { pageId: page._id, error: pageError instanceof Error ? pageError.message : String(pageError) });
         results.push({
           pageId: page._id.toString(),
           pageName: page.name,
@@ -570,7 +578,7 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
     };
 
   } catch (error) {
-    console.error('Auto-generate cron error:', error);
+    log.error('Auto-generate cron error', { error: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }

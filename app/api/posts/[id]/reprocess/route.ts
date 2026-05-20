@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
@@ -6,6 +7,9 @@ import User from '@/lib/models/User';
 import { getFromS3, getS3KeyFromUrl, uploadToS3 } from '@/lib/s3';
 import { processVideoForLinkedIn, processImageForLinkedIn, checkFfmpegAvailable } from '@/lib/ffmpeg';
 import { randomUUID } from 'crypto';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:posts:[id]:reprocess');
 
 // POST /api/posts/[id]/reprocess - Reprocess media for a failed post
 export async function POST(
@@ -52,7 +56,7 @@ export async function POST(
 
     for (const item of post.media) {
       try {
-        console.log(`Processing ${item.type}: ${item.filename}`);
+        log.info('Processing media item', { type: item.type, filename: item.filename });
         
         // Get the S3 key from the URL
         const s3Key = getS3KeyFromUrl(item.url);
@@ -63,7 +67,7 @@ export async function POST(
 
         // Fetch the original file from S3
         const originalBuffer = await getFromS3(s3Key);
-        console.log(`Fetched ${item.filename} (${originalBuffer.length} bytes)`);
+        log.info('Fetched media file', { filename: item.filename, bytes: originalBuffer.length });
 
         let processedBuffer: Buffer;
         let newFilename: string;
@@ -71,20 +75,20 @@ export async function POST(
 
         if (item.type === 'video') {
           // Process video
-          console.log(`Converting video to MP4...`);
+          log.info('Converting video to MP4');
           const processed = await processVideoForLinkedIn(originalBuffer, item.filename);
           processedBuffer = processed.buffer;
           newFilename = processed.filename;
           newMimeType = processed.mimeType;
-          console.log(`Video converted: ${newFilename} (${(processedBuffer.length / 1024 / 1024).toFixed(2)}MB)`);
+          log.info('Video converted', { filename: newFilename, sizeMB: (processedBuffer.length / 1024 / 1024).toFixed(2) });
         } else {
           // Process image
-          console.log(`Optimizing image...`);
+          log.info('Optimizing image');
           const processed = await processImageForLinkedIn(originalBuffer, item.filename, item.mimeType);
           processedBuffer = processed.buffer;
           newFilename = processed.filename;
           newMimeType = processed.mimeType;
-          console.log(`Image optimized: ${newFilename} (${(processedBuffer.length / 1024).toFixed(2)}KB)`);
+          log.info('Image optimized', { filename: newFilename, sizeKB: (processedBuffer.length / 1024).toFixed(2) });
         }
 
         // Upload processed file to S3 with new key
@@ -93,7 +97,7 @@ export async function POST(
         const newS3Key = `media/${newId}.${extension}`;
         
         const newUrl = await uploadToS3(newS3Key, processedBuffer, newMimeType);
-        console.log(`Uploaded processed file to: ${newUrl}`);
+        log.info('Uploaded processed file', { url: newUrl });
 
         processedMedia.push({
           id: newId,
@@ -106,7 +110,7 @@ export async function POST(
 
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.error(`Failed to process ${item.filename}:`, errorMessage);
+        log.error('Failed to process media item', { filename: item.filename, error: errorMessage });
         errors.push(`${item.filename}: ${errorMessage}`);
       }
     }
@@ -132,7 +136,7 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('Error reprocessing media:', error);
+    log.error('Error reprocessing media', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'

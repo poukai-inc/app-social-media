@@ -1,9 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import Page from '@/lib/models/Page';
 import Post from '@/lib/models/Post';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:pages');
 
 // GET /api/pages - Get all pages for the current user
 export async function GET(request: NextRequest) {
@@ -62,7 +66,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ pages });
   } catch (error) {
-    console.error('Pages fetch error:', error);
+    log.error('Pages fetch error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch pages' }, { status: 500 });
   }
 }
@@ -175,7 +179,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ page }, { status: 201 });
   } catch (error) {
-    console.error('Page creation error:', error);
+    log.error('Page creation error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to create page' }, { status: 500 });
   }
 }

@@ -3,7 +3,10 @@ import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import Page from '@/lib/models/Page';
 import User from '@/lib/models/User';
-import { PlatformConnection } from '@/lib/platforms/types';
+import type { PlatformConnection } from '@/lib/platforms/types';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:auth:twitter:callback');
 
 /**
  * Twitter OAuth 2.0 - Step 2: Handle callback and exchange code for tokens
@@ -30,7 +33,7 @@ export async function GET(request: Request) {
 
     // Handle OAuth errors
     if (error) {
-      console.error('Twitter OAuth error:', error, errorDescription);
+      log.error('Twitter OAuth error', { error, errorDescription });
       return NextResponse.redirect(
         `${process.env.NEXTAUTH_URL}/dashboard?error=${encodeURIComponent(errorDescription || error)}`
       );
@@ -79,7 +82,7 @@ export async function GET(request: Request) {
     const tokenData = await tokenResponse.json();
 
     if (tokenData.error) {
-      console.error('Twitter token error:', tokenData);
+      log.error('Twitter token error', { tokenData });
       return NextResponse.redirect(
         `${process.env.NEXTAUTH_URL}/dashboard?error=${encodeURIComponent(tokenData.error_description || tokenData.error)}`
       );
@@ -99,7 +102,7 @@ export async function GET(request: Request) {
     const userData = await userResponse.json();
 
     if (userData.errors) {
-      console.error('Twitter user fetch error:', userData.errors);
+      log.error('Twitter user fetch error', { errors: userData.errors });
       return NextResponse.redirect(
         `${process.env.NEXTAUTH_URL}/dashboard?error=failed_to_get_user`
       );
@@ -112,7 +115,7 @@ export async function GET(request: Request) {
     // Look up user by email to get MongoDB ObjectId
     const user = await User.findOne({ email: session.user.email });
     if (!user) {
-      console.error('User not found:', session.user.email);
+      log.error('User not found', { email: session.user.email });
       return NextResponse.redirect(
         `${process.env.NEXTAUTH_URL}/dashboard?error=user_not_found`
       );
@@ -181,7 +184,7 @@ export async function GET(request: Request) {
       `${process.env.NEXTAUTH_URL}/dashboard/connect/twitter?data=${connectionData}`
     );
   } catch (error) {
-    console.error('Twitter OAuth callback error:', error);
+    log.error('Twitter OAuth callback error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.redirect(
       `${process.env.NEXTAUTH_URL}/dashboard?error=callback_failed`
     );

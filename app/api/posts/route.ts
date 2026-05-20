@@ -1,9 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
-import Post, { PostMode, StructuredInput, MediaItem } from '@/lib/models/Post';
+import type { PostMode, StructuredInput, MediaItem } from '@/lib/models/Post';
+import Post from '@/lib/models/Post';
 import User from '@/lib/models/User';
 import { postToLinkedIn } from '@/lib/linkedin';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:posts');
 
 // GET /api/posts - Get all posts for the current user
 export async function GET() {
@@ -27,7 +32,7 @@ export async function GET() {
 
     return NextResponse.json(posts);
   } catch (error) {
-    console.error('Error fetching posts:', error);
+    log.error('Error fetching posts', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -127,7 +132,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(post, { status: 201 });
   } catch (error) {
-    console.error('Error creating post:', error);
+    log.error('Error creating post', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

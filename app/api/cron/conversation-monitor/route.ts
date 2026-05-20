@@ -14,9 +14,13 @@
  * - Prevents spam with smart rate limiting
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import { monitorAndRespondToConversations, getConversationStats } from '@/lib/engagement/conversation-manager';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('cron:conversation-monitor');
 
 // Verify cron secret (same as other cron jobs)
 function verifyCronSecret(request: NextRequest): boolean {
@@ -46,8 +50,7 @@ export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
 
-    console.log(`[Conversation Cron] Starting conversation monitoring${pageId ? ` for page ${pageId}` : ' for all pages'}`);
-    console.log(`[Conversation Cron] Config: maxConversations=${maxConversations}, maxResponses=${maxResponses}, dryRun=${dryRun}, forceCheck=${forceCheck}`);
+    log.info('Starting conversation monitoring', { pageId: pageId || 'all', maxConversations, maxResponses, dryRun, forceCheck });
 
     // Run the conversation monitoring
     const result = await monitorAndRespondToConversations(pageId || undefined, {
@@ -63,14 +66,10 @@ export async function GET(request: NextRequest) {
 
     const duration = Date.now() - startTime;
 
-    console.log(`[Conversation Cron] Completed in ${duration}ms`);
-    console.log(`[Conversation Cron] Results: ${result.conversationsChecked} checked, ${result.responsesSent} responses sent`);
-    
+    log.info('Conversation monitoring completed', { durationMs: duration, conversationsChecked: result.conversationsChecked, responsesSent: result.responsesSent });
+
     if (result.errors.length > 0) {
-      console.log(`[Conversation Cron] Errors: ${result.errors.length}`);
-      result.errors.forEach((error, i) => {
-        console.log(`[Conversation Cron] Error ${i + 1}: ${error}`);
-      });
+      log.warn('Conversation monitoring errors', { count: result.errors.length, errors: result.errors });
     }
 
     return NextResponse.json({
@@ -89,7 +88,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Conversation Cron] Fatal error:', error);
+    log.error('Fatal error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       {
         success: false,

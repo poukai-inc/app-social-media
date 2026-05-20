@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:pages:new');
 import {
   ArrowLeft,
   ArrowRight,
@@ -116,7 +119,7 @@ export default function NewPagePage() {
         setAccounts(data.accounts);
       }
     } catch (error) {
-      console.error('Failed to fetch accounts:', error);
+      log.error('Failed to fetch accounts', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);
     }
@@ -164,7 +167,7 @@ export default function NewPagePage() {
         alert(error.error || 'Failed to create page');
       }
     } catch (error) {
-      console.error('Failed to create page:', error);
+      log.error('Failed to create page', { error: error instanceof Error ? error.message : String(error) });
       alert('Failed to create page');
     } finally {
       setSaving(false);

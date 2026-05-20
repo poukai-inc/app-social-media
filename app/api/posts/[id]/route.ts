@@ -1,9 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
 import User from '@/lib/models/User';
 import { postToLinkedIn } from '@/lib/linkedin';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:posts:[id]');
 
 // GET /api/posts/[id] - Get a specific post
 export async function GET(
@@ -34,7 +38,7 @@ export async function GET(
 
     return NextResponse.json(post);
   } catch (error) {
-    console.error('Error fetching post:', error);
+    log.error('Error fetching post', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -124,7 +128,7 @@ export async function PUT(
     await post.save();
     return NextResponse.json(post);
   } catch (error) {
-    console.error('Error updating post:', error);
+    log.error('Error updating post', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -158,7 +162,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Post deleted successfully' });
   } catch (error) {
-    console.error('Error deleting post:', error);
+    log.error('Error deleting post', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

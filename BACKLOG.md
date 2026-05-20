@@ -117,7 +117,7 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 55 | `[ ]` | Pin all prod deps to exact versions (R-065) | `package.json` |
 | 56 | `[ ]` | `.gitignore` entries for `.omc/`, `.vercel/`, `.next/`, IDE | `.gitignore` |
 | 57 | `[ ]` | Axe a11y test on top 5 dashboard routes | `tests/a11y/` (new) |
-| 104 | `[ ]` | Fix ~718 ESLint errors blocking lint CI gate (was 61 under old config; new poukai-ui-style rules surface more: ~660 no-console, 127 consistent-type-imports, 98 no-unused-vars, 27 no-explicit-any). C1 console-logger migration drains the bulk. Remove `continue-on-error` from `.github/workflows/ci.yml` lint job after | repo-wide |
+| 104 | `[~]` | Fix remaining ESLint errors blocking lint CI gate. **Progress 2026-05-20**: 1462 → 156 errors via (a) console→logger migration (~660 calls across 85 files in lib/, app/, components/), (b) `eslint --fix` auto-fix for consistent-type-imports. Remaining 156: ~98 no-unused-vars (manual review), ~27 no-explicit-any (manual typing), ~15 react-hooks/immutability, ~13 @next/next/no-img-element, ~7 react/no-unescaped-entities. After zero: remove `continue-on-error` from CI lint job | repo-wide |
 | 106 | `[ ]` | Tighten jsx-a11y beyond `next/core-web-vitals` baseline to full `recommended` set (R-024..R-033). Requires either forking next/core-web-vitals or registering jsx-a11y under an alias in eslint.config.mjs | `eslint.config.mjs` |
 | 105 | `[x]` | ~~Fix `tsc --noEmit` errors~~ — DONE (2026-05-20): 11 errors fixed across 7 files (mongoose 9 strict types, TokenAlert.platform narrowing, countDocuments cast); typecheck CI gate now hard | done |
 

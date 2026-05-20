@@ -4,6 +4,9 @@ import { Suspense, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:approvals');
 
 interface AIAnalysis {
   confidence: number;
@@ -81,7 +84,7 @@ function ApprovalsContent() {
         setPatterns(data.approvalPatterns);
       }
     } catch (error) {
-      console.error('Failed to fetch pending posts:', error);
+      log.error('Failed to fetch pending posts', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);
     }

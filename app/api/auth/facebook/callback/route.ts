@@ -3,7 +3,10 @@ import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import Page from '@/lib/models/Page';
 import User from '@/lib/models/User';
-import { PlatformConnection } from '@/lib/platforms/types';
+import type { PlatformConnection } from '@/lib/platforms/types';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:auth:facebook:callback');
 
 /**
  * Facebook OAuth - Step 2: Handle callback and exchange code for tokens
@@ -54,7 +57,7 @@ export async function GET(request: Request) {
 
     // Handle OAuth errors
     if (error) {
-      console.error('Facebook OAuth error:', error, errorDescription);
+      log.error('Facebook OAuth error', { error, errorDescription });
       return NextResponse.redirect(
         `${process.env.NEXTAUTH_URL}/dashboard?error=${encodeURIComponent(errorDescription || error)}`
       );
@@ -94,7 +97,7 @@ export async function GET(request: Request) {
     const tokenData = await tokenResponse.json();
 
     if (tokenData.error) {
-      console.error('Facebook token error:', tokenData.error);
+      log.error('Facebook token error', { error: tokenData.error });
       return NextResponse.redirect(
         `${process.env.NEXTAUTH_URL}/dashboard?error=${encodeURIComponent(tokenData.error.message)}`
       );
@@ -113,7 +116,7 @@ export async function GET(request: Request) {
     const longLivedData = await longLivedResponse.json();
 
     if (longLivedData.error) {
-      console.error('Facebook long-lived token error:', longLivedData.error);
+      log.error('Facebook long-lived token error', { error: longLivedData.error });
       return NextResponse.redirect(
         `${process.env.NEXTAUTH_URL}/dashboard?error=${encodeURIComponent(longLivedData.error.message)}`
       );
@@ -127,13 +130,13 @@ export async function GET(request: Request) {
     debugUrl.searchParams.set('access_token', userAccessToken);
     const debugResponse = await fetch(debugUrl.toString());
     const debugData = await debugResponse.json();
-    console.log('Granted permissions:', JSON.stringify(debugData, null, 2));
+    log.info('Granted permissions', { permissions: debugData });
 
     // Get ALL user's Facebook Pages (with pagination)
     const allPages: FacebookPage[] = [];
     let nextUrl: string | null = `${FACEBOOK_GRAPH_API}/me/accounts?access_token=${encodeURIComponent(userAccessToken)}&fields=id,name,access_token,category,picture&limit=100`;
     
-    console.log('Fetching Facebook pages (with pagination)...');
+    log.info('Fetching Facebook pages (with pagination)');
     
     while (nextUrl) {
       const pagesResponse = await fetch(nextUrl);
@@ -148,15 +151,15 @@ export async function GET(request: Request) {
       
       // Safety limit to prevent infinite loops
       if (allPages.length > 500) {
-        console.warn('Hit page limit, stopping pagination');
+        log.warn('Hit page limit, stopping pagination');
         break;
       }
     }
     
-    console.log(`Found ${allPages.length} Facebook pages total`);
+    log.info('Found Facebook pages total', { count: allPages.length });
 
     if (allPages.length === 0) {
-      console.error('No Facebook pages found after pagination');
+      log.error('No Facebook pages found after pagination');
       return NextResponse.redirect(
         `${process.env.NEXTAUTH_URL}/dashboard?error=no_pages_found`
       );
@@ -170,7 +173,7 @@ export async function GET(request: Request) {
     // Look up the user by email to get the MongoDB ObjectId
     const user = await User.findOne({ email: session.user.email });
     if (!user) {
-      console.error('User not found:', session.user.email);
+      log.error('User not found', { email: session.user.email });
       return NextResponse.redirect(
         `${process.env.NEXTAUTH_URL}/dashboard?error=user_not_found`
       );
@@ -244,7 +247,7 @@ export async function GET(request: Request) {
       `${process.env.NEXTAUTH_URL}/dashboard/connect/facebook?data=${encodedPages}`
     );
   } catch (error) {
-    console.error('Facebook OAuth callback error:', error);
+    log.error('Facebook OAuth callback error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.redirect(
       `${process.env.NEXTAUTH_URL}/dashboard?error=callback_failed`
     );

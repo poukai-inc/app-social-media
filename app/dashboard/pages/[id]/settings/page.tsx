@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:pages:[id]:settings');
 import {
   ArrowLeft,
   Save,
@@ -16,7 +19,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import PlatformConnections from '@/components/platform-connections';
-import { PlatformType } from '@/lib/platforms/types';
+import type { PlatformType } from '@/lib/platforms/types';
 
 interface Page {
   _id: string;
@@ -184,7 +187,7 @@ export default function PageSettings() {
         router.push('/dashboard/pages');
       }
     } catch (error) {
-      console.error('Failed to fetch page:', error);
+      log.error('Failed to fetch page', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);
     }
@@ -211,7 +214,7 @@ export default function PageSettings() {
         alert(error.error || 'Failed to save settings');
       }
     } catch (error) {
-      console.error('Failed to save:', error);
+      log.error('Failed to save', { error: error instanceof Error ? error.message : String(error) });
       alert('Failed to save settings');
     } finally {
       setSaving(false);
@@ -232,7 +235,7 @@ export default function PageSettings() {
         alert(error.error || 'Failed to delete page');
       }
     } catch (error) {
-      console.error('Failed to delete:', error);
+      log.error('Failed to delete', { error: error instanceof Error ? error.message : String(error) });
       alert('Failed to delete page');
     } finally {
       setDeleting(false);

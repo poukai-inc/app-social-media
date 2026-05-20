@@ -1,9 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
 import User from '@/lib/models/User';
 import { postToLinkedIn } from '@/lib/linkedin';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:posts:[id]:retry');
 
 // POST /api/posts/[id]/retry - Retry publishing a failed post
 export async function POST(
@@ -39,7 +43,7 @@ export async function POST(
     }
 
     // Attempt to publish to LinkedIn
-    console.log(`Retrying publication for post ${id}`);
+    log.info('Retrying publication for post', { id });
     const result = await postToLinkedIn(
       session.user.email, 
       post.content, 
@@ -73,7 +77,7 @@ export async function POST(
     }
 
   } catch (error) {
-    console.error('Error retrying post:', error);
+    log.error('Error retrying post', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'

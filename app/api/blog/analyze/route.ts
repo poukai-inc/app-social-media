@@ -1,6 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { analyzeBlog, generatePostFromBlogAngle, PostAngle } from '@/lib/openai';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:blog:analyze');
 
 // POST /api/blog/analyze - Analyze a blog URL or content
 export async function POST(request: NextRequest) {
@@ -47,7 +51,7 @@ export async function POST(request: NextRequest) {
           blogContent = await response.text();
         }
       } catch (fetchError) {
-        console.error('Failed to fetch blog:', fetchError);
+        log.error('Failed to fetch blog', { error: fetchError instanceof Error ? fetchError.message : String(fetchError) });
         return NextResponse.json(
           { error: 'Failed to fetch blog content from URL' },
           { status: 400 }
@@ -64,7 +68,7 @@ export async function POST(request: NextRequest) {
       blogUrl: url,
     });
   } catch (error) {
-    console.error('Blog analysis error:', error);
+    log.error('Blog analysis error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to analyze blog' },
       { status: 500 }

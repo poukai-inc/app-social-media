@@ -2,6 +2,9 @@ import NextAuth from 'next-auth';
 import LinkedIn from 'next-auth/providers/linkedin';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('auth');
 
 export const { handlers, signIn, signOut, auth } = NextAuth(() => {
   // Base scopes for personal posting
@@ -76,7 +79,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth(() => {
             }
             return true;
           } catch (error) {
-            console.error('Error during sign in:', error);
+            log.error('Error during sign in', { error: error instanceof Error ? error.message : String(error) });
             return false;
           }
         }

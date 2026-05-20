@@ -1,6 +1,7 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
-import { PostAngle } from './Post';
-import { PlatformType, PlatformAccountType } from '../platforms/types';
+import type { Document, Model } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
+import type { PostAngle } from './Post';
+import type { PlatformType, PlatformAccountType } from '../platforms/types';
 
 export type PageType = 'personal' | 'organization' | 'manual';
 

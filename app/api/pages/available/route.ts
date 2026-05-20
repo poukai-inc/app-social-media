@@ -1,8 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import Page from '@/lib/models/Page';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:pages:available');
 
 // GET /api/pages/available - Get available LinkedIn accounts that can be added as pages
 export async function GET(request: NextRequest) {
@@ -67,7 +71,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Available accounts fetch error:', error);
+    log.error('Available accounts fetch error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch available accounts' }, { status: 500 });
   }
 }

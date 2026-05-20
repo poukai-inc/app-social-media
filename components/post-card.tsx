@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('component:post-card');
 import {
   Calendar,
   CheckCircle,
@@ -170,7 +173,7 @@ export function PostCard({ post }: PostCardProps) {
         router.refresh();
       }
     } catch (error) {
-      console.error('Error deleting post:', error);
+      log.error('Error deleting post', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsDeleting(false);
       setShowMenu(false);
@@ -190,7 +193,7 @@ export function PostCard({ post }: PostCardProps) {
         router.refresh();
       }
     } catch (error) {
-      console.error('Error publishing post:', error);
+      log.error('Error publishing post', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsPublishing(false);
       setShowMenu(false);
@@ -210,7 +213,7 @@ export function PostCard({ post }: PostCardProps) {
         router.refresh();
       }
     } catch (error) {
-      console.error('Error approving post:', error);
+      log.error('Error approving post', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsApproving(false);
       setShowMenu(false);
@@ -232,7 +235,7 @@ export function PostCard({ post }: PostCardProps) {
         router.refresh();
       }
     } catch (error) {
-      console.error('Error rejecting post:', error);
+      log.error('Error rejecting post', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsRejecting(false);
       setShowMenu(false);

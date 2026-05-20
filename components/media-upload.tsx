@@ -2,6 +2,9 @@
 
 import { useState, useRef } from 'react';
 import { X, Upload, Image, Video, Loader2 } from 'lucide-react';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('component:media-upload');
 
 interface MediaItem {
   id: string;
@@ -68,7 +71,7 @@ export function MediaUpload({ media, onMediaChange, maxFiles = 9 }: MediaUploadP
         method: 'DELETE',
       });
     } catch (err) {
-      console.error('Error deleting file:', err);
+      log.error('Error deleting file', { error: err instanceof Error ? err.message : String(err) });
     }
     
     onMediaChange(media.filter(m => m.id !== item.id));

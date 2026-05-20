@@ -1,10 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
-import { DatabaseSource } from '@/lib/models/Page';
+import type { DatabaseSource } from '@/lib/models/Page';
 import mongoose from 'mongoose';
 import { fetchContentForGeneration } from '@/lib/data-sources/database';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:pages:[id]:data-sources:content');
 
 // GET /api/pages/[id]/data-sources/content - Get content items for generation
 export async function GET(
@@ -92,7 +96,7 @@ export async function GET(
       totalCount: result.items?.length || 0,
     });
   } catch (error) {
-    console.error('Get content items error:', error);
+    log.error('Get content items error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to get content items' },
       { status: 500 }

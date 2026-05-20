@@ -4,11 +4,15 @@
  * Get detailed conversation history with full message thread.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import ICPEngagement from '@/lib/models/ICPEngagement';
 import mongoose from 'mongoose';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:conversations:[id]');
 
 export async function GET(
   request: NextRequest,
@@ -87,7 +91,7 @@ export async function GET(
     return NextResponse.json(formattedConversation);
 
   } catch (error) {
-    console.error('Error fetching conversation details:', error);
+    log.error('Error fetching conversation details', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

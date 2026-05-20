@@ -2,6 +2,9 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:conversations');
 
 interface ConversationMessage {
   id: string;
@@ -113,7 +116,7 @@ function ConversationsContent() {
       // Refresh conversations
       fetchConversations();
     } catch (err) {
-      console.error('Error toggling auto response:', err);
+      log.error('Error toggling auto response', { error: err instanceof Error ? err.message : String(err) });
       alert('Failed to update conversation settings');
     }
   };
@@ -135,7 +138,7 @@ function ConversationsContent() {
 
       fetchConversations();
     } catch (err) {
-      console.error('Error resetting count:', err);
+      log.error('Error resetting count', { error: err instanceof Error ? err.message : String(err) });
       alert('Failed to reset response count');
     }
   };

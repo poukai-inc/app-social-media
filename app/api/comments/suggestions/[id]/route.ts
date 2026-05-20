@@ -1,8 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import CommentSuggestion from '@/lib/models/CommentSuggestion';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:comments:suggestions:[id]');
 
 // POST /api/comments/suggestions/[id]/action - Approve, skip, or mark as posted
 export async function POST(
@@ -81,7 +85,7 @@ export async function POST(
       suggestion,
     });
   } catch (error) {
-    console.error('Suggestion action error:', error);
+    log.error('Suggestion action error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to process action' }, { status: 500 });
   }
 }
@@ -116,7 +120,7 @@ export async function GET(
 
     return NextResponse.json({ suggestion });
   } catch (error) {
-    console.error('Suggestion fetch error:', error);
+    log.error('Suggestion fetch error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch suggestion' }, { status: 500 });
   }
 }
@@ -151,7 +155,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Suggestion delete error:', error);
+    log.error('Suggestion delete error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to delete suggestion' }, { status: 500 });
   }
 }

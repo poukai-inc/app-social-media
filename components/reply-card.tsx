@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('component:reply-card');
 import {
   MessageSquare,
   CheckCircle,
@@ -84,7 +87,7 @@ export function ReplyCard({ reply }: ReplyCardProps) {
       });
       router.refresh();
     } catch (error) {
-      console.error('Error approving:', error);
+      log.error('Error approving', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +107,7 @@ export function ReplyCard({ reply }: ReplyCardProps) {
       });
       router.refresh();
     } catch (error) {
-      console.error('Error executing:', error);
+      log.error('Error executing', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsLoading(false);
     }
@@ -121,7 +124,7 @@ export function ReplyCard({ reply }: ReplyCardProps) {
       setShowReply(false);
       router.refresh();
     } catch (error) {
-      console.error('Error saving reply:', error);
+      log.error('Error saving reply', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsLoading(false);
     }
@@ -141,7 +144,7 @@ export function ReplyCard({ reply }: ReplyCardProps) {
       }
       router.refresh();
     } catch (error) {
-      console.error('Error regenerating:', error);
+      log.error('Error regenerating', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsLoading(false);
     }
@@ -157,7 +160,7 @@ export function ReplyCard({ reply }: ReplyCardProps) {
       });
       router.refresh();
     } catch (error) {
-      console.error('Error skipping:', error);
+      log.error('Error skipping', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsLoading(false);
     }

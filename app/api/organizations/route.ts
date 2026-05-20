@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
-import User, { LinkedInOrganization } from '@/lib/models/User';
+import type { LinkedInOrganization } from '@/lib/models/User';
+import User from '@/lib/models/User';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:organizations');
 
 interface LinkedInOrgElement {
   organization: string;
@@ -50,7 +54,7 @@ export async function GET() {
       defaultOrganizationId: user.defaultOrganizationId,
     });
   } catch (error) {
-    console.error('Error fetching organizations:', error);
+    log.error('Error fetching organizations', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch organizations' },
       { status: 500 }
@@ -93,7 +97,7 @@ export async function POST() {
 
     if (!orgsResponse.ok) {
       const errorText = await orgsResponse.text();
-      console.error('LinkedIn organizations fetch error:', errorText);
+      log.error('LinkedIn organizations fetch error', { error: errorText });
       
       // If permission denied, return empty list without error
       if (orgsResponse.status === 403) {
@@ -141,7 +145,7 @@ export async function POST() {
           });
         }
       } catch (err) {
-        console.error(`Failed to fetch details for org ${orgId}:`, err);
+        log.error('Failed to fetch details for org', { orgId, error: err instanceof Error ? err.message : String(err) });
       }
     }
 
@@ -156,7 +160,7 @@ export async function POST() {
       defaultOrganizationId: user.defaultOrganizationId,
     });
   } catch (error) {
-    console.error('Error refreshing organizations:', error);
+    log.error('Error refreshing organizations', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to refresh organizations' },
       { status: 500 }
@@ -201,7 +205,7 @@ export async function PUT(request: Request) {
       defaultOrganizationId: user.defaultOrganizationId,
     });
   } catch (error) {
-    console.error('Error updating preferences:', error);
+    log.error('Error updating preferences', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to update preferences' },
       { status: 500 }

@@ -1,7 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
 import { uploadToS3 } from '@/lib/s3';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:upload');
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB for videos
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -66,7 +70,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ files: uploadedFiles }, { status: 201 });
   } catch (error) {
-    console.error('Error uploading files:', error);
+    log.error('Error uploading files', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to upload files' }, { status: 500 });
   }
 }

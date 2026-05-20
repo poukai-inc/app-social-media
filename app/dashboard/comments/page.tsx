@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:comments');
 
 interface CommentSuggestion {
   _id: string;
@@ -70,7 +73,7 @@ export default function CommentsPage() {
         setDailyGoal(data.dailyGoal);
       }
     } catch (error) {
-      console.error('Failed to fetch suggestions:', error);
+      log.error('Failed to fetch suggestions', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);
     }
@@ -94,7 +97,7 @@ export default function CommentsPage() {
         setEditingSuggestion(null);
       }
     } catch (error) {
-      console.error('Action failed:', error);
+      log.error('Action failed', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setActionLoading(null);
     }
@@ -125,7 +128,7 @@ export default function CommentsPage() {
         setActiveTab('pending');
       }
     } catch (error) {
-      console.error('Failed to add suggestion:', error);
+      log.error('Failed to add suggestion', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setAddLoading(false);
     }

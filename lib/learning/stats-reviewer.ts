@@ -11,7 +11,7 @@
  * - etc.
  */
 
-import { PlatformType } from '../platforms/types';
+import type { PlatformType } from '../platforms/types';
 
 // ============================================
 // Types

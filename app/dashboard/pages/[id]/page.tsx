@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:pages:[id]');
 import {
   ArrowLeft,
   Settings,
@@ -169,7 +172,7 @@ export default function PageDashboard() {
         router.push('/dashboard/pages');
       }
     } catch (error) {
-      console.error('Failed to fetch page:', error);
+      log.error('Failed to fetch page', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);
     }
@@ -196,7 +199,7 @@ export default function PageDashboard() {
         });
       }
     } catch (error) {
-      console.error('Failed to fetch posts:', error);
+      log.error('Failed to fetch posts', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setPostsLoading(false);
     }
@@ -219,7 +222,7 @@ export default function PageDashboard() {
         });
       }
     } catch (error) {
-      console.error('Failed to fetch ICP stats:', error);
+      log.error('Failed to fetch ICP stats', { error: error instanceof Error ? error.message : String(error) });
     }
   };
 
@@ -245,7 +248,7 @@ export default function PageDashboard() {
         alert(error.error || 'Failed to generate post');
       }
     } catch (error) {
-      console.error('Failed to generate:', error);
+      log.error('Failed to generate', { error: error instanceof Error ? error.message : String(error) });
       alert('Failed to generate post');
     } finally {
       setGenerating(false);
@@ -267,7 +270,7 @@ export default function PageDashboard() {
         alert(error.error || 'Failed to approve post');
       }
     } catch (error) {
-      console.error('Failed to approve:', error);
+      log.error('Failed to approve', { error: error instanceof Error ? error.message : String(error) });
       alert('Failed to approve post');
     }
   };
@@ -287,7 +290,7 @@ export default function PageDashboard() {
         alert(error.error || 'Failed to reject post');
       }
     } catch (error) {
-      console.error('Failed to reject:', error);
+      log.error('Failed to reject', { error: error instanceof Error ? error.message : String(error) });
       alert('Failed to reject post');
     }
   };
@@ -315,7 +318,7 @@ export default function PageDashboard() {
         alert(error.error || 'Failed to retry post');
       }
     } catch (error) {
-      console.error('Failed to retry:', error);
+      log.error('Failed to retry', { error: error instanceof Error ? error.message : String(error) });
       alert('Failed to retry post');
     } finally {
       setRetrying(null);
@@ -344,7 +347,7 @@ export default function PageDashboard() {
         alert(error.error || 'Failed to delete post');
       }
     } catch (error) {
-      console.error('Failed to delete:', error);
+      log.error('Failed to delete', { error: error instanceof Error ? error.message : String(error) });
       alert('Failed to delete post');
     }
   };

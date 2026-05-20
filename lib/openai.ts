@@ -1,6 +1,9 @@
-import { StructuredInput } from './models/Post';
+import type { StructuredInput } from './models/Post';
 import { getPerformanceInsightsForAI } from './learning/platform-learning';
 import { createChatCompletion } from './ai-client';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('openai');
 
 // NOTE: The ai-client handles model selection automatically (Ollama or Groq)
 
@@ -402,7 +405,7 @@ export async function generatePostWithStrategy(options: GenerateWithStrategyOpti
         parts.push(learningInsights);
       }
     } catch (error) {
-      console.warn('Could not fetch learning insights:', error);
+      log.warn('Could not fetch learning insights', { error: error instanceof Error ? error.message : String(error) });
       // Continue without learning insights - not critical
     }
   }
@@ -522,7 +525,7 @@ export async function generatePostWithStrategy(options: GenerateWithStrategyOpti
       
       // Critical validation for Twitter character limit
       if (targetPlatform === 'twitter' && trimmedContent.length > 280) {
-        console.warn(`[Content Generation] Twitter post too long (${trimmedContent.length} chars), attempting smart truncation`);
+        log.warn('Content Generation: Twitter post too long, attempting smart truncation', { length: trimmedContent.length });
         
         // First, try to find a good cut point
         let cutContent = trimmedContent;
@@ -570,7 +573,7 @@ export async function generatePostWithStrategy(options: GenerateWithStrategyOpti
           trimmedContent = trimmedContent.substring(0, 277).trim() + '...';
         }
         
-        console.log(`[Content Generation] Twitter post truncated to ${trimmedContent.length} chars`);
+        log.info('Content Generation: Twitter post truncated', { length: trimmedContent.length });
       }
 
       // Post-generation cleanup for Facebook: strip emojis, hashtags, and markdown that slip through
@@ -591,7 +594,7 @@ export async function generatePostWithStrategy(options: GenerateWithStrategyOpti
         trimmedContent = trimmedContent.replace(/  +/g, ' ').trim();
         
         if (trimmedContent !== cleanedContent) {
-          console.log(`[Content Generation] Facebook post cleaned: stripped emojis/hashtags/markdown`);
+          log.info('Content Generation: Facebook post cleaned, stripped emojis/hashtags/markdown');
         }
       }
 
@@ -603,7 +606,7 @@ export async function generatePostWithStrategy(options: GenerateWithStrategyOpti
       
     } catch (error) {
       lastError = error as Error;
-      console.warn(`[Content Generation] Attempt ${attempt}/${MAX_RETRIES} failed for ${targetPlatform}: ${lastError.message}`);
+      log.warn('Content Generation: attempt failed', { attempt, maxRetries: MAX_RETRIES, targetPlatform, error: lastError.message });
       
       if (attempt < MAX_RETRIES) {
         // Small delay before retry
@@ -1111,7 +1114,8 @@ export async function generateLinkedInPostWithAnalysis(
 // Multi-Platform Content Adaptation
 // ============================================
 
-import { PlatformType, PLATFORM_CONFIGS } from './platforms/types';
+import type { PlatformType} from './platforms/types';
+import { PLATFORM_CONFIGS } from './platforms/types';
 
 const PLATFORM_SYSTEM_PROMPTS: Record<PlatformType, string> = {
   linkedin: LINKEDIN_POST_SYSTEM_PROMPT,

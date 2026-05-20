@@ -1,15 +1,19 @@
-import { 
+import type { 
   IPlatformAdapter, 
   PlatformConnection, 
   PlatformContent, 
   PlatformPublishResult,
   PlatformMetrics,
   MediaUploadResult,
-  ContentStrategyInput,
+  ContentStrategyInput} from './types';
+import {
   PLATFORM_CONFIGS,
 } from './types';
-import { IPlatformConnection } from '../models/Page';
+import type { IPlatformConnection } from '../models/Page';
 import { BasePlatformAdapter } from './base-adapter';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('platform:twitter');
 import { fetchWithTimeout } from '../circuit-breaker';
 import crypto from 'crypto';
 
@@ -351,7 +355,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
         const checkAfterSecs = data.processing_info?.check_after_secs || 5;
         await new Promise(resolve => setTimeout(resolve, checkAfterSecs * 1000));
       } catch (error) {
-        console.error('Error checking media status:', error);
+        log.error('Error checking media status', { error: error instanceof Error ? error.message : String(error) });
         await new Promise(resolve => setTimeout(resolve, 5000));
       }
     }
@@ -510,7 +514,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
 
       // Log token info for debugging (last 8 chars of token to check staleness)
       const tokenSuffix = connection.accessToken?.slice(-8) || 'MISSING';
-      console.log(`[Twitter Search] Executing query: "${searchQuery}" (token: ...${tokenSuffix})`);
+      log.info('Twitter Search: executing query', { searchQuery, tokenSuffix });
 
       const response = await fetchWithTimeout(
         `${TWITTER_API_BASE}/tweets/search/recent?${params.toString()}`,
@@ -522,7 +526,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
         }
       );
 
-      console.log(`[Twitter Search] Response status: ${response.status} for query: "${query}"`);
+      log.info('Twitter Search: response status', { status: response.status, query });
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
@@ -555,7 +559,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
       // Log search metadata for debugging (result count, query used)
       const resultCount = data.meta?.result_count ?? data.data?.length ?? 0;
       if (resultCount === 0) {
-        console.log(`[Twitter Search] Query "${query}" → 0 results (meta: ${JSON.stringify(data.meta || {})})`);
+        log.info('Twitter Search: query returned 0 results', { query, meta: data.meta || {} });
       }
       
       // Map users by ID for easy lookup
@@ -837,13 +841,13 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
       // Strategy: Use mentions timeline (works on Free tier)
       // This gets all tweets that mention/reply to us
       // Note: Don't use start_time with mentions - it can cause errors
-      let url = `${TWITTER_API_BASE}/users/${ourUserId}/mentions?` +
+      const url = `${TWITTER_API_BASE}/users/${ourUserId}/mentions?` +
         `tweet.fields=author_id,created_at,conversation_id,in_reply_to_user_id,text,referenced_tweets&` +
         `expansions=author_id,referenced_tweets.id&` +
         `user.fields=id,name,username,public_metrics,verified&` +
         `max_results=100`;
 
-      console.log(`[Twitter] Checking mentions for user ${ourUserId}`);
+      log.info('Checking mentions for user', { ourUserId });
       
       const response = await fetchWithTimeout(url, {
         headers: {
@@ -854,7 +858,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.log(`[Twitter] Mentions API error: ${response.status}`, errorData);
+        log.error('Mentions API error', { status: response.status, errorData });
         return {
           success: false,
           newReplies: [],
@@ -867,7 +871,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
       const users = data.includes?.users || [];
       const referencedTweets = data.includes?.tweets || [];
 
-      console.log(`[Twitter] Found ${tweets.length} mentions total`);
+      log.info('Found mentions', { count: tweets.length });
 
       // Create user lookup map
       const userMap = new Map(users.map((user: any) => [user.id, {
@@ -900,7 +904,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
         return false;
       });
 
-      console.log(`[Twitter] Found ${relevantReplies.length} relevant replies in conversation ${conversationId}`);
+      log.info('Found relevant replies in conversation', { count: relevantReplies.length, conversationId });
 
       const newReplies = relevantReplies.map((tweet: any) => ({
         id: tweet.id,
@@ -939,14 +943,14 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
       });
 
       if (!response.ok) {
-        console.warn(`Failed to get own user ID from Twitter API (${response.status})`);
+        log.warn('Failed to get own user ID from Twitter API', { status: response.status });
         return null;
       }
 
       const data = await response.json();
       return data.data?.id || null;
     } catch (error) {
-      console.warn('Error getting own user ID:', error);
+      log.warn('Error getting own user ID', { error: error instanceof Error ? error.message : String(error) });
       return null;
     }
   }

@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:pages:[id]:data-sources');
 import {
   ArrowLeft,
   Database,
@@ -112,7 +115,7 @@ export default function DataSourcesPage() {
         setDataSources(data.dataSources || []);
       }
     } catch (error) {
-      console.error('Failed to fetch data sources:', error);
+      log.error('Failed to fetch data sources', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);
     }
@@ -239,7 +242,7 @@ export default function DataSourcesPage() {
         fetchDataSources();
       }
     } catch (error) {
-      console.error('Failed to toggle source:', error);
+      log.error('Failed to toggle source', { error: error instanceof Error ? error.message : String(error) });
     }
   };
 

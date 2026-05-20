@@ -1,12 +1,12 @@
 /**
  * ICP Engagement Agent
- * 
+ *
  * An autonomous agent that:
  * 1. Analyzes page content to understand the ICP
  * 2. Searches Twitter for posts from ICPs
  * 3. Generates contextual, value-adding replies
  * 4. Posts replies with safeguards and rate limiting
- * 
+ *
  * Based on ICP principles from the transcripts:
  * - Target people with urgent, important problems
  * - Be 10x better in our responses (add real value)
@@ -15,11 +15,17 @@
 
 import mongoose from 'mongoose';
 import Page from '../models/Page';
-import { IPlatformConnection } from '../models/Page';
-import { twitterAdapter, TwitterSearchResult, TwitterUser } from '../platforms/twitter-adapter';
-import { analyzePageICP, ICPProfile } from './icp-analyzer';
-import ICPEngagement, { IICPEngagement } from '../models/ICPEngagement';
+import type { IPlatformConnection } from '../models/Page';
+import type { TwitterSearchResult} from '../platforms/twitter-adapter';
+import { twitterAdapter, TwitterUser } from '../platforms/twitter-adapter';
+import type { ICPProfile } from './icp-analyzer';
+import { analyzePageICP } from './icp-analyzer';
+import type { IICPEngagement } from '../models/ICPEngagement';
+import ICPEngagement from '../models/ICPEngagement';
 import { createChatCompletion } from '../ai-client';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('engagement:icp-agent');
 
 // ============================================
 // Types
@@ -99,13 +105,13 @@ export async function runICPEngagementAgent(
   const config = { ...DEFAULT_CONFIG, ...configOverrides };
   const errors: string[] = [];
   const engagements: EngagementResult[] = [];
-  
+
   let queriesExecuted = 0;
   let tweetsFound = 0;
   let tweetsEvaluated = 0;
   let repliesSent = 0;
   let repliesSuccessful = 0;
-  
+
   try {
     // 1. Load page and get Twitter connection
     const page = await Page.findById(pageId);
@@ -131,22 +137,22 @@ export async function runICPEngagementAgent(
     }
 
     // 2. Analyze or load ICP profile
-    console.log(`[ICP Agent] Analyzing ICP for page ${pageId}...`);
+    log.info('Analyzing ICP', { pageId });
     const icpResult = await analyzePageICP({ pageId, includeDataSources: true, includeHistoricalPosts: true });
-    
+
     if (!icpResult.success || !icpResult.profile) {
       throw new Error(icpResult.error || 'Failed to analyze ICP');
     }
-    
+
     const icpProfile = icpResult.profile;
-    console.log(`[ICP Agent] ICP analyzed. ${icpProfile.searchQueries.length} search queries generated.`);
+    log.info('ICP analyzed', { searchQueryCount: icpProfile.searchQueries.length });
 
     // 3. Get queries to run (use test queries if provided, otherwise ICP queries)
     let queriesToRun: { query: string; intent: string; priority: number }[];
-    
+
     if (config.testQueries && config.testQueries.length > 0) {
       // Use test queries for testing
-      console.log(`[ICP Agent] Using ${config.testQueries.length} test queries instead of ICP queries.`);
+      log.info('Using test queries instead of ICP queries', { count: config.testQueries.length });
       queriesToRun = config.testQueries.map((q, i) => ({
         query: q,
         intent: 'test',
@@ -171,7 +177,7 @@ export async function runICPEngagementAgent(
           await new Promise(resolve => setTimeout(resolve, 2_000));
         }
 
-        console.log(`[ICP Agent] Searching (${qi + 1}/${queriesToRun.length}): "${searchQuery.query}"`);
+        log.info('Searching tweets', { index: qi + 1, total: queriesToRun.length, query: searchQuery.query });
         queriesExecuted++;
 
         // Reload fresh token before each search to avoid stale-token race with token-refresh cron
@@ -189,12 +195,12 @@ export async function runICPEngagementAgent(
 
         if (!searchResult.success) {
           const errorMsg = `Search failed for "${searchQuery.query}": ${searchResult.error}`;
-          console.warn(`[ICP Agent] ${errorMsg}`);
+          log.warn('Search failed', { query: searchQuery.query, error: searchResult.error });
           errors.push(errorMsg);
-          
+
           // If it's a rate limit or auth error, stop searching
           if (searchResult.error?.includes('Rate limited') || searchResult.error?.includes('Unauthorized')) {
-            console.warn(`[ICP Agent] Stopping searches due to API error: ${searchResult.error}`);
+            log.warn('Stopping searches due to API error', { error: searchResult.error });
             break;
           }
           continue;
@@ -202,15 +208,15 @@ export async function runICPEngagementAgent(
 
         const tweets = searchResult.tweets || [];
         tweetsFound += tweets.length;
-        console.log(`[ICP Agent] Found ${tweets.length} tweets for query "${searchQuery.query}".`);
+        log.info('Tweets found for query', { count: tweets.length, query: searchQuery.query });
 
         // If query returns 0 results, try a simplified version (first 2 words)
         if (tweets.length === 0) {
           const words = searchQuery.query.trim().split(/\s+/);
           if (words.length > 2) {
             const simplifiedQuery = words.slice(0, 2).join(' ');
-            console.log(`[ICP Agent] Retrying with simplified query: "${simplifiedQuery}"`);
-            
+            log.info('Retrying with simplified query', { simplifiedQuery });
+
             const retryResult = await twitterAdapter.searchTweets(
               freshConnection,
               simplifiedQuery,
@@ -220,11 +226,11 @@ export async function runICPEngagementAgent(
                 excludeReplies: true,
               }
             );
-            
+
             if (retryResult.success && retryResult.tweets && retryResult.tweets.length > 0) {
-              console.log(`[ICP Agent] Simplified query found ${retryResult.tweets.length} tweets.`);
+              log.info('Simplified query found tweets', { count: retryResult.tweets.length });
               tweetsFound += retryResult.tweets.length;
-              
+
               // Process these tweets through the same evaluation pipeline
               for (const tweet of retryResult.tweets) {
                 tweetsEvaluated++;
@@ -235,7 +241,7 @@ export async function runICPEngagementAgent(
 
                 const topicOk = passesTopicFilter(tweet, icpProfile);
                 if (!topicOk.pass) {
-                  console.log(`[ICP Agent] Filtered out @${tweet.author?.username}: ${topicOk.reason}`);
+                  log.info('Filtered out tweet', { username: tweet.author?.username, reason: topicOk.reason });
                   continue;
                 }
 
@@ -255,7 +261,7 @@ export async function runICPEngagementAgent(
           // Basic filters
           const filterResult = passesBasicFilters(tweet, config);
           if (!filterResult.pass) {
-            console.log(`[ICP Agent] Filtered out @${tweet.author?.username}: ${filterResult.reason}`);
+            log.info('Filtered out tweet', { username: tweet.author?.username, reason: filterResult.reason });
             continue;
           }
 
@@ -266,28 +272,28 @@ export async function runICPEngagementAgent(
             config.cooldownMinutes
           );
           if (recentEngagement) {
-            console.log(`[ICP Agent] Cooldown active for @${tweet.author?.username}`);
+            log.info('Cooldown active for user', { username: tweet.author?.username });
             continue;
           }
 
           // Quick topic filter before calling AI (saves tokens on clearly off-topic tweets)
           const topicResult = passesTopicFilter(tweet, icpProfile);
           if (!topicResult.pass) {
-            console.log(`[ICP Agent] Filtered out @${tweet.author?.username}: ${topicResult.reason}`);
+            log.info('Filtered out tweet by topic', { username: tweet.author?.username, reason: topicResult.reason });
             continue;
           }
 
           // Evaluate relevance
-          console.log(`[ICP Agent] Evaluating @${tweet.author?.username}: "${tweet.text.slice(0, 80)}..."`);
+          log.info('Evaluating tweet', { username: tweet.author?.username, preview: tweet.text.slice(0, 80) });
           const evaluation = await evaluateTweetRelevance(tweet, icpProfile, searchQuery.intent);
-          
-          console.log(`[ICP Agent]   Score: ${evaluation.relevanceScore}/10, Potential: ${evaluation.engagementPotential}/10`);
-          
+
+          log.info('Tweet evaluated', { relevanceScore: evaluation.relevanceScore, engagementPotential: evaluation.engagementPotential });
+
           if (evaluation.relevanceScore >= config.minRelevanceScore) {
-            console.log(`[ICP Agent]   ✓ Accepted`);
+            log.info('Tweet accepted', { username: tweet.author?.username });
             allCandidates.push(evaluation);
           } else {
-            console.log(`[ICP Agent]   ✗ Rejected (score ${evaluation.relevanceScore} < ${config.minRelevanceScore})`);
+            log.info('Tweet rejected', { username: tweet.author?.username, score: evaluation.relevanceScore, minScore: config.minRelevanceScore });
           }
         }
       } catch (error) {
@@ -295,14 +301,16 @@ export async function runICPEngagementAgent(
       }
     }
 
-    console.log(`[ICP Agent] ${allCandidates.length} candidates passed filters.`);
-    
+    log.info('Candidates passed filters', { count: allCandidates.length });
+
     if (allCandidates.length === 0) {
-      console.log(`[ICP Agent] ⚠️  No candidates found. Check:`);
-      console.log(`  - Follower range: ${config.minFollowers}-${config.maxFollowers}`);
-      console.log(`  - Min relevance score: ${config.minRelevanceScore}/10`);
-      console.log(`  - Skip verified: ${config.skipVerified}`);
-      console.log(`  - Tweets found: ${tweetsFound}, evaluated: ${tweetsEvaluated}`);
+      log.warn('No candidates found', {
+        followerRange: `${config.minFollowers}-${config.maxFollowers}`,
+        minRelevanceScore: config.minRelevanceScore,
+        skipVerified: config.skipVerified,
+        tweetsFound,
+        tweetsEvaluated,
+      });
     }
 
     // 5. Sort by relevance and engagement potential
@@ -319,7 +327,7 @@ export async function runICPEngagementAgent(
       try {
         // Generate contextual reply with quality validation
         const reply = await generateAndValidateReply(candidate.tweet, icpProfile);
-        
+
         if (!reply) {
           errors.push(`Could not generate quality reply for tweet ${candidate.tweet.id}`);
           continue;
@@ -328,10 +336,12 @@ export async function runICPEngagementAgent(
         repliesSent++;
 
         if (config.dryRun) {
-          console.log(`[ICP Agent] DRY RUN - Would reply to @${candidate.tweet.author?.username}:`);
-          console.log(`  Tweet: ${candidate.tweet.text.slice(0, 100)}...`);
-          console.log(`  Reply: ${reply}`);
-          
+          log.info('DRY RUN - Would reply to user', {
+            username: candidate.tweet.author?.username,
+            tweetPreview: candidate.tweet.text.slice(0, 100),
+            reply,
+          });
+
           engagements.push({
             tweet: candidate.tweet,
             reply,
@@ -350,7 +360,7 @@ export async function runICPEngagementAgent(
 
           if (replyResult.success) {
             repliesSuccessful++;
-            console.log(`[ICP Agent] ✓ Successfully replied to @${candidate.tweet.author?.username}`);
+            log.info('Successfully replied to user', { username: candidate.tweet.author?.username });
 
             // Save engagement record
             const engagementRecord = await saveEngagement({
@@ -375,9 +385,11 @@ export async function runICPEngagementAgent(
                   reply,
                   replyResult.replyUrl
                 );
-                console.log(`[ICP Agent] ✓ Conversation tracking initialized for engagement ${engagementRecord._id}`);
+                log.info('Conversation tracking initialized', { engagementId: engagementRecord._id });
               } catch (convError) {
-                console.warn(`[ICP Agent] Failed to initialize conversation tracking:`, convError);
+                log.warn('Failed to initialize conversation tracking', {
+                  error: convError instanceof Error ? convError.message : String(convError),
+                });
                 // Non-critical error - continue
               }
             }
@@ -392,15 +404,15 @@ export async function runICPEngagementAgent(
             });
           } else {
             const errorMsg = `Failed to reply to tweet ${candidate.tweet.id}: ${replyResult.error}`;
-            console.log(`[ICP Agent] ✗ ${errorMsg}`);
-            
+            log.info('Reply failed', { tweetId: candidate.tweet.id, error: replyResult.error });
+
             // Skip edited tweets - they're a Twitter API limitation
             if (replyResult.error?.includes('edited')) {
-              console.log(`[ICP Agent] Skipping edited tweet - Twitter API restriction`);
+              log.info('Skipping edited tweet - Twitter API restriction');
             } else {
               errors.push(errorMsg);
             }
-            
+
             engagements.push({
               tweet: candidate.tweet,
               reply,
@@ -552,7 +564,7 @@ async function hasRecentEngagement(
   cooldownMinutes: number
 ): Promise<boolean> {
   const cutoff = new Date(Date.now() - cooldownMinutes * 60 * 1000);
-  
+
   const recent = await ICPEngagement.findOne({
     pageId: new mongoose.Types.ObjectId(pageId),
     'targetUser.id': authorId,
@@ -644,7 +656,7 @@ Output this exact JSON structure:
       };
     }
   } catch (error) {
-    console.warn('Error evaluating tweet:', error);
+    log.warn('Error evaluating tweet', { error: error instanceof Error ? error.message : String(error) });
   }
 
   return {
@@ -657,7 +669,7 @@ Output this exact JSON structure:
 
 /**
  * Generate a contextual, value-adding reply using proven Twitter engagement principles
- * 
+ *
  * Research-backed strategies for replies that drive profile views:
  * 1. CURIOSITY GAPS - Leave an open loop that makes them want to learn more
  * 2. CONTRARIAN ANGLES - Politely challenge or add nuance (gets 3x engagement)
@@ -691,7 +703,7 @@ async function generateReply(
     ['COST_OF_INACTION',  'Help them feel the compounding cost of NOT solving this now — make the pain of waiting feel concrete and real, not theoretical'],
     ['DOLLARIZE',         'Frame your insight in their own financial or business terms — translate the pain into time lost, revenue missed, or budget wasted'],
   ];
-  
+
   const [formulaLabel, formulaApproach] = replyFormulas[Math.floor(Math.random() * replyFormulas.length)];
 
   // Build psychographic context block for the system prompt
@@ -702,7 +714,7 @@ async function generateReply(
     icpProfile.theHunger ? `What they HUNGER for: ${icpProfile.theHunger}` : '',
     icpProfile.theCrapTheyDealWith ? `Vendor baggage (what burned them before): ${icpProfile.theCrapTheyDealWith}` : '',
   ].filter(Boolean).join('\n');
-  
+
   const systemPrompt = `You write Twitter replies that make people click your profile. Return ONLY the reply text. No quotes, no explanations, no meta-commentary. No <think> tags. Just the reply.
 
 Your expertise: ${icpProfile.valueProposition.expertise.join(', ')}
@@ -749,7 +761,7 @@ Rules:
 - Reply text only — no quotes, no explanation`;
 
   try {
-    console.log(`[Reply Generator] Generating reply for @${tweet.author?.username} using ${formulaLabel} formula...`);
+    log.info('Generating reply', { username: tweet.author?.username, formula: formulaLabel });
     const response = await createChatCompletion({
       messages: [
         { role: 'system', content: systemPrompt },
@@ -761,11 +773,11 @@ Rules:
     });
 
     const reply = response.content?.trim();
-    console.log(`[Reply Generator] Generated: "${reply}"`);
-    
+    log.info('Reply generated', { reply });
+
     // Validate reply
     if (!reply || reply.length > 280) {
-      console.log(`[Reply Validator] Rejected - ${!reply ? 'empty' : `too long (${reply.length} chars)`}`);
+      log.info('Reply rejected by validator', { reason: !reply ? 'empty' : `too long (${reply?.length} chars)` });
       return null;
     }
 
@@ -775,7 +787,7 @@ Rules:
       /^(great|love|amazing|awesome|nice|fantastic|brilliant|excellent|perfect|wonderful)\s+(point|post|take|insight|thread|perspective|thought)/i,
       /^(this|that|so)\s+(is\s+)?(great|amazing|true|right|perfect)/i,
       /^(couldn't agree more|well said|nailed it|spot on|exactly)/i,
-      
+
       // Self-promotion
       /check out/i,
       /our (product|tool|platform|service|app)/i,
@@ -791,7 +803,7 @@ Rules:
       /\$[A-Z]\b/,          // $X, $Y, $Z
       /\[X\]|\[N\]|\[number\]|\[amount\]|\[value\]/i,
       /\bX%|X hours|X months|X days\b/i,
-      
+
       // Generic bot-like responses
       /^(hey|hi|hello)\s+@/i,
       /thanks for sharing/i,
@@ -809,7 +821,7 @@ Rules:
       /i helped (a |one |\d+ )?client(s)? (cut|reduce|save|increase|improve)/i,
       /we helped (a |one |\d+ )?client(s)?/i,
       /(150|200|300)\+?\s*hrs?\/?(week|month)/i,
-      
+
       // Salesy closers that sound like a pitch, not a reply
       /curious how (i|we) can help/i,
       /let'?s (avoid|fix|solve|tackle|chat|connect|talk|discuss) (this|that|it) together/i,
@@ -828,7 +840,7 @@ Rules:
 
     for (const pattern of badPatterns) {
       if (pattern.test(reply)) {
-        console.log(`[Reply Validator] Rejected - matched bad pattern: ${pattern}`);
+        log.info('Reply rejected - matched bad pattern', { pattern: String(pattern) });
         return null;
       }
     }
@@ -836,14 +848,14 @@ Rules:
     // Quality checks
     // 1. Too short replies don't add value
     if (reply.length < 30) {
-      console.log('[Reply Validator] Rejected - too short');
+      log.info('Reply rejected - too short');
       return null;
     }
 
     // 2. All caps is spammy
     const capsRatio = (reply.match(/[A-Z]/g) || []).length / reply.length;
     if (capsRatio > 0.5) {
-      console.log('[Reply Validator] Rejected - too many caps');
+      log.info('Reply rejected - too many caps');
       return null;
     }
 
@@ -851,15 +863,15 @@ Rules:
     if (reply.endsWith('?') && reply.length < 40) {
       const wordCount = reply.split(/\s+/).length;
       if (wordCount < 6) {
-        console.log('[Reply Validator] Rejected - question too short and generic');
+        log.info('Reply rejected - question too short and generic');
         return null;
       }
     }
 
-    console.log('[Reply Validator] ✓ Reply passed all validation checks');
+    log.info('Reply passed all validation checks');
     return reply;
   } catch (error) {
-    console.error('Error generating reply:', error);
+    log.error('Error generating reply', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined });
     return null;
   }
 }
@@ -907,10 +919,10 @@ async function saveEngagement(data: {
       status: 'sent',
       engagedAt: new Date(),
     });
-    
+
     return engagement;
   } catch (error) {
-    console.error('Error saving engagement:', error);
+    log.error('Error saving engagement', { error: error instanceof Error ? error.message : String(error) });
     return null;
   }
 }
@@ -983,7 +995,7 @@ Output this exact JSON structure (no placeholder values — use your actual scor
       };
     }
   } catch (error) {
-    console.warn('Error scoring reply:', error);
+    log.warn('Error scoring reply', { error: error instanceof Error ? error.message : String(error) });
   }
 
   return { score: 5, issues: ['Evaluation failed'], passesQuality: false };
@@ -998,14 +1010,14 @@ async function generateAndValidateReply(
   icpProfile: ICPProfile,
   maxAttempts: number = 3
 ): Promise<string | null> {
-  console.log(`[Reply Generation] Starting generation for tweet ${tweet.id} (max ${maxAttempts} attempts)`);
-  
+  log.info('Starting reply generation', { tweetId: tweet.id, maxAttempts });
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    console.log(`[Reply Generation] Attempt ${attempt}/${maxAttempts}`);
+    log.info('Reply generation attempt', { attempt, maxAttempts });
     const reply = await generateReply(tweet, icpProfile);
-    
+
     if (!reply) {
-      console.log(`[Reply Generation] Attempt ${attempt}: Reply rejected by validator`);
+      log.info('Reply rejected by validator', { attempt });
       if (attempt < maxAttempts) {
         await sleep(1000);
       }
@@ -1019,18 +1031,18 @@ async function generateAndValidateReply(
       tweet.author?.description || ''
     );
 
-    console.log(`[Reply Generator] Attempt ${attempt}: Score ${quality.score}/10, Passes: ${quality.passesQuality}`);
-    
+    log.info('Reply quality scored', { attempt, score: quality.score, passes: quality.passesQuality });
+
     if (quality.passesQuality) {
       return reply;
     }
 
     if (quality.issues.length > 0) {
-      console.log(`[Reply Generator] Issues: ${quality.issues.join(', ')}`);
+      log.info('Reply quality issues', { issues: quality.issues.join(', ') });
     }
   }
 
-  console.log(`[Reply Generator] Failed to generate quality reply after ${maxAttempts} attempts`);
+  log.info('Failed to generate quality reply', { maxAttempts });
   return null;
 }
 

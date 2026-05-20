@@ -13,6 +13,8 @@
  *   try { ... breaker.recordSuccess(); } catch { breaker.recordFailure(error); }
  */
 
+import { logger } from '@/lib/logger';
+
 export interface CircuitBreakerOptions {
   /** Number of failures before opening the circuit (default: 5) */
   failureThreshold?: number;
@@ -97,7 +99,7 @@ export class CircuitBreaker {
         // Check if enough time has passed to transition to HALF_OPEN
         if (now - this.s.openedAt >= this.options.resetTimeoutMs) {
           this.s.state = 'HALF_OPEN';
-          console.log(`[CircuitBreaker:${this.key}] Transitioning to HALF_OPEN — allowing probe request`);
+          logger.info('circuit-breaker', 'Transitioning to HALF_OPEN — allowing probe request', { key: this.key });
           return true;
         }
         return false;
@@ -127,7 +129,7 @@ export class CircuitBreaker {
    */
   recordSuccess(): void {
     if (this.s.state === 'HALF_OPEN') {
-      console.log(`[CircuitBreaker:${this.key}] Probe succeeded — closing circuit`);
+      logger.info('circuit-breaker', 'Probe succeeded — closing circuit', { key: this.key });
     }
     this.s.state = 'CLOSED';
     this.s.failureCount = 0;
@@ -153,9 +155,7 @@ export class CircuitBreaker {
       this.s.openedAt = now;
       // For permission errors, use a longer timeout (1 hour)
       this.entry.options.resetTimeoutMs = 60 * 60 * 1000;
-      console.log(
-        `[CircuitBreaker:${this.key}] INSTANT TRIP on status ${statusCode} — circuit OPEN for 1 hour`
-      );
+      logger.info('circuit-breaker', 'INSTANT TRIP — circuit OPEN for 1 hour', { key: this.key, statusCode });
       return;
     }
 
@@ -163,16 +163,14 @@ export class CircuitBreaker {
       // Probe failed — go back to OPEN
       this.s.state = 'OPEN';
       this.s.openedAt = now;
-      console.log(`[CircuitBreaker:${this.key}] Probe failed — circuit back to OPEN`);
+      logger.info('circuit-breaker', 'Probe failed — circuit back to OPEN', { key: this.key });
       return;
     }
 
     if (this.s.failureCount >= this.options.failureThreshold) {
       this.s.state = 'OPEN';
       this.s.openedAt = now;
-      console.log(
-        `[CircuitBreaker:${this.key}] Failure threshold (${this.options.failureThreshold}) reached — circuit OPEN`
-      );
+      logger.info('circuit-breaker', 'Failure threshold reached — circuit OPEN', { key: this.key, threshold: this.options.failureThreshold });
     }
   }
 
@@ -192,7 +190,7 @@ export class CircuitBreaker {
     this.s.lastFailureAt = 0;
     this.s.openedAt = 0;
     this.s.lastError = undefined;
-    console.log(`[CircuitBreaker:${this.key}] Manually reset to CLOSED`);
+    logger.info('circuit-breaker', 'Manually reset to CLOSED', { key: this.key });
   }
 }
 

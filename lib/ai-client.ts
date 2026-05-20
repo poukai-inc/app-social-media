@@ -27,6 +27,9 @@ import AIUsage, {
   type ModelLimits,
   type IAIUsage,
 } from './models/AIUsage';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('ai-client');
 
 // ============================================
 // Provider Configuration (lazy-loaded)
@@ -50,7 +53,7 @@ function getAiConfig(): { client: OpenAI; provider: 'ollama' | 'groq'; model: st
     _aiClient = new OpenAI({ apiKey: 'ollama', baseURL: `${baseURL}/v1` });
     _aiProvider = 'ollama';
     _ollamaModel = model;
-    console.log(`[AI] Provider: ollama, Model: ${model}, URL: ${baseURL}`);
+    log.info('Provider configured', { provider: 'ollama', model, url: baseURL });
   } else {
     _aiClient = new OpenAI({
       apiKey: process.env.GROQ_API_KEY,
@@ -58,7 +61,7 @@ function getAiConfig(): { client: OpenAI; provider: 'ollama' | 'groq'; model: st
     });
     _aiProvider = 'groq';
     _ollamaModel = ''; // unused in groq mode
-    console.log('[AI] Provider: groq, Groq Cloud');
+    log.info('Provider configured', { provider: 'groq' });
   }
   return { client: _aiClient, provider: _aiProvider, model: _ollamaModel };
 }
@@ -132,7 +135,7 @@ async function refreshDailyCache(): Promise<void> {
       });
     }
   } catch (error) {
-    console.warn('[AI] Error refreshing cache:', error);
+    log.warn('Error refreshing cache', { error: error instanceof Error ? error.message : String(error) });
   }
 }
 
@@ -216,12 +219,12 @@ async function recordUsage(model: string, tokens: number, success: boolean = tru
     const limits = GROQ_MODEL_LIMITS[model];
     if (limits?.tokensPerDay) {
       const percentUsed = ((result.tokensUsed / limits.tokensPerDay) * 100).toFixed(1);
-      console.log(`[AI] ${model}: ${result.tokensUsed.toLocaleString()}/${limits.tokensPerDay.toLocaleString()} tokens (${percentUsed}%)`);
+      log.info('Token usage recorded', { model, tokensUsed: result.tokensUsed, tokensLimit: limits.tokensPerDay, percentUsed });
     } else {
-      console.log(`[AI] ${model}: ${result.tokensUsed.toLocaleString()} tokens (no daily limit)`);
+      log.info('Token usage recorded', { model, tokensUsed: result.tokensUsed, dailyLimit: 'none' });
     }
   } catch (error) {
-    console.error('[AI] Error recording usage:', error);
+    log.error('Error recording usage', { error: error instanceof Error ? error.message : String(error) });
   }
 }
 
@@ -240,14 +243,14 @@ async function recordRateLimitHit(model: string): Promise<void> {
     rateLimitHits: (dailyCache.usage.get(model)?.rateLimitHits || 0) + 1,
   });
   
-  console.log(`[AI] Marked ${model} as exhausted (${exhaustedTokens} tokens)`);
-  
+  log.info('Model marked as exhausted', { model, exhaustedTokens });
+
   try {
     await AIUsage.updateOne(
       { date: today, modelName: model },
-      { 
+      {
         $inc: { rateLimitHits: 1 },
-        $set: { 
+        $set: {
           lastUpdated: new Date(),
           tokensUsed: exhaustedTokens,  // Mark as exhausted in DB too
         },
@@ -255,7 +258,7 @@ async function recordRateLimitHit(model: string): Promise<void> {
       { upsert: true }
     );
   } catch (error) {
-    console.error('[AI] Error recording rate limit:', error);
+    log.error('Error recording rate limit', { error: error instanceof Error ? error.message : String(error) });
   }
 }
 
@@ -394,18 +397,18 @@ async function getAvailableModel(preferFast: boolean = false, estimatedTokens: n
   
   if (availableModels.length === 0) {
     // No models available - find the one with lowest usage (might still work)
-    console.warn('[AI] All models near capacity!');
-    
+    log.warn('All models near capacity!');
+
     // Prefer unlimited models as last resort
     const unlimited = modelStats.find(m => m.isUnlimited);
     if (unlimited) {
-      console.log(`[AI] Falling back to ${unlimited.model} (no daily limit)`);
+      log.info('Falling back to unlimited model', { model: unlimited.model });
       return unlimited.model;
     }
-    
+
     // Otherwise pick lowest usage
     const sorted = [...modelStats].sort((a, b) => a.usagePercent - b.usagePercent);
-    console.log(`[AI] Using ${sorted[0].model} (${(sorted[0].usagePercent * 100).toFixed(1)}% used)`);
+    log.info('Using lowest-usage model', { model: sorted[0].model, usagePercent: (sorted[0].usagePercent * 100).toFixed(1) });
     return sorted[0].model;
   }
   
@@ -421,15 +424,15 @@ async function getAvailableModel(preferFast: boolean = false, estimatedTokens: n
     
     // Only log if switching or notable
     if (selected.usagePercent > 0.5) {
-      console.log(`[AI] Selected ${selected.model} (${(selected.usagePercent * 100).toFixed(1)}% used - lowest available)`);
+      log.info('Selected model', { model: selected.model, usagePercent: (selected.usagePercent * 100).toFixed(1) });
     }
-    
+
     return selected.model;
   }
-  
+
   // Only unlimited models available
   const selected = unlimitedModels[0];
-  console.log(`[AI] Using ${selected.model} (unlimited - all limited models exhausted)`);
+  log.info('Using unlimited model (all limited models exhausted)', { model: selected.model });
   return selected.model;
 }
 
@@ -524,7 +527,7 @@ export async function createChatCompletion(
     triedModels.add(model);
     
     try {
-      console.log(`[AI] Using ${model} (attempt ${attempt + 1}/${maxRetries + 1})`);
+      log.info('Using model', { model, attempt: attempt + 1, maxAttempts: maxRetries + 1 });
       
       const { client: aiClient } = getAiConfig();
       const response = await aiClient.chat.completions.create({
@@ -549,12 +552,11 @@ export async function createChatCompletion(
       }
 
       // Debug: Log finish reason and content info
-      console.log(`[AI] Response: finish_reason=${finishReason}, content_length=${content?.length || 0}`);
+      log.info('Response received', { finishReason, contentLength: content?.length || 0 });
 
       // Debug: Log if content is empty despite successful response
       if (!content && response.choices.length > 0) {
-        console.warn(`[AI] Warning: Response has choices but content is empty/null`);
-        console.warn(`[AI] Choices:`, JSON.stringify(response.choices, null, 2));
+        log.warn('Response has choices but content is empty/null', { choices: JSON.stringify(response.choices, null, 2) });
       }
 
       return {
@@ -576,7 +578,7 @@ export async function createChatCompletion(
 
       if (currentProvider === 'groq' && (status === 429 || code === 'rate_limit_exceeded')) {
         await recordRateLimitHit(model);
-        console.log(`[AI] Rate limited on ${model}, switching to next model...`);
+        log.info('Rate limited, switching to next model', { model });
         continue;
       }
 
@@ -584,7 +586,7 @@ export async function createChatCompletion(
       if (currentProvider === 'ollama') {
         const msg = (error as Error).message || '';
         if (msg.includes('ECONNREFUSED') || msg.includes('fetch failed')) {
-          console.error(`[AI] Cannot connect to Ollama at ${process.env.OLLAMA_BASE_URL}. Is Ollama running?`);
+          log.error('Cannot connect to Ollama', { url: process.env.OLLAMA_BASE_URL });
         }
       }
       

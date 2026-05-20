@@ -1,5 +1,5 @@
 import { BasePlatformAdapter } from './base-adapter';
-import {
+import type {
   PlatformContent,
   PlatformPublishResult,
   PlatformMetrics,
@@ -7,8 +7,11 @@ import {
   ContentStrategyInput,
   PlatformType,
 } from './types';
-import { IPlatformConnection } from '../models/Page';
+import type { IPlatformConnection } from '../models/Page';
 import { CircuitBreaker, fetchWithTimeout } from '../circuit-breaker';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('platform:facebook');
 
 const FACEBOOK_GRAPH_API = 'https://graph.facebook.com/v18.0';
 
@@ -210,7 +213,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
       });
 
       if (!breaker.allowRequest()) {
-        console.log(`[Facebook] Skipping metrics fetch: ${breaker.getRejectionReason()}`);
+        log.info('Skipping metrics fetch', { reason: breaker.getRejectionReason() });
         return {
           platform: 'facebook',
           connectionId: connection.platformId,

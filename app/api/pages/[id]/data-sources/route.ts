@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
-import Page, { DatabaseSource } from '@/lib/models/Page';
+import type { DatabaseSource } from '@/lib/models/Page';
+import Page from '@/lib/models/Page';
 import { 
   testConnection, 
   executeQuery, 
@@ -11,6 +13,9 @@ import {
   getTableColumns 
 } from '@/lib/data-sources/database';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:pages:[id]:data-sources');
 
 // GET /api/pages/[id]/data-sources - List all data sources
 export async function GET(
@@ -62,7 +67,7 @@ export async function GET(
       dataSources: sanitizedSources,
     });
   } catch (error) {
-    console.error('Get data sources error:', error);
+    log.error('Get data sources error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to get data sources' },
       { status: 500 }
@@ -177,7 +182,7 @@ export async function POST(
       connectionTest: testResult,
     });
   } catch (error) {
-    console.error('Add data source error:', error);
+    log.error('Add data source error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to add data source' },
       { status: 500 }
@@ -253,7 +258,7 @@ export async function PUT(
       message: 'Data source updated successfully',
     });
   } catch (error) {
-    console.error('Update data source error:', error);
+    log.error('Update data source error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to update data source' },
       { status: 500 }
@@ -306,7 +311,7 @@ export async function DELETE(
       message: 'Data source deleted successfully',
     });
   } catch (error) {
-    console.error('Delete data source error:', error);
+    log.error('Delete data source error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to delete data source' },
       { status: 500 }

@@ -15,6 +15,9 @@ import { auth } from '@/lib/auth';
 import { getUsageStatus, getTotalCapacity, getSelectedModel, GROQ_MODEL_LIMITS, MODEL_PRIORITY } from '@/lib/ai-client';
 import connectDB from '@/lib/mongodb';
 import AIUsage, { getDateKey } from '@/lib/models/AIUsage';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:ai:usage');
 
 export async function GET(request: Request) {
   try {
@@ -85,7 +88,7 @@ export async function GET(request: Request) {
       limits: GROQ_MODEL_LIMITS,
     });
   } catch (error) {
-    console.error('[AI Usage API] Error:', error);
+    log.error('AI usage API error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { 
         success: false, 

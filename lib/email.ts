@@ -1,4 +1,7 @@
 import crypto from 'crypto';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('email');
 
 // Email service for approval workflows
 // Supports Resend (recommended) or falls back to console logging in dev
@@ -29,11 +32,12 @@ export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
   const { to, subject, html, text } = options;
 
   if (!config.apiKey) {
-    // Dev mode - log to console
-    console.log('📧 Email would be sent (no RESEND_API_KEY configured):');
-    console.log(`  To: ${to}`);
-    console.log(`  Subject: ${subject}`);
-    console.log(`  Body: ${text || html.slice(0, 200)}...`);
+    // Dev mode - log to structured logger
+    log.info('Email would be sent (no RESEND_API_KEY configured)', {
+      to,
+      subject,
+      bodyPreview: `${text || html.slice(0, 200)}...`,
+    });
     return true;
   }
 
@@ -59,13 +63,13 @@ export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('Failed to send email:', error);
+      log.error('Failed to send email', { error });
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Email send error:', error);
+    log.error('Email send error', { error: error instanceof Error ? error.message : String(error) });
     return false;
   }
 }

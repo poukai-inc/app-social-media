@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:engagements:settings');
 
 interface EngagementSettings {
   autoReplyEnabled: boolean;
@@ -42,7 +45,7 @@ export default function EngagementSettingsPage() {
         setSettings(data.settings);
       }
     } catch (error) {
-      console.error('Error fetching settings:', error);
+      log.error('Error fetching settings', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsLoading(false);
     }

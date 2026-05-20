@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:auth:facebook');
 
 /**
  * Facebook OAuth - Step 1: Redirect to Facebook for authorization
@@ -52,7 +55,7 @@ export async function GET(request: Request) {
 
     return NextResponse.redirect(authUrl.toString());
   } catch (error) {
-    console.error('Facebook OAuth init error:', error);
+    log.error('Facebook OAuth init error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to initialize Facebook OAuth' },
       { status: 500 }

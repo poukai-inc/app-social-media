@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
-import Post, { IPost, PlatformPublishResult, PlatformContent } from '@/lib/models/Post';
+import type { IPost, PlatformPublishResult} from '@/lib/models/Post';
+import Post, { PlatformContent } from '@/lib/models/Post';
 import { postToLinkedIn } from '@/lib/linkedin';
 import User from '@/lib/models/User';
 import Page from '@/lib/models/Page';
 import { platformRegistry } from '@/lib/platforms';
-import { PlatformType, PlatformConnection } from '@/lib/platforms/types';
+import type { PlatformType, PlatformConnection } from '@/lib/platforms/types';
 import { withLock } from '@/lib/distributed-lock';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('cron:publish');
 
 // This API route processes scheduled posts
 // You should call this endpoint via a cron job service (e.g., Vercel Cron, GitHub Actions, or external services)
@@ -32,12 +36,12 @@ async function tryRefreshToken(
   try {
     const adapter = platformRegistry.getAdapter(platform);
     if (!adapter?.refreshToken) {
-      console.log(`No refresh method available for ${platform}`);
+      log.info('No refresh method available', { platform });
       return null;
     }
     
     const refreshed = await adapter.refreshToken(connection);
-    console.log(`Successfully refreshed ${platform} token`);
+    log.info('Successfully refreshed token', { platform });
     
     return {
       ...connection,
@@ -46,7 +50,7 @@ async function tryRefreshToken(
       tokenExpiresAt: refreshed.expiresAt,
     };
   } catch (error) {
-    console.error(`Failed to refresh ${platform} token:`, error);
+    log.error('Failed to refresh token', { platform, error: error instanceof Error ? error.message : String(error) });
     return null;
   }
 }
@@ -78,7 +82,7 @@ async function publishToPlatform(
   
   // Check if connection is expired and attempt refresh
   if (connection.tokenExpiresAt && new Date(connection.tokenExpiresAt) < new Date()) {
-    console.log(`${platform} token expired, attempting refresh...`);
+    log.info('Token expired, attempting refresh', { platform });
     const refreshed = await tryRefreshToken(platform, connection);
     
     if (refreshed) {
@@ -100,7 +104,7 @@ async function publishToPlatform(
             }
           );
         } catch (saveError) {
-          console.error('Failed to save refreshed token:', saveError);
+          log.error('Failed to save refreshed token', { error: saveError instanceof Error ? saveError.message : String(saveError) });
         }
       }
     } else {
@@ -140,7 +144,7 @@ async function publishToPlatform(
           );
           mediaResults.push(result);
         } catch (mediaError) {
-          console.error(`Failed to upload media to ${platform}:`, mediaError);
+          log.error('Failed to upload media', { platform, error: mediaError instanceof Error ? mediaError.message : String(mediaError) });
           // Continue without this media item
         }
       }
@@ -167,7 +171,7 @@ async function publishToPlatform(
                         result.error?.includes('502');
     
     if (isRetryable && retryCount < MAX_RETRIES) {
-      console.log(`Retrying ${platform} publish (attempt ${retryCount + 1}/${MAX_RETRIES})...`);
+      log.info('Retrying publish', { platform, attempt: retryCount + 1, maxRetries: MAX_RETRIES });
       await delay(RETRY_DELAY_MS[retryCount] || 30000);
       return publishToPlatform(context, platform, content, retryCount + 1);
     }
@@ -187,7 +191,7 @@ async function publishToPlatform(
                         errorMessage.includes('fetch failed');
     
     if (isRetryable && retryCount < MAX_RETRIES) {
-      console.log(`Retrying ${platform} publish after error (attempt ${retryCount + 1}/${MAX_RETRIES})...`);
+      log.info('Retrying publish after error', { platform, attempt: retryCount + 1, maxRetries: MAX_RETRIES });
       await delay(RETRY_DELAY_MS[retryCount] || 30000);
       return publishToPlatform(context, platform, content, retryCount + 1);
     }
@@ -427,7 +431,7 @@ async function executePublish() {
       results,
     };
   } catch (error) {
-    console.error('Cron job error:', error);
+    log.error('Cron job error', { error: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }

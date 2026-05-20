@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
-import { EngagementTarget, EngagementSettings, EngagementStatus } from '@/lib/models/Engagement';
+import type { EngagementStatus } from '@/lib/models/Engagement';
+import { EngagementTarget, EngagementSettings } from '@/lib/models/Engagement';
 import User from '@/lib/models/User';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:engagements:debug');
 
 // Debug endpoint to check engagement data
 export async function GET() {
@@ -78,7 +82,7 @@ export async function GET() {
       })),
     });
   } catch (error) {
-    console.error('Debug error:', error);
+    log.error('Debug error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

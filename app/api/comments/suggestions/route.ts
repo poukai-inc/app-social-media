@@ -1,9 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
-import CommentSuggestion, { CommentStatus } from '@/lib/models/CommentSuggestion';
-import { generateComment, generateCommentVariations, EngagementStyle } from '@/lib/openai';
+import type { CommentStatus } from '@/lib/models/CommentSuggestion';
+import CommentSuggestion from '@/lib/models/CommentSuggestion';
+import type { EngagementStyle } from '@/lib/openai';
+import { generateComment, generateCommentVariations } from '@/lib/openai';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:comments:suggestions');
 
 // GET /api/comments/suggestions - Get pending comment suggestions
 export async function GET(request: NextRequest) {
@@ -65,7 +71,7 @@ export async function GET(request: NextRequest) {
       dailyGoal: 10, // Per system.md: 5-10 comments/day
     });
   } catch (error) {
-    console.error('Suggestions fetch error:', error);
+    log.error('Suggestions fetch error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch suggestions' }, { status: 500 });
   }
 }
@@ -153,7 +159,7 @@ export async function POST(request: NextRequest) {
       suggestion,
     });
   } catch (error) {
-    console.error('Suggestion creation error:', error);
+    log.error('Suggestion creation error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to create suggestion' }, { status: 500 });
   }
 }

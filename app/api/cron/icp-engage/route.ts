@@ -14,11 +14,15 @@
  * Recommended schedule: Every 4-6 hours
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Page from '@/lib/models/Page';
 import { runICPEngagementAgent } from '@/lib/engagement/icp-engagement-agent';
 import { IPlatformConnection } from '@/lib/models/Page';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('cron:icp-engage');
 
 // Verify cron secret
 function verifyCronSecret(request: NextRequest): boolean {
@@ -59,16 +63,16 @@ export async function GET(request: NextRequest) {
       // 'settings.icpEngagementEnabled': true,
     }).select('_id name connections contentStrategy');
 
-    console.log(`[ICP Cron] Found ${pages.length} pages with Twitter connections`);
+    log.info('Found pages with Twitter connections', { count: pages.length });
 
     // Process each page
     for (const page of pages) {
       try {
-        console.log(`[ICP Cron] Processing page: ${page.name} (${page._id})`);
+        log.info('Processing page', { name: page.name, id: page._id });
 
         // Check if page has content strategy (needed for ICP analysis)
         if (!page.contentStrategy) {
-          console.log(`[ICP Cron] Skipping ${page.name} - no content strategy`);
+          log.info('Skipping page - no content strategy', { name: page.name });
           results.push({
             pageId: page._id.toString(),
             pageName: page.name,
@@ -104,7 +108,7 @@ export async function GET(request: NextRequest) {
           await new Promise(resolve => setTimeout(resolve, 10000)); // 10 second delay
         }
       } catch (error) {
-        console.error(`[ICP Cron] Error processing page ${page._id}:`, error);
+        log.error('Error processing page', { pageId: page._id, error: error instanceof Error ? error.message : String(error) });
         results.push({
           pageId: page._id.toString(),
           pageName: page.name,
@@ -119,7 +123,7 @@ export async function GET(request: NextRequest) {
     const totalReplies = results.reduce((sum, r) => sum + r.repliesSent, 0);
     const successCount = results.filter(r => r.success).length;
 
-    console.log(`[ICP Cron] Completed in ${duration}ms. ${successCount}/${results.length} pages successful. ${totalReplies} total replies sent.`);
+    log.info('Completed', { durationMs: duration, successful: successCount, total: results.length, totalReplies });
 
     return NextResponse.json({
       success: true,
@@ -132,7 +136,7 @@ export async function GET(request: NextRequest) {
       results,
     });
   } catch (error) {
-    console.error('[ICP Cron] Fatal error:', error);
+    log.error('Fatal error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       {
         success: false,

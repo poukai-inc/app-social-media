@@ -3,6 +3,9 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:connect:twitter');
 
 interface TwitterData {
   platform: 'twitter';
@@ -52,8 +55,8 @@ function ConnectTwitterPageContent() {
             setTargetAppPage(data.pages[0]._id);
           }
         }
-      } catch {
-        console.error('Failed to fetch pages');
+      } catch (err) {
+        log.error('Failed to fetch pages', { error: err instanceof Error ? err.message : String(err) });
       }
     };
     fetchAppPages();

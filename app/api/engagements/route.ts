@@ -1,15 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
-import {
-  EngagementTarget,
-  IEngagementTarget,
+import type {
   EngagementType,
   EngagementStatus
 } from '@/lib/models/Engagement';
+import {
+  EngagementTarget,
+  IEngagementTarget
+} from '@/lib/models/Engagement';
 import { extractPostUrn, getPostDetails, scrapeLinkedInPost } from '@/lib/linkedin-engagement';
 import { generateComment, generateCommentVariations } from '@/lib/openai';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:engagements');
 
 // GET /api/engagements - List engagement targets
 export async function GET(request: NextRequest) {
@@ -60,7 +66,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ engagements: serialized });
   } catch (error) {
-    console.error('Error fetching engagements:', error);
+    log.error('Error fetching engagements', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch engagements' }, { status: 500 });
   }
 }
@@ -165,7 +171,7 @@ export async function POST(request: NextRequest) {
           });
         }
       } catch (aiError) {
-        console.error('AI comment generation failed:', aiError);
+        log.error('AI comment generation failed', { error: aiError instanceof Error ? aiError.message : String(aiError) });
         // Continue without AI comment
       }
     }
@@ -198,7 +204,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error creating engagement:', error);
+    log.error('Error creating engagement', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to create engagement' }, { status: 500 });
   }
 }
@@ -327,7 +333,7 @@ export async function PUT(request: NextRequest) {
       results,
     });
   } catch (error) {
-    console.error('Error bulk creating engagements:', error);
+    log.error('Error bulk creating engagements', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to create engagements' }, { status: 500 });
   }
 }

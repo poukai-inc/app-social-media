@@ -1,4 +1,5 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import type { Document, Model } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 // ============================================
 // Engagement Target - Posts from others to engage with

@@ -6,14 +6,19 @@
  * - GET: Get engagement stats and history
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import Page from '@/lib/models/Page';
 import ICPEngagement from '@/lib/models/ICPEngagement';
-import { runICPEngagementAgent, AgentConfig } from '@/lib/engagement/icp-engagement-agent';
+import type { AgentConfig } from '@/lib/engagement/icp-engagement-agent';
+import { runICPEngagementAgent } from '@/lib/engagement/icp-engagement-agent';
 import { analyzePageICP } from '@/lib/engagement/icp-analyzer';
 import mongoose from 'mongoose';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:icp-engagement');
 
 /**
  * POST /api/icp-engagement
@@ -58,7 +63,7 @@ export async function POST(request: NextRequest) {
       ...configOverrides,
     };
 
-    console.log(`[API] Running ICP engagement agent for page ${pageId} (dryRun: ${dryRun})`);
+    log.info('Running ICP engagement agent', { pageId, dryRun });
 
     // Run the agent
     const result = await runICPEngagementAgent(pageId, agentConfig);
@@ -91,7 +96,7 @@ export async function POST(request: NextRequest) {
       duration: new Date(result.completedAt).getTime() - new Date(result.startedAt).getTime(),
     });
   } catch (error) {
-    console.error('[API] ICP engagement error:', error);
+    log.error('ICP engagement error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
@@ -160,7 +165,7 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
-    console.error('[API] Get ICP engagement error:', error);
+    log.error('Get ICP engagement error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

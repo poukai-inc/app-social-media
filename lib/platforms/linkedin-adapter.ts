@@ -1,5 +1,5 @@
 import { BasePlatformAdapter } from './base-adapter';
-import {
+import type {
   PlatformContent,
   PlatformPublishResult,
   PlatformMetrics,
@@ -7,8 +7,11 @@ import {
   ContentStrategyInput,
   PlatformType,
 } from './types';
-import { IPlatformConnection } from '../models/Page';
+import type { IPlatformConnection } from '../models/Page';
 import { CircuitBreaker, fetchWithTimeout } from '../circuit-breaker';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('platform:linkedin-adapter');
 
 const LINKEDIN_API_BASE = 'https://api.linkedin.com/v2';
 const LINKEDIN_REST_API_BASE = 'https://api.linkedin.com/rest';
@@ -268,12 +271,12 @@ export class LinkedInAdapter extends BasePlatformAdapter {
         const status = data.recipes?.[0]?.status;
 
         if (status === 'AVAILABLE') {
-          console.log('LinkedIn video processing complete');
+          log.info('LinkedIn video processing complete');
           return { success: true };
         }
 
         if (status === 'PROCESSING' || status === 'WAITING_UPLOAD') {
-          console.log(`LinkedIn video status: ${status}, waiting...`);
+          log.info('LinkedIn video status, waiting', { status });
           await delay(VIDEO_POLL_INTERVAL_MS);
           continue;
         }
@@ -288,7 +291,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
         // Unknown status, wait and try again
         await delay(VIDEO_POLL_INTERVAL_MS);
       } catch (error) {
-        console.error('Error checking video status:', error);
+        log.error('Error checking video status', { error: error instanceof Error ? error.message : String(error) });
         await delay(VIDEO_POLL_INTERVAL_MS);
       }
     }
@@ -315,7 +318,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
       });
 
       if (!breaker.allowRequest()) {
-        console.log(`[LinkedIn] Skipping metrics fetch: ${breaker.getRejectionReason()}`);
+        log.info('Skipping metrics fetch', { reason: breaker.getRejectionReason() });
         return {
           platform: 'linkedin',
           connectionId: connection.platformId,

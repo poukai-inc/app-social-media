@@ -1,8 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import Post from '@/lib/models/Post';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:posts:[id]:performance');
 
 // POST /api/posts/[id]/performance - Update post performance metrics
 export async function POST(
@@ -70,7 +74,7 @@ export async function POST(
         performance: post.performance,
       });
     } catch (linkedinError) {
-      console.error('LinkedIn API error:', linkedinError);
+      log.error('LinkedIn API error', { error: linkedinError instanceof Error ? linkedinError.message : String(linkedinError) });
       return NextResponse.json({
         success: false,
         error: 'Could not fetch LinkedIn stats',
@@ -78,7 +82,7 @@ export async function POST(
       });
     }
   } catch (error) {
-    console.error('Performance sync error:', error);
+    log.error('Performance sync error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to sync performance' }, { status: 500 });
   }
 }
@@ -113,7 +117,7 @@ export async function GET(
       publishedAt: post.publishedAt,
     });
   } catch (error) {
-    console.error('Performance fetch error:', error);
+    log.error('Performance fetch error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch performance' }, { status: 500 });
   }
 }

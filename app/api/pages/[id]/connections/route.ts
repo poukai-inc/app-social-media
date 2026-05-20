@@ -3,7 +3,10 @@ import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import Page from '@/lib/models/Page';
 import User from '@/lib/models/User';
-import { PlatformType, PlatformConnection } from '@/lib/platforms/types';
+import type { PlatformType, PlatformConnection } from '@/lib/platforms/types';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:pages:[id]:connections');
 
 /**
  * API to manage platform connections for a page
@@ -98,7 +101,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('Add connection error:', error);
+    log.error('Add connection error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to add connection' },
       { status: 500 }
@@ -154,7 +157,7 @@ export async function DELETE(
       message: `${platform} disconnected successfully`,
     });
   } catch (error) {
-    console.error('Delete connection error:', error);
+    log.error('Delete connection error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to remove connection' },
       { status: 500 }
@@ -226,7 +229,7 @@ export async function PATCH(
       },
     });
   } catch (error) {
-    console.error('Update connection error:', error);
+    log.error('Update connection error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to update connection' },
       { status: 500 }
@@ -272,7 +275,7 @@ export async function GET(
 
     return NextResponse.json({ connections });
   } catch (error) {
-    console.error('Get connections error:', error);
+    log.error('Get connections error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to get connections' },
       { status: 500 }

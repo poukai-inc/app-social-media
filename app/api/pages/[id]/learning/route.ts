@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import Page from '@/lib/models/Page';
@@ -8,7 +9,10 @@ import {
   getEngagementDataForOptimizer 
 } from '@/lib/learning';
 import { analyzeAndRecommendSchedule, getDefaultTimingRecommendations } from '@/lib/platforms/schedule-optimizer';
-import { PlatformType } from '@/lib/platforms/types';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:pages:[id]:learning');
+import type { PlatformType } from '@/lib/platforms/types';
 
 /**
  * GET /api/pages/[id]/learning
@@ -106,7 +110,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Learning insights error:', error);
+    log.error('Learning insights error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to get learning insights' },
       { status: 500 }

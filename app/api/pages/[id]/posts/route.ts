@@ -1,9 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import Page from '@/lib/models/Page';
 import Post from '@/lib/models/Post';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:pages:[id]:posts');
 
 // GET /api/pages/[id]/posts - Get posts for a specific page
 export async function GET(
@@ -70,7 +74,7 @@ export async function GET(
       statusCounts: counts,
     });
   } catch (error) {
-    console.error('Page posts fetch error:', error);
+    log.error('Page posts fetch error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });
   }
 }

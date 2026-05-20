@@ -1,8 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import Post from '@/lib/models/Post';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:posts:[id]:rate');
 
 // POST /api/posts/[id]/rate - Rate a post outcome for the learning loop
 export async function POST(
@@ -44,7 +48,7 @@ export async function POST(
     }
 
     // Log for learning loop (this data can be used to improve AI confidence calibration)
-    console.log('Learning loop data:', {
+    log.info('Learning loop data', {
       postId: post._id,
       aiConfidence: post.aiAnalysis?.confidence,
       riskLevel: post.aiAnalysis?.riskLevel,
@@ -63,7 +67,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('Rating error:', error);
+    log.error('Rating error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to rate post' }, { status: 500 });
   }
 }

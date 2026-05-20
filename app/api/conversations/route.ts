@@ -5,12 +5,16 @@
  * from ICP engagement activities.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import ICPEngagement from '@/lib/models/ICPEngagement';
 import { getConversationStats, disableAutoResponse } from '@/lib/engagement/conversation-manager';
 import mongoose from 'mongoose';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:conversations');
 
 export async function GET(request: NextRequest) {
   try {
@@ -97,7 +101,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching conversations:', error);
+    log.error('Error fetching conversations', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -151,7 +155,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Error managing conversation:', error);
+    log.error('Error managing conversation', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

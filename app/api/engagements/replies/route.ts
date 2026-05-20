@@ -1,11 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import Post from '@/lib/models/Post';
-import { CommentReply, ReplyStatus } from '@/lib/models/Engagement';
+import type { ReplyStatus } from '@/lib/models/Engagement';
+import { CommentReply } from '@/lib/models/Engagement';
 import { getPostComments, replyToComment } from '@/lib/linkedin-engagement';
 import { generateReply } from '@/lib/openai';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:engagements:replies');
 
 // GET /api/engagements/replies - Get comment replies
 export async function GET(request: NextRequest) {
@@ -62,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ replies: serialized });
   } catch (error) {
-    console.error('Error fetching replies:', error);
+    log.error('Error fetching replies', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch replies' }, { status: 500 });
   }
 }
@@ -120,7 +125,7 @@ export async function POST(request: NextRequest) {
               style: 'professional',
             });
           } catch (aiErr) {
-            console.error('AI reply generation failed:', aiErr);
+            log.error('AI reply generation failed', { error: aiErr instanceof Error ? aiErr.message : String(aiErr) });
           }
 
           await CommentReply.create({
@@ -149,7 +154,7 @@ export async function POST(request: NextRequest) {
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {
-    console.error('Error fetching comments:', error);
+    log.error('Error fetching comments', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch comments' }, { status: 500 });
   }
 }
@@ -206,7 +211,7 @@ export async function PUT(request: NextRequest) {
             style: 'professional',
           });
         } catch (aiErr) {
-          console.error('AI reply regeneration failed:', aiErr);
+          log.error('AI reply regeneration failed', { error: aiErr instanceof Error ? aiErr.message : String(aiErr) });
         }
       }
     }
@@ -254,7 +259,7 @@ export async function PUT(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error updating reply:', error);
+    log.error('Error updating reply', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to update reply' }, { status: 500 });
   }
 }

@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('component:engagement-card');
 import {
   Heart,
   MessageSquare,
@@ -94,7 +97,7 @@ export function EngagementCard({ engagement }: EngagementCardProps) {
       });
       router.refresh();
     } catch (error) {
-      console.error('Error approving:', error);
+      log.error('Error approving', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsLoading(false);
     }
@@ -108,7 +111,7 @@ export function EngagementCard({ engagement }: EngagementCardProps) {
       });
       router.refresh();
     } catch (error) {
-      console.error('Error executing:', error);
+      log.error('Error executing', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsLoading(false);
     }
@@ -125,7 +128,7 @@ export function EngagementCard({ engagement }: EngagementCardProps) {
       setShowComment(false);
       router.refresh();
     } catch (error) {
-      console.error('Error saving comment:', error);
+      log.error('Error saving comment', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsLoading(false);
     }
@@ -145,7 +148,7 @@ export function EngagementCard({ engagement }: EngagementCardProps) {
       }
       router.refresh();
     } catch (error) {
-      console.error('Error regenerating:', error);
+      log.error('Error regenerating', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsLoading(false);
     }
@@ -158,7 +161,7 @@ export function EngagementCard({ engagement }: EngagementCardProps) {
       await fetch(`/api/engagements/${engagement._id}`, { method: 'DELETE' });
       router.refresh();
     } catch (error) {
-      console.error('Error deleting:', error);
+      log.error('Error deleting', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsLoading(false);
     }

@@ -5,7 +5,8 @@
  * Also useful for auditing and debugging token issues.
  */
 
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import type { Document, Model } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 export interface ITokenAlert extends Document {
   pageId: mongoose.Types.ObjectId;

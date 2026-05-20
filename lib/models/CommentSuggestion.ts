@@ -1,4 +1,5 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import type { Document, Model } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 export type CommentStatus = 'pending' | 'approved' | 'posted' | 'skipped';
 export type CommentSource = 'feed' | 'target_profile' | 'engagement_reply';

@@ -1,5 +1,6 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
-import { PlatformType } from '../platforms/types';
+import type { Document, Model } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
+import type { PlatformType } from '../platforms/types';
 
 /**
  * Individual metric snapshot at a point in time

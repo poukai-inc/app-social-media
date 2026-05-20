@@ -1,12 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
-import { 
-  EngagementSettings, 
-  getOrCreateEngagementSettings,
+import type {
   IEngagementSettings 
 } from '@/lib/models/Engagement';
+import { 
+  EngagementSettings, 
+  getOrCreateEngagementSettings 
+} from '@/lib/models/Engagement';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:engagements:settings');
 
 // GET /api/engagements/settings - Get engagement settings
 export async function GET() {
@@ -37,7 +43,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Error fetching settings:', error);
+    log.error('Error fetching settings', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
   }
 }
@@ -94,7 +100,7 @@ export async function PUT(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error updating settings:', error);
+    log.error('Error updating settings', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
   }
 }

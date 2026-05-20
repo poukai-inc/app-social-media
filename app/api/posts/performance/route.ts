@@ -1,8 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import Post from '@/lib/models/Post';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:posts:performance');
 
 // GET /api/posts/performance - Get performance overview for all posts
 export async function GET(request: NextRequest) {
@@ -111,7 +115,7 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
-    console.error('Performance overview error:', error);
+    log.error('Performance overview error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch performance' }, { status: 500 });
   }
 }

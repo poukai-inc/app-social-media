@@ -4,6 +4,9 @@ import { writeFile, unlink, readFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('ffmpeg');
 
 const execAsync = promisify(exec);
 
@@ -50,7 +53,7 @@ export async function combineVideos(
   }
   
   if (videos.length > 4) {
-    console.warn('Maximum 4 videos supported for combining. Using first 4.');
+    log.warn('Maximum 4 videos supported for combining - using first 4');
     videos = videos.slice(0, 4);
   }
   
@@ -78,10 +81,10 @@ export async function combineVideos(
     // Check if any video has audio
     const hasAnyAudio = metadataList.some(m => m.hasAudio);
     
-    console.log(`Combining ${videos.length} videos. Longest: ${maxDuration.toFixed(1)}s, Shortest: ${minDuration.toFixed(1)}s, Audio: ${hasAnyAudio ? 'yes' : 'no (will add silent)'}`);
-    
+    log.info('Combining videos', { count: videos.length, longestSec: maxDuration.toFixed(1), shortestSec: minDuration.toFixed(1), audio: hasAnyAudio ? 'yes' : 'no (will add silent)' });
+
     if (maxDuration !== minDuration) {
-      console.log('Shorter videos will be looped to match the longest video.');
+      log.info('Shorter videos will be looped to match the longest video');
     }
     
     // Check combined duration limit
@@ -210,7 +213,7 @@ export async function combineVideos(
       command = `ffmpeg ${inputArgs} ${silentAudioInput} -filter_complex "${filterComplex}" -map "[outv]" -map ${silentAudioIndex}:a -c:v libx264 -preset medium -profile:v high -level 4.0 -crf 23 -c:a aac -b:a 128k -pix_fmt yuv420p -movflags +faststart -t ${maxDuration} -y "${outputPath}"`;
     }
     
-    console.log('Running ffmpeg combine command...');
+    log.info('Running ffmpeg combine command');
     
     // Execute ffmpeg with longer timeout for video combining
     await execAsync(command, {
@@ -221,11 +224,11 @@ export async function combineVideos(
     // Read combined file
     const outputBuffer = await readFile(outputPath);
     const outputSizeMB = outputBuffer.length / (1024 * 1024);
-    console.log(`Combined video size: ${outputSizeMB.toFixed(2)}MB`);
-    
+    log.info('Combined video size', { sizeMB: outputSizeMB.toFixed(2) });
+
     // If too large, we need to compress
     if (outputSizeMB > LINKEDIN_TARGET_SIZE_MB) {
-      console.log('Combined video too large, recompressing...');
+      log.info('Combined video too large, recompressing');
       return await processVideoForLinkedIn(outputBuffer, 'combined-video.mp4');
     }
     
@@ -268,7 +271,7 @@ async function getVideoMetadata(inputPath: string): Promise<VideoMetadata> {
       hasAudio: !!audioStream,
     };
   } catch (error) {
-    console.error('Failed to get video metadata:', error);
+    log.error('Failed to get video metadata', { error: error instanceof Error ? error.message : String(error) });
     throw new Error('Failed to analyze video file');
   }
 }
@@ -311,7 +314,7 @@ export async function processVideoForLinkedIn(
     
     // Get video metadata
     const metadata = await getVideoMetadata(inputPath);
-    console.log('Video metadata:', metadata);
+    log.info('Video metadata', { metadata });
     
     // Check duration limit
     if (metadata.duration > LINKEDIN_MAX_DURATION_SEC) {
@@ -343,7 +346,7 @@ export async function processVideoForLinkedIn(
       // Scale to fit within max dimensions while maintaining aspect ratio
       // Wrap in double quotes to prevent shell from interpreting parentheses
       ffmpegArgs.push('-vf', `"scale='min(${LINKEDIN_MAX_WIDTH},iw)':'min(${LINKEDIN_MAX_HEIGHT},ih)':force_original_aspect_ratio=decrease,scale=trunc(iw/2)*2:trunc(ih/2)*2"`);
-      console.log(`Resizing video from ${metadata.width}x${metadata.height}`);
+      log.info('Resizing video', { fromWidth: metadata.width, fromHeight: metadata.height });
     }
     
     // Calculate if we need to compress
@@ -355,7 +358,7 @@ export async function processVideoForLinkedIn(
       ffmpegArgs.push('-b:v', `${targetBitrate}`);
       ffmpegArgs.push('-maxrate', `${Math.floor(targetBitrate * 1.5)}`);
       ffmpegArgs.push('-bufsize', `${Math.floor(targetBitrate * 2)}`);
-      console.log(`Compressing video from ${currentSizeMB.toFixed(1)}MB with bitrate ${(targetBitrate / 1000000).toFixed(2)}Mbps`);
+      log.info('Compressing video', { fromSizeMB: currentSizeMB.toFixed(1), targetBitrateMbps: (targetBitrate / 1000000).toFixed(2) });
     } else {
       // Use CRF for quality-based encoding when file is small enough
       ffmpegArgs.push('-crf', '23');
@@ -368,21 +371,21 @@ export async function processVideoForLinkedIn(
     ffmpegArgs.push(`"${outputPath}"`);
     
     const command = `ffmpeg ${ffmpegArgs.join(' ')}`;
-    console.log('Running ffmpeg command:', command);
-    
+    log.info('Running ffmpeg command', { command });
+
     // Execute ffmpeg
     const { stderr } = await execAsync(command, {
       maxBuffer: 50 * 1024 * 1024, // 50MB buffer for ffmpeg output
     });
-    
+
     if (stderr && !stderr.includes('encoded')) {
-      console.log('ffmpeg output:', stderr.slice(-500)); // Last 500 chars
+      log.info('ffmpeg output', { output: stderr.slice(-500) }); // Last 500 chars
     }
-    
+
     // Read processed file
     const outputBuffer = await readFile(outputPath);
     const outputSizeMB = outputBuffer.length / (1024 * 1024);
-    console.log(`Processed video size: ${outputSizeMB.toFixed(2)}MB`);
+    log.info('Processed video size', { sizeMB: outputSizeMB.toFixed(2) });
     
     // Verify size is within limits
     if (outputSizeMB > LINKEDIN_MAX_SIZE_MB) {

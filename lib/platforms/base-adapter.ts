@@ -1,14 +1,15 @@
-import {
+import type {
   IPlatformAdapter,
   PlatformContent,
   PlatformPublishResult,
   PlatformMetrics,
   MediaUploadResult,
   ContentStrategyInput,
-  PlatformType,
+  PlatformType} from './types';
+import {
   PLATFORM_CONFIGS,
 } from './types';
-import { IPlatformConnection } from '../models/Page';
+import type { IPlatformConnection } from '../models/Page';
 
 /**
  * Base class for platform adapters

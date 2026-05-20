@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:pages');
 import {
   Plus,
   Settings,
@@ -72,7 +75,7 @@ export default function PagesPage() {
         setPages(data.pages);
       }
     } catch (error) {
-      console.error('Failed to fetch pages:', error);
+      log.error('Failed to fetch pages', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);
     }

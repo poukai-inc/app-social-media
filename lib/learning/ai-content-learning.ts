@@ -1,6 +1,7 @@
-import { PlatformType } from '../platforms/types';
-import { getPlatformInsights, getTopPostsForLearning, PlatformInsights } from './platform-learning';
-import { PageContentStrategy } from '../openai';
+import type { PlatformType } from '../platforms/types';
+import type { PlatformInsights } from './platform-learning';
+import { getPlatformInsights, getTopPostsForLearning } from './platform-learning';
+import type { PageContentStrategy } from '../openai';
 
 /**
  * AI Content Learning Service

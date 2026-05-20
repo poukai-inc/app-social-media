@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('component:post-form');
 import { 
   Calendar, 
   Clock, 
@@ -17,9 +20,10 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { MediaUpload } from './media-upload';
-import { StructuredInputForm, StructuredInput } from './structured-input-form';
+import type { StructuredInput } from './structured-input-form';
+import { StructuredInputForm } from './structured-input-form';
 import PlatformSelector from './platform-selector';
-import { PlatformType } from '@/lib/platforms/types';
+import type { PlatformType } from '@/lib/platforms/types';
 
 type PostMode = 'manual' | 'structured' | 'ai' | 'blog_repurpose';
 
@@ -192,7 +196,7 @@ export function PostForm({
         setPages(data.pages || []);
       }
     } catch (err) {
-      console.error('Failed to fetch pages:', err);
+      log.error('Failed to fetch pages', { error: err instanceof Error ? err.message : String(err) });
     } finally {
       setIsLoadingPages(false);
     }
@@ -216,7 +220,7 @@ export function PostForm({
         }
       }
     } catch (err) {
-      console.error('Failed to fetch organizations:', err);
+      log.error('Failed to fetch organizations', { error: err instanceof Error ? err.message : String(err) });
     } finally {
       setIsLoadingOrgs(false);
     }

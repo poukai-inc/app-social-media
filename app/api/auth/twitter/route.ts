@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import crypto from 'crypto';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:auth:twitter');
 
 /**
  * Twitter OAuth 2.0 - Step 1: Redirect to Twitter for authorization
@@ -66,7 +69,7 @@ export async function GET(request: Request) {
 
     return NextResponse.redirect(authUrl.toString());
   } catch (error) {
-    console.error('Twitter OAuth init error:', error);
+    log.error('Twitter OAuth init error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to initialize Twitter OAuth' },
       { status: 500 }

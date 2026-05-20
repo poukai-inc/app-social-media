@@ -45,11 +45,14 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    // CLI scripts and dev tooling — console output is the contract.
+    // CLI scripts, dev tooling, and the logger sink itself —
+    // console output is the contract (logger.ts must use console
+    // to actually emit the structured log line).
     files: [
       ".github/scripts/**/*.{mjs,js,ts}",
       "scripts/**/*.{mjs,cjs,js,ts}",
       "*.config.{mjs,js,ts}",
+      "lib/logger.ts",
     ],
     rules: {
       "no-console": "off",

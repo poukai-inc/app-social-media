@@ -1,5 +1,8 @@
 import mysql from 'mysql2/promise';
-import { DatabaseSource, DatabaseType } from '../models/Page';
+import type { DatabaseSource, DatabaseType } from '../models/Page';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('data-source:database');
 
 // Valid table name regex - alphanumeric, underscores, max 64 chars
 const VALID_TABLE_NAME_REGEX = /^[a-zA-Z_][a-zA-Z0-9_]{0,63}$/;
@@ -112,7 +115,7 @@ export async function testConnection(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Database connection test failed:', errorMessage);
+    log.error('Database connection test failed', { error: errorMessage });
     return {
       success: false,
       message: `Connection failed: ${errorMessage}`,
@@ -179,7 +182,7 @@ export async function executeQuery(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Query execution failed:', errorMessage);
+    log.error('Query execution failed', { error: errorMessage });
     return {
       success: false,
       error: `Query failed: ${errorMessage}`,

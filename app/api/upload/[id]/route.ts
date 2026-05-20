@@ -1,6 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { deleteFromS3, getS3KeyFromUrl } from '@/lib/s3';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:upload:[id]');
 
 export async function DELETE(
   request: NextRequest,
@@ -37,7 +41,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'File deleted successfully' });
   } catch (error) {
-    console.error('Error deleting file:', error);
+    log.error('Error deleting file', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to delete file' }, { status: 500 });
   }
 }

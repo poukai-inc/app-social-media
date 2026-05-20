@@ -1,5 +1,9 @@
 import { createChatCompletion } from '@/lib/ai-client';
-import { PlatformType, PLATFORM_CONFIGS } from './types';
+import type { PlatformType} from './types';
+import { PLATFORM_CONFIGS } from './types';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('platform:schedule-optimizer');
 
 /**
  * Engagement data point for analysis
@@ -248,7 +252,7 @@ Format your response as JSON:
       };
     }
   } catch (error) {
-    console.error('AI insights generation failed:', error);
+    log.error('AI insights generation failed', { error: error instanceof Error ? error.message : String(error) });
   }
   
   return {

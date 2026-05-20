@@ -1,13 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { generateLinkedInPost, improvePost, generatePostWithStrategy, PageContentStrategy } from '@/lib/openai';
-import { StructuredInput, PostAngle } from '@/lib/models/Post';
+import type { PageContentStrategy } from '@/lib/openai';
+import { generateLinkedInPost, improvePost, generatePostWithStrategy } from '@/lib/openai';
+import type { StructuredInput, PostAngle } from '@/lib/models/Post';
 import connectToDatabase from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
 import User from '@/lib/models/User';
-import Page, { DatabaseSource } from '@/lib/models/Page';
+import type { DatabaseSource } from '@/lib/models/Page';
+import Page from '@/lib/models/Page';
 import mongoose from 'mongoose';
-import { fetchContentForGeneration, ContentItem } from '@/lib/data-sources/database';
+import type { ContentItem } from '@/lib/data-sources/database';
+import { fetchContentForGeneration } from '@/lib/data-sources/database';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:generate');
 
 interface GenerateRequest {
   mode: 'structured' | 'ai';
@@ -234,7 +241,7 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
-    console.error('Error generating content:', error);
+    log.error('Error generating content', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to generate content' },
       { status: 500 }

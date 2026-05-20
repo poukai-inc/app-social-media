@@ -12,11 +12,15 @@
  * - 10x better positioning
  */
 
-import Page, { IPage, ContentStrategy, DatabaseSource } from '../models/Page';
+import type { ContentStrategy, DatabaseSource } from '../models/Page';
+import Page, { IPage } from '../models/Page';
 import Post from '../models/Post';
 import { fetchContentForGeneration } from '../data-sources/database';
 import { createChatCompletion } from '../ai-client';
 import { findMatchingPersona } from './icp-personas';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('engagement:icp-analyzer');
 
 // ============================================
 // Types
@@ -163,7 +167,7 @@ Sample Content:
 ${sampleContent}`);
           }
         } catch (e) {
-          console.warn(`Could not fetch from data source ${source.name}:`, e);
+          log.warn('Could not fetch from data source', { sourceName: source.name, error: e instanceof Error ? e.message : String(e) });
         }
       }
     }
@@ -211,7 +215,7 @@ ${postSummaries}`);
         keywords: profile.painPoints?.flatMap(p => p.keywords),
       });
       if (matchedPersona) {
-        console.log(`[ICP Analyzer] Enriching sparse psychographics from pre-built persona: ${matchedPersona.personaName}`);
+        log.info('Enriching sparse psychographics from pre-built persona', { personaName: matchedPersona.personaName });
         profile.biographics ??= {
           incomeBracket: matchedPersona.incomeBracket,
           titleTier: matchedPersona.titleTier,
@@ -239,7 +243,7 @@ ${postSummaries}`);
       },
     };
   } catch (error) {
-    console.error('Error analyzing page ICP:', error);
+    log.error('Error analyzing page ICP', { error: error instanceof Error ? error.message : String(error) });
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

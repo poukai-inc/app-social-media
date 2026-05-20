@@ -11,8 +11,11 @@
  * - Timing recommendations
  */
 
-import { PageContentStrategy } from '@/lib/openai';
-import { PlatformType } from '@/lib/platforms/types';
+import type { PageContentStrategy } from '@/lib/openai';
+import type { PlatformType } from '@/lib/platforms/types';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('learning:ai-content-reviewer');
 import { createChatCompletion } from '@/lib/ai-client';
 
 export interface ReviewCriteria {
@@ -188,7 +191,7 @@ Respond with this exact JSON structure:
 
     // Extract JSON from response (handle markdown code blocks)
     // First strip markdown code block wrappers if present
-    let jsonStr = resultContent.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    const jsonStr = resultContent.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
     
     // Try to find the outermost JSON object by matching balanced braces
     let braceCount = 0;
@@ -240,7 +243,7 @@ Respond with this exact JSON structure:
     return decision;
 
   } catch (error) {
-    console.error('AI review failed:', error);
+    log.error('AI review failed', { error: error instanceof Error ? error.message : String(error) });
     
     // Fail-safe: if AI review fails, don't auto-publish
     return {

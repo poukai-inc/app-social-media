@@ -12,12 +12,16 @@
 import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import connectToDatabase from '@/lib/mongodb';
-import Page, { IPlatformConnection } from '@/lib/models/Page';
+import type { IPlatformConnection } from '@/lib/models/Page';
+import Page from '@/lib/models/Page';
 import User from '@/lib/models/User';
 import TokenAlert from '@/lib/models/TokenAlert';
 import { sendEmail } from '@/lib/email';
 import { twitterAdapter } from '@/lib/platforms/twitter-adapter';
 import { facebookAdapter } from '@/lib/platforms/facebook-adapter';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('cron:token-refresh');
 // import { linkedinAdapter } from '@/lib/platforms/linkedin-adapter';
 
 // Warning thresholds
@@ -215,7 +219,7 @@ export async function GET(request: Request) {
 
     await connectToDatabase();
     
-    console.log('[Token Refresh Cron] Starting token check...');
+    log.info('Starting token check');
     
     // Find all active pages with platform connections
     const pages = await Page.find({
@@ -234,7 +238,7 @@ export async function GET(request: Request) {
       const user = page.userId as unknown as { _id: string; email: string; name: string };
       
       if (!user?.email) {
-        console.warn(`[Token Refresh] Page ${page._id} has no user with email`);
+        log.warn('Page has no user with email', { pageId: page._id });
         continue;
       }
       
@@ -276,7 +280,7 @@ export async function GET(request: Request) {
           continue;
         }
         
-        console.log(`[Token Refresh] ${connection.platform} token for ${page.name} ${isExpired ? 'EXPIRED' : 'expiring soon'}`);
+        log.info('Token status', { platform: connection.platform, pageName: page.name, status: isExpired ? 'EXPIRED' : 'expiring soon' });
         
         const alertType = isExpired ? 'expired' : 'expiring_soon';
         const pageObjectId = new mongoose.Types.ObjectId(page._id.toString());
@@ -298,7 +302,7 @@ export async function GET(request: Request) {
           if (recentlyAlerted) {
             result.status = 'already_alerted';
             result.emailSent = false;
-            console.log(`[Token Refresh] Already alerted about ${connection.platform} for ${page.name} within ${EMAIL_COOLDOWN_HOURS}h, skipping email`);
+            log.info('Already alerted, skipping email', { platform: connection.platform, pageName: page.name, cooldownHours: EMAIL_COOLDOWN_HOURS });
             results.push(result);
             continue;
           }
@@ -337,7 +341,7 @@ export async function GET(request: Request) {
         }
         
         // Attempt to refresh the token
-        console.log(`[Token Refresh] Attempting to refresh ${connection.platform} token...`);
+        log.info('Attempting to refresh token', { platform: connection.platform });
         const refreshResult = await refreshPlatformToken(connection);
         
         if (refreshResult.success && refreshResult.newToken) {
@@ -373,13 +377,13 @@ export async function GET(request: Request) {
           
           result.status = 'refreshed';
           tokensRefreshed++;
-          console.log(`[Token Refresh] ✅ Successfully refreshed ${connection.platform} token for ${page.name}`);
+          log.info('Successfully refreshed token', { platform: connection.platform, pageName: page.name });
         } else {
           result.status = 'refresh_failed';
           result.error = refreshResult.error;
           refreshFailed++;
           
-          console.log(`[Token Refresh] ❌ Failed to refresh ${connection.platform} token: ${refreshResult.error}`);
+          log.error('Failed to refresh token', { platform: connection.platform, error: refreshResult.error });
           
           // Check if we already sent an alert recently
           const recentlyAlerted = await TokenAlert.recentAlertExists(
@@ -391,7 +395,7 @@ export async function GET(request: Request) {
           
           if (recentlyAlerted) {
             result.emailSent = false;
-            console.log(`[Token Refresh] Already alerted about ${connection.platform} refresh failure for ${page.name} within ${EMAIL_COOLDOWN_HOURS}h, skipping email`);
+            log.info('Already alerted about refresh failure, skipping email', { platform: connection.platform, pageName: page.name, cooldownHours: EMAIL_COOLDOWN_HOURS });
           } else {
             // Send email notification
             const emailSent = await sendTokenExpiryEmail(
@@ -446,7 +450,7 @@ export async function GET(request: Request) {
       },
     };
     
-    console.log('[Token Refresh Cron] Complete:', summary);
+    log.info('Token refresh cron complete', { summary });
     
     return NextResponse.json({
       success: true,
@@ -456,7 +460,7 @@ export async function GET(request: Request) {
     });
     
   } catch (error) {
-    console.error('[Token Refresh Cron] Error:', error);
+    log.error('Token refresh cron error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { 
         success: false, 
