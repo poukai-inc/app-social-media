@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import type { IPost, PlatformPublishResult} from '@/lib/models/Post';
-import Post, { PlatformContent } from '@/lib/models/Post';
+import Post from '@/lib/models/Post';
 import { postToLinkedIn } from '@/lib/linkedin';
 import User from '@/lib/models/User';
 import Page from '@/lib/models/Page';
@@ -233,7 +233,6 @@ async function publishToAllPlatforms(context: PublishContext): Promise<{
   
   // Determine overall status
   const publishedCount = results.filter(r => r.status === 'published').length;
-  const failedCount = results.filter(r => r.status === 'failed').length;
   
   let overallStatus: 'published' | 'partially_published' | 'failed';
   

@@ -24,24 +24,28 @@ interface TwitterData {
 function ConnectTwitterPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [twitterData, setTwitterData] = useState<TwitterData | null>(null);
+  const [twitterData, _setTwitterData] = useState<TwitterData | null>(() => {
+    const dataParam = searchParams.get('data');
+    if (!dataParam) return null;
+    try {
+      return JSON.parse(Buffer.from(dataParam, 'base64').toString()) as TwitterData;
+    } catch {
+      return null;
+    }
+  });
   const [appPages, setAppPages] = useState<{ _id: string; name: string }[]>([]);
   const [targetAppPage, setTargetAppPage] = useState<string>('');
   const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Decode the data from URL
+  const [error, setError] = useState<string | null>(() => {
     const dataParam = searchParams.get('data');
-    if (dataParam) {
-      try {
-        const decoded = JSON.parse(Buffer.from(dataParam, 'base64').toString());
-        setTwitterData(decoded);
-      } catch {
-        setError('Invalid data received');
-      }
+    if (!dataParam) return null;
+    try {
+      JSON.parse(Buffer.from(dataParam, 'base64').toString());
+      return null;
+    } catch {
+      return 'Invalid data received';
     }
-  }, [searchParams]);
+  });
 
   useEffect(() => {
     // Fetch user's app pages

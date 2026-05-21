@@ -13,13 +13,10 @@ import {
   Plus,
   Trash2,
   Play,
-  RefreshCw,
   CheckCircle,
   XCircle,
   Eye,
-  Settings,
   Loader2,
-  Table,
   Code,
   AlertCircle,
 } from 'lucide-react';
@@ -101,12 +98,6 @@ export default function DataSourcesPage() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (session && pageId) {
-      fetchDataSources();
-    }
-  }, [session, pageId]);
-
   const fetchDataSources = async () => {
     try {
       const response = await fetch(`/api/pages/${pageId}/data-sources`);
@@ -120,6 +111,12 @@ export default function DataSourcesPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (session && pageId) {
+      setTimeout(() => fetchDataSources(), 0);
+    }
+  }, [session, pageId]);
 
   const handleTestConnection = async () => {
     setTesting(true);
@@ -138,7 +135,7 @@ export default function DataSourcesPage() {
 
       const result = await response.json();
       setTestResult(result);
-    } catch (error) {
+    } catch {
       setTestResult({ success: false, message: 'Connection test failed' });
     } finally {
       setTesting(false);
@@ -167,7 +164,7 @@ export default function DataSourcesPage() {
 
       const result = await response.json();
       setPreviewResults(result);
-    } catch (error) {
+    } catch {
       setPreviewResults({ success: false, error: 'Preview failed' });
     } finally {
       setPreviewLoading(false);
@@ -201,7 +198,7 @@ export default function DataSourcesPage() {
         const data = await response.json();
         alert(data.error || 'Failed to add data source');
       }
-    } catch (error) {
+    } catch {
       alert('Failed to add data source');
     } finally {
       setSaving(false);
@@ -222,7 +219,7 @@ export default function DataSourcesPage() {
       } else {
         alert('Failed to delete data source');
       }
-    } catch (error) {
+    } catch {
       alert('Failed to delete data source');
     }
   };

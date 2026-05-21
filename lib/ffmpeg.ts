@@ -94,8 +94,6 @@ export async function combineVideos(
     
     // Determine output dimensions based on layout
     let filterComplex: string;
-    let outputWidth: number;
-    let outputHeight: number;
     
     // Build input args with stream_loop for shorter videos
     // -stream_loop -1 loops infinitely, we'll cut with -t at the end
@@ -114,8 +112,6 @@ export async function combineVideos(
     if (videos.length === 2) {
       if (layout === 'vertical') {
         // Stack vertically (top/bottom)
-        outputWidth = 1920;
-        outputHeight = 1080;
         if (hasAnyAudio) {
           filterComplex = `
             [0:v]scale=1920:540:force_original_aspect_ratio=decrease,pad=1920:540:(ow-iw)/2:(oh-ih)/2,setsar=1[v0];
@@ -132,8 +128,6 @@ export async function combineVideos(
         }
       } else {
         // Side by side (left/right) - default for 2 videos
-        outputWidth = 1920;
-        outputHeight = 1080;
         if (hasAnyAudio) {
           filterComplex = `
             [0:v]scale=960:1080:force_original_aspect_ratio=decrease,pad=960:1080:(ow-iw)/2:(oh-ih)/2,setsar=1[v0];
@@ -151,8 +145,6 @@ export async function combineVideos(
       }
     } else if (videos.length === 3) {
       // 2 on top, 1 centered on bottom
-      outputWidth = 1920;
-      outputHeight = 1080;
       if (hasAnyAudio) {
         filterComplex = `
           [0:v]scale=960:540:force_original_aspect_ratio=decrease,pad=960:540:(ow-iw)/2:(oh-ih)/2,setsar=1[v0];
@@ -177,8 +169,6 @@ export async function combineVideos(
       }
     } else {
       // 4 videos: 2x2 grid
-      outputWidth = 1920;
-      outputHeight = 1080;
       if (hasAnyAudio) {
         filterComplex = `
           [0:v]scale=960:540:force_original_aspect_ratio=decrease,pad=960:540:(ow-iw)/2:(oh-ih)/2,setsar=1[v0];

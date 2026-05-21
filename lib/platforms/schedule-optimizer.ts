@@ -423,8 +423,8 @@ export function getDefaultTimingRecommendations(
         score: 1 - (i * 0.1),
         avgEngagement: 0,
       })),
-      optimalSlots: config.bestDays.flatMap((day, dayIdx) =>
-        config.bestHours.slice(0, 2).map((hour, hourIdx) => ({
+      optimalSlots: config.bestDays.flatMap((day, _dayIdx) =>
+        config.bestHours.slice(0, 2).map((hour, _hourIdx) => ({
           day,
           dayName: DAY_NAMES[day],
           hour,

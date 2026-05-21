@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build query for conversations
-    const query: any = {
+    const query: Record<string, unknown> = {
       pageId: new mongoose.Types.ObjectId(pageId),
       platform: 'twitter',
       'conversation.threadId': { $exists: true },

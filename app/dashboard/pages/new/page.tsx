@@ -87,16 +87,13 @@ export default function NewPagePage() {
     autoApprove: false,
     minConfidenceForAutoApprove: 0.8,
   });
-  const [contentSources, setContentSources] = useState({
+  const [contentSources] = useState({
     blogUrls: [] as string[],
     keywords: [] as string[],
   });
 
   // Input helpers
   const [topicInput, setTopicInput] = useState('');
-  const [avoidInput, setAvoidInput] = useState('');
-  const [blogInput, setBlogInput] = useState('');
-  const [keywordInput, setKeywordInput] = useState('');
   const [timeInput, setTimeInput] = useState('');
 
   useEffect(() => {
@@ -104,12 +101,6 @@ export default function NewPagePage() {
       router.push('/login');
     }
   }, [status, router]);
-
-  useEffect(() => {
-    if (session) {
-      fetchAvailableAccounts();
-    }
-  }, [session]);
 
   const fetchAvailableAccounts = async () => {
     try {
@@ -124,6 +115,12 @@ export default function NewPagePage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (session) {
+      setTimeout(() => fetchAvailableAccounts(), 0);
+    }
+  }, [session]);
 
   const handleSubmit = async () => {
     // For manual mode, we don't need a selected account

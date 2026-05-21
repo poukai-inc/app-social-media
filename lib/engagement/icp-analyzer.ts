@@ -13,7 +13,7 @@
  */
 
 import type { ContentStrategy, DatabaseSource } from '../models/Page';
-import Page, { IPage } from '../models/Page';
+import Page from '../models/Page';
 import Post from '../models/Post';
 import { fetchContentForGeneration } from '../data-sources/database';
 import { createChatCompletion } from '../ai-client';

@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/engagements/replies - Manually fetch new comments from LinkedIn
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.email) {

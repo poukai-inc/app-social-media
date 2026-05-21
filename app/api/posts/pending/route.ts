@@ -9,7 +9,7 @@ import { logger } from '@/lib/logger';
 const log = logger.child('api:posts:pending');
 
 // GET /api/posts/pending - Get all posts pending approval
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.email) {

@@ -9,7 +9,7 @@ import { logger } from '@/lib/logger';
 const log = logger.child('api:pages:available');
 
 // GET /api/pages/available - Get available LinkedIn accounts that can be added as pages
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.email) {

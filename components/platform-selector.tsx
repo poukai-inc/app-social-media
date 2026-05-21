@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import type { PlatformType } from '@/lib/platforms/types';
 
 interface PlatformSelectorProps {
@@ -68,11 +67,6 @@ export default function PlatformSelector({
   const selectAll = () => {
     if (disabled) return;
     onChange([...availablePlatforms]);
-  };
-
-  const selectOne = (platform: PlatformType) => {
-    if (disabled) return;
-    onChange([platform]);
   };
 
   if (availablePlatforms.length === 0) {

@@ -14,7 +14,6 @@ import { logger } from '@/lib/logger';
 const log = logger.child('platform:linkedin-adapter');
 
 const LINKEDIN_API_BASE = 'https://api.linkedin.com/v2';
-const LINKEDIN_REST_API_BASE = 'https://api.linkedin.com/rest';
 
 // Video processing timeout and polling settings
 const VIDEO_PROCESSING_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
@@ -42,7 +41,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
    */
   async adaptContent(
     baseContent: string,
-    strategy?: ContentStrategyInput
+    _strategy?: ContentStrategyInput
   ): Promise<PlatformContent> {
     let content = baseContent;
     
@@ -354,7 +353,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
         shares: data.sharesSummary?.totalShareCount || 0,
         lastUpdated: new Date(),
       };
-    } catch (error) {
+    } catch {
       return {
         platform: 'linkedin',
         connectionId: connection.platformId,

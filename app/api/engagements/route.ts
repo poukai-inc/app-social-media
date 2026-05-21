@@ -9,10 +9,9 @@ import type {
 } from '@/lib/models/Engagement';
 import {
   EngagementTarget,
-  IEngagementTarget
 } from '@/lib/models/Engagement';
 import { extractPostUrn, getPostDetails, scrapeLinkedInPost } from '@/lib/linkedin-engagement';
-import { generateComment, generateCommentVariations } from '@/lib/openai';
+import { generateComment } from '@/lib/openai';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('api:engagements');

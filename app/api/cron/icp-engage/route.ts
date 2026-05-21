@@ -19,7 +19,6 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Page from '@/lib/models/Page';
 import { runICPEngagementAgent } from '@/lib/engagement/icp-engagement-agent';
-import { IPlatformConnection } from '@/lib/models/Page';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('cron:icp-engage');

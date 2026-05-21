@@ -87,7 +87,7 @@ export interface ReviewContext {
 export async function reviewContentForPublishing(
   context: ReviewContext
 ): Promise<ReviewDecision> {
-  const { content, platform, strategy, topic, angle, sourceContent, recentPerformance } = context;
+  const { content, platform, strategy, topic, angle } = context;
 
   // Determine if this is organization or personal voice
   const pageType = strategy?.pageType || 'personal';
@@ -219,7 +219,7 @@ Respond with this exact JSON structure:
     let decision: ReviewDecision;
     try {
       decision = JSON.parse(extractedJson) as ReviewDecision;
-    } catch (parseError) {
+    } catch {
       // Try cleaning common issues: trailing commas, unescaped newlines in strings
       extractedJson = extractedJson
         .replace(/,\s*([}\]])/g, '$1')  // Remove trailing commas

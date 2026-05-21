@@ -128,7 +128,6 @@ export default function PageSettings() {
 
   // Input helpers
   const [topicInput, setTopicInput] = useState('');
-  const [avoidInput, setAvoidInput] = useState('');
   const [blogInput, setBlogInput] = useState('');
   const [keywordInput, setKeywordInput] = useState('');
   const [timeInput, setTimeInput] = useState('');
@@ -138,12 +137,6 @@ export default function PageSettings() {
       router.push('/login');
     }
   }, [status, router]);
-
-  useEffect(() => {
-    if (session && pageId) {
-      fetchPage();
-    }
-  }, [session, pageId]);
 
   const fetchPage = async () => {
     try {
@@ -192,6 +185,12 @@ export default function PageSettings() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (session && pageId) {
+      setTimeout(() => fetchPage(), 0);
+    }
+  }, [session, pageId]);
 
   const handleSave = async () => {
     setSaving(true);

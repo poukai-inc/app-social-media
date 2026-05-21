@@ -7,12 +7,10 @@ import { logger } from '@/lib/logger';
 
 const log = logger.child('component:reply-card');
 import {
-  MessageSquare,
   CheckCircle,
   Clock,
   XCircle,
   MoreVertical,
-  Trash2,
   Play,
   RefreshCw,
   Loader2,
@@ -190,7 +188,7 @@ export function ReplyCard({ reply }: ReplyCardProps) {
           {/* Comment Text */}
           <div className="mt-3 rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800">
             <p className="text-sm text-zinc-700 dark:text-zinc-300">
-              "{reply.commentText}"
+              &ldquo;{reply.commentText}&rdquo;
             </p>
           </div>
 

@@ -14,7 +14,7 @@ const log = logger.child('api:posts:[id]:approve');
 /**
  * Get the next occurrence of a specific day and hour
  */
-function getNextOccurrence(dayOfWeek: number, hour: number, timezone?: string): Date {
+function getNextOccurrence(dayOfWeek: number, hour: number, _timezone?: string): Date {
   const now = new Date();
   const result = new Date(now);
   

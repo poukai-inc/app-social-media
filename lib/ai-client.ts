@@ -24,8 +24,6 @@ import AIUsage, {
   FAST_MODEL_PRIORITY,
   getDateKey,
   getMinuteKey,
-  type ModelLimits,
-  type IAIUsage,
 } from './models/AIUsage';
 import { logger } from '@/lib/logger';
 
@@ -189,8 +187,7 @@ function getMinuteUsage(model: string): { tokens: number; requests: number } {
  */
 async function recordUsage(model: string, tokens: number, success: boolean = true): Promise<void> {
   const today = getDateKey();
-  const currentMinute = getMinuteKey();
-  
+
   // Update in-memory caches immediately
   updateMinuteCache(model, tokens);
   const cached = dailyCache.usage.get(model) || { tokens: 0, requests: 0, rateLimitHits: 0 };
@@ -441,34 +438,6 @@ async function getAvailableModel(preferFast: boolean = false, estimatedTokens: n
 // ============================================
 
 /**
- * Parse retry-after from error or headers
- */
-function parseRetryAfter(error: unknown): number | undefined {
-  if (error && typeof error === 'object') {
-    // Check for retry-after in headers
-    const headers = (error as { headers?: { get?: (key: string) => string | null } }).headers;
-    if (headers?.get) {
-      const retryAfter = headers.get('retry-after');
-      if (retryAfter) {
-        return parseInt(retryAfter, 10);
-      }
-    }
-    
-    // Parse from error message
-    const message = (error as { message?: string }).message || '';
-    const match = message.match(/try again in (\d+(?:\.\d+)?)(s|m|h)/i);
-    if (match) {
-      const value = parseFloat(match[1]);
-      const unit = match[2].toLowerCase();
-      if (unit === 'm') return Math.ceil(value * 60);
-      if (unit === 'h') return Math.ceil(value * 3600);
-      return Math.ceil(value);
-    }
-  }
-  return undefined;
-}
-
-/**
  * Estimate tokens for a request (rough heuristic: 4 chars ≈ 1 token)
  */
 function estimateTokens(messages: Array<{ content: string }>, maxTokens: number): number {
@@ -645,7 +614,7 @@ export async function getUsageStatus(): Promise<Record<string, {
   rateLimitHits: number;
 }>> {
   await refreshDailyCache();
-  const status: Record<string, any> = {};
+  const status: Record<string, { tokensUsed: number; tokensLimit: number | null; requestsUsed: number; requestsLimit: number; percentUsed: number | null; available: boolean; rateLimitHits: number }> = {};
   
   // In Ollama mode, just show the Ollama model
   const { provider, model: ollamaModel } = getAiConfig();

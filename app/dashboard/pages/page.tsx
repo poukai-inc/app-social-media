@@ -10,11 +10,7 @@ const log = logger.child('dashboard:pages');
 import {
   Plus,
   Settings,
-  BarChart3,
   FileText,
-  Clock,
-  CheckCircle,
-  AlertCircle,
   User,
   Building2,
   ChevronRight,
@@ -61,12 +57,6 @@ export default function PagesPage() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (session) {
-      fetchPages();
-    }
-  }, [session]);
-
   const fetchPages = async () => {
     try {
       const response = await fetch('/api/pages?includeStats=true');
@@ -80,6 +70,12 @@ export default function PagesPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (session) {
+      setTimeout(() => fetchPages(), 0);
+    }
+  }, [session]);
 
   if (status === 'loading' || loading) {
     return (
@@ -155,7 +151,6 @@ export default function PagesPage() {
 }
 
 function PageCard({ page }: { page: Page }) {
-  const totalPosts = Object.values(page.postStats || {}).reduce((a, b) => a + b, 0);
   const publishedPosts = page.postStats?.published || 0;
   const scheduledPosts = page.postStats?.scheduled || 0;
   const pendingPosts = page.postStats?.pending_approval || 0;

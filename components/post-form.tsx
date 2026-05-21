@@ -149,7 +149,7 @@ export function PostForm({
   // Page state
   const [selectedPageId, setSelectedPageId] = useState<string>(initialPageId || '');
   const [pages, setPages] = useState<PageInfo[]>([]);
-  const [isLoadingPages, setIsLoadingPages] = useState(false);
+  const [, setIsLoadingPages] = useState(false);
   
   // Platform state
   const [targetPlatforms, setTargetPlatforms] = useState<PlatformType[]>(
@@ -160,32 +160,6 @@ export function PostForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
-
-  // Fetch organizations on mount
-  useEffect(() => {
-    fetchOrganizations();
-    fetchPages();
-  }, []);
-
-  // When page is selected, auto-fill settings from page strategy
-  useEffect(() => {
-    if (selectedPageId) {
-      const page = pages.find(p => p._id === selectedPageId);
-      if (page) {
-        // Set postAs based on page type
-        setPostAs(page.type === 'organization' ? 'organization' : 'person');
-        if (page.organizationId) {
-          setSelectedOrgId(page.organizationId);
-        }
-        // Use page strategy settings if available
-        if (page.contentStrategy) {
-          if (page.contentStrategy.targetAudience) {
-            setTargetAudience(page.contentStrategy.targetAudience);
-          }
-        }
-      }
-    }
-  }, [selectedPageId, pages]);
 
   const fetchPages = async () => {
     setIsLoadingPages(true);
@@ -225,6 +199,33 @@ export function PostForm({
       setIsLoadingOrgs(false);
     }
   };
+
+  // Fetch organizations and pages on mount
+  useEffect(() => {
+    setTimeout(() => fetchOrganizations(), 0);
+    setTimeout(() => fetchPages(), 0);
+  }, []);
+
+  // When page is selected, auto-fill settings from page strategy
+  useEffect(() => {
+    if (selectedPageId) {
+      const page = pages.find(p => p._id === selectedPageId);
+      if (page) {
+        // Set postAs based on page type
+        const nextPostAs = page.type === 'organization' ? 'organization' : 'person';
+        setTimeout(() => {
+          setPostAs(nextPostAs);
+          if (page.organizationId) {
+            setSelectedOrgId(page.organizationId);
+          }
+          // Use page strategy settings if available
+          if (page.contentStrategy?.targetAudience) {
+            setTargetAudience(page.contentStrategy.targetAudience);
+          }
+        }, 0);
+      }
+    }
+  }, [selectedPageId, pages]);
 
   const selectedOrg = organizations.find(org => org.id === selectedOrgId);
 

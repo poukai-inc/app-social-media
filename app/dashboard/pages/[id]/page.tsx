@@ -21,11 +21,9 @@ import {
   Eye,
   ThumbsUp,
   MessageSquare,
-  Share2,
   Sparkles,
   Calendar,
   RefreshCw,
-  MoreVertical,
   Linkedin,
   Facebook,
   Twitter,
@@ -154,14 +152,6 @@ export default function PageDashboard() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (session && pageId) {
-      fetchPage();
-      fetchPosts();
-      fetchIcpStats();
-    }
-  }, [session, pageId, statusFilter]);
-
   const fetchPage = async () => {
     try {
       const response = await fetch(`/api/pages/${pageId}`);
@@ -225,6 +215,14 @@ export default function PageDashboard() {
       log.error('Failed to fetch ICP stats', { error: error instanceof Error ? error.message : String(error) });
     }
   };
+
+  useEffect(() => {
+    if (session && pageId) {
+      setTimeout(() => fetchPage(), 0);
+      setTimeout(() => fetchPosts(), 0);
+      setTimeout(() => fetchIcpStats(), 0);
+    }
+  }, [session, pageId, statusFilter]);
 
   const handleGeneratePost = async () => {
     if (!page) return;

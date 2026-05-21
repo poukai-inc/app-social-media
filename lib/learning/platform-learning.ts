@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import type { PlatformEngagement } from '../models/EngagementHistory';
-import EngagementHistory, { IEngagementHistory } from '../models/EngagementHistory';
+import EngagementHistory from '../models/EngagementHistory';
 import type { PlatformType } from '../platforms/types';
 import type { EngagementDataPoint } from '../platforms/schedule-optimizer';
 import { logger } from '@/lib/logger';

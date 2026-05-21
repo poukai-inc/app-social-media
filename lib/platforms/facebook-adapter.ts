@@ -30,7 +30,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
    */
   async adaptContent(
     baseContent: string,
-    strategy?: ContentStrategyInput
+    _strategy?: ContentStrategyInput
   ): Promise<PlatformContent> {
     let content = baseContent;
     
@@ -251,7 +251,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
         engagementRate: impressions > 0 ? engagedUsers / impressions : 0,
         lastUpdated: new Date(),
       };
-    } catch (error) {
+    } catch {
       return {
         platform: 'facebook',
         connectionId: connection.platformId,

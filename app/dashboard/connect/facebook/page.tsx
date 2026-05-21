@@ -25,31 +25,47 @@ interface PageData {
 function ConnectFacebookPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [pageData, setPageData] = useState<PageData | null>(null);
-  const [selectedPage, setSelectedPage] = useState<string | null>(null);
-  const [appPages, setAppPages] = useState<{ _id: string; name: string }[]>([]);
-  const [targetAppPage, setTargetAppPage] = useState<string>('');
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Decode the data from URL
+  const [pageData, _setPageData] = useState<PageData | null>(() => {
     const dataParam = searchParams.get('data');
-    if (dataParam) {
-      try {
-        const decoded = JSON.parse(Buffer.from(dataParam, 'base64').toString());
-        setPageData(decoded);
-        if (decoded.targetPageId) {
-          setTargetAppPage(decoded.targetPageId);
-        }
-        if (decoded.pages.length === 1) {
-          setSelectedPage(decoded.pages[0].id);
-        }
-      } catch {
-        setError('Invalid data received');
-      }
+    if (!dataParam) return null;
+    try {
+      return JSON.parse(Buffer.from(dataParam, 'base64').toString()) as PageData;
+    } catch {
+      return null;
     }
-  }, [searchParams]);
+  });
+  const [selectedPage, setSelectedPage] = useState<string | null>(() => {
+    const dataParam = searchParams.get('data');
+    if (!dataParam) return null;
+    try {
+      const decoded = JSON.parse(Buffer.from(dataParam, 'base64').toString()) as PageData;
+      return decoded.pages?.length === 1 ? decoded.pages[0].id : null;
+    } catch {
+      return null;
+    }
+  });
+  const [appPages, setAppPages] = useState<{ _id: string; name: string }[]>([]);
+  const [targetAppPage, setTargetAppPage] = useState<string>(() => {
+    const dataParam = searchParams.get('data');
+    if (!dataParam) return '';
+    try {
+      const decoded = JSON.parse(Buffer.from(dataParam, 'base64').toString()) as PageData;
+      return decoded.targetPageId ?? '';
+    } catch {
+      return '';
+    }
+  });
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [error, setError] = useState<string | null>(() => {
+    const dataParam = searchParams.get('data');
+    if (!dataParam) return null;
+    try {
+      JSON.parse(Buffer.from(dataParam, 'base64').toString());
+      return null;
+    } catch {
+      return 'Invalid data received';
+    }
+  });
 
   useEffect(() => {
     // Fetch user's app pages

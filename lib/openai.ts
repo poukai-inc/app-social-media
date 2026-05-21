@@ -32,9 +32,7 @@ function sanitizeExternalContent(content: string): string {
 function getLinkedInSystemPrompt(pageType: PageVoiceType = 'personal'): string {
   const isOrganization = pageType === 'organization';
   const we = isOrganization ? 'We' : 'I';
-  const our = isOrganization ? 'Our' : 'My';
-  const us = isOrganization ? 'our team' : 'me';
-  
+
   return `You write LinkedIn posts for a senior engineering studio. Sound like a real engineer, not AI.
 
 OUTPUT RULES (read these first):
@@ -313,19 +311,6 @@ Please provide the improved version only, without any explanations.`,
 // Page Strategy-Based Content Generation
 // ============================================
 
-const POST_ANGLE_DESCRIPTIONS: Record<string, string> = {
-  problem_recognition: 'Focus on identifying and articulating a problem your audience faces. Make them feel seen and understood.',
-  war_story: 'Share a personal experience or lesson learned from building/working. Be specific and honest about what happened.',
-  opinionated_take: 'Take a strong stance on something in your industry. Be specific and back it up with reasoning.',
-  insight: 'Share a useful observation or tip that your audience might not have considered. Be educational.',
-  how_to: 'Provide a step-by-step approach or framework for solving a problem. Be practical and actionable.',
-  case_study: 'Share a specific example with real results. Include numbers or concrete outcomes where possible.',
-  // Chris Do ICP framework angles — high-converting because they speak to fear, hunger, and ROI
-  cost_of_inaction: 'Show what happens when someone DOES NOT solve this problem. Make the compounding cost of delay real and concrete. The goal is not to scare — it is to help them truly feel the pain of waiting. End with a question that forces self-reflection.',
-  dollarize_value: 'Translate a technical decision, process, or mistake into the client’s own financial terms. Show what X hours of delay, Y lines of bad code, or Z wrong hire actually costs in revenue, opportunity, or time. Make the abstract concrete with real-world math.',
-  hungry_buyer: 'Write directly for someone who already knows they have the problem and is actively looking for a solution. Skip the education. Speak to the already-convinced buyer. Validate their urgency, show you understand the hunger, and offer the clearest possible signal of your unique angle.',
-};
-
 // Get angle descriptions adjusted for page type - emphasizing STORIES
 function getAngleDescription(angle: string, pageType: PageVoiceType = 'personal'): string {
   const isOrg = pageType === 'organization';
@@ -359,7 +344,6 @@ export async function generatePostWithStrategy(options: GenerateWithStrategyOpti
   
   // Determine the voice type based on page type
   const pageType = strategy.pageType || 'personal';
-  const isOrganization = pageType === 'organization';
 
   // Get platform config for character limits
   const targetPlatform = platform || 'linkedin';
@@ -1388,8 +1372,6 @@ export async function adaptContentForMultiplePlatforms(
     customInstructions?: Record<PlatformType, string>;
   }
 ): Promise<AdaptedContent[]> {
-  const results: AdaptedContent[] = [];
-  
   // Process platforms in parallel for efficiency
   const adaptations = await Promise.all(
     targetPlatforms.map(platform =>

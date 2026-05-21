@@ -1,7 +1,7 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { analyzeBlog, generatePostFromBlogAngle, PostAngle } from '@/lib/openai';
+import { analyzeBlog } from '@/lib/openai';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('api:blog:analyze');

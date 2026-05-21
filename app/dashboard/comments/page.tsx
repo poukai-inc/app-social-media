@@ -55,12 +55,6 @@ export default function CommentsPage() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (session) {
-      fetchSuggestions(activeTab);
-    }
-  }, [session, activeTab]);
-
   const fetchSuggestions = async (tab: string) => {
     setLoading(true);
     try {
@@ -78,6 +72,12 @@ export default function CommentsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (session) {
+      setTimeout(() => fetchSuggestions(activeTab), 0);
+    }
+  }, [session, activeTab]);
 
   const handleAction = async (
     id: string,

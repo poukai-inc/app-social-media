@@ -17,7 +17,7 @@ import mongoose from 'mongoose';
 import Page from '../models/Page';
 import type { IPlatformConnection } from '../models/Page';
 import type { TwitterSearchResult} from '../platforms/twitter-adapter';
-import { twitterAdapter, TwitterUser } from '../platforms/twitter-adapter';
+import { twitterAdapter } from '../platforms/twitter-adapter';
 import type { ICPProfile } from './icp-analyzer';
 import { analyzePageICP } from './icp-analyzer';
 import type { IICPEngagement } from '../models/ICPEngagement';
@@ -552,7 +552,7 @@ function passesBasicFilters(tweet: TwitterSearchResult, config: AgentConfig): { 
  */
 function passesTopicFilter(
   tweet: TwitterSearchResult,
-  icpProfile: ICPProfile
+  _icpProfile: ICPProfile
 ): { pass: boolean; reason?: string } {
   const text = (tweet.text + ' ' + (tweet.author?.description || '')).toLowerCase();
 
@@ -600,7 +600,7 @@ async function hasRecentEngagement(
 async function evaluateTweetRelevance(
   tweet: TwitterSearchResult,
   icpProfile: ICPProfile,
-  intent: string
+  _intent: string
 ): Promise<EngagementCandidate> {
   const prompt = `You are a strict ICP evaluator for a fractional CTO / software engineering consultancy.
 

@@ -8,7 +8,6 @@ import connectToDatabase from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
 import User from '@/lib/models/User';
 import type { DatabaseSource } from '@/lib/models/Page';
-import Page from '@/lib/models/Page';
 import mongoose from 'mongoose';
 import type { ContentItem } from '@/lib/data-sources/database';
 import { fetchContentForGeneration } from '@/lib/data-sources/database';
@@ -138,8 +137,8 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
       });
 
       // Get active platform connections to determine target platforms
-      const activeConnections = page.connections?.filter((c: any) => c.isActive) || [];
-      const targetPlatforms = activeConnections.map((c: any) => c.platform);
+      const activeConnections = page.connections?.filter((c: { isActive: boolean; platform: string }) => c.isActive) || [];
+      const targetPlatforms = activeConnections.map((c: { isActive: boolean; platform: string }) => c.platform);
       
       // Default to LinkedIn if no connections (shouldn't happen, but safety)
       if (targetPlatforms.length === 0) {

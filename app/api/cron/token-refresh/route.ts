@@ -14,7 +14,6 @@ import mongoose from 'mongoose';
 import connectToDatabase from '@/lib/mongodb';
 import type { IPlatformConnection } from '@/lib/models/Page';
 import Page from '@/lib/models/Page';
-import User from '@/lib/models/User';
 import TokenAlert from '@/lib/models/TokenAlert';
 import { sendEmail } from '@/lib/email';
 import { twitterAdapter } from '@/lib/platforms/twitter-adapter';

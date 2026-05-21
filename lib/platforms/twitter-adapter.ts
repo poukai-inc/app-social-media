@@ -115,8 +115,8 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
    * - Can include threads for longer content
    */
   async adaptContent(
-    baseContent: string, 
-    strategy?: ContentStrategyInput
+    baseContent: string,
+    _strategy?: ContentStrategyInput
   ): Promise<PlatformContent> {
     const config = PLATFORM_CONFIGS.twitter;
     
@@ -231,7 +231,6 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
       
       const mediaBuffer = await mediaResponse.arrayBuffer();
       const base64Media = Buffer.from(mediaBuffer).toString('base64');
-      const contentType = mediaResponse.headers.get('content-type') || 'image/jpeg';
       
       // Twitter uses v1.1 for media upload with OAuth 1.0a
       const uploadUrl = 'https://upload.twitter.com/1.1/media/upload.json';
@@ -398,7 +397,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
         clicks: nonPublic.url_link_clicks,
         lastUpdated: new Date(),
       };
-    } catch (error) {
+    } catch {
       return {
         platform: 'twitter',
         connectionId: connection.platformId,
@@ -869,12 +868,14 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
       const data = await response.json();
       const tweets = data.data || [];
       const users = data.includes?.users || [];
-      const referencedTweets = data.includes?.tweets || [];
 
       log.info('Found mentions', { count: tweets.length });
 
+      type MentionUser = { id: string; name: string; username: string; public_metrics?: { followers_count?: number }; verified?: boolean };
+      type MentionTweet = { id: string; text: string; author_id: string; created_at: string; conversation_id: string; in_reply_to_user_id?: string; referenced_tweets?: Array<{ type: string; id: string }> };
+
       // Create user lookup map
-      const userMap = new Map(users.map((user: any) => [user.id, {
+      const userMap = new Map(users.map((user: MentionUser) => [user.id, {
         id: user.id,
         name: user.name,
         username: user.username,
@@ -886,27 +887,27 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
       // A reply is in our conversation if:
       // 1. Its conversation_id matches our thread
       // 2. OR it references our reply tweet
-      const relevantReplies = tweets.filter((tweet: any) => {
+      const relevantReplies = tweets.filter((tweet: MentionTweet) => {
         // Skip our own tweets
         if (tweet.author_id === ourUserId) return false;
-        
+
         // Check if it's in the same conversation
         if (tweet.conversation_id === conversationId) return true;
-        
+
         // Check if it's a reply to our specific tweet
         if (ourReplyId && tweet.referenced_tweets) {
           const isReplyToOurs = tweet.referenced_tweets.some(
-            (ref: any) => ref.type === 'replied_to' && ref.id === ourReplyId
+            (ref) => ref.type === 'replied_to' && ref.id === ourReplyId
           );
           if (isReplyToOurs) return true;
         }
-        
+
         return false;
       });
 
       log.info('Found relevant replies in conversation', { count: relevantReplies.length, conversationId });
 
-      const newReplies = relevantReplies.map((tweet: any) => ({
+      const newReplies = relevantReplies.map((tweet: MentionTweet) => ({
         id: tweet.id,
         text: tweet.text,
         authorId: tweet.author_id,

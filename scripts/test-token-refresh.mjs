@@ -9,7 +9,7 @@ import 'dotenv/config';
 
 const connectDB = (await import('../lib/mongodb.ts')).default;
 const Page = (await import('../lib/models/Page.ts')).default;
-const User = (await import('../lib/models/User.ts')).default;  // Need to import User for populate
+await import('../lib/models/User.ts');  // Need to import User model for populate
 
 await connectDB();
 

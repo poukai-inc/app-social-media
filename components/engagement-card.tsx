@@ -15,7 +15,6 @@ import {
   MoreVertical,
   Trash2,
   Play,
-  Edit,
   RefreshCw,
   ExternalLink,
   Loader2,

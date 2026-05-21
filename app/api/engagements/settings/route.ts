@@ -6,9 +6,8 @@ import User from '@/lib/models/User';
 import type {
   IEngagementSettings 
 } from '@/lib/models/Engagement';
-import { 
-  EngagementSettings, 
-  getOrCreateEngagementSettings 
+import {
+  getOrCreateEngagementSettings
 } from '@/lib/models/Engagement';
 import { logger } from '@/lib/logger';
 

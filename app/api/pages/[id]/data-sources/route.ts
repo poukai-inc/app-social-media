@@ -5,12 +5,8 @@ import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import type { DatabaseSource } from '@/lib/models/Page';
 import Page from '@/lib/models/Page';
-import { 
-  testConnection, 
-  executeQuery, 
-  previewQuery,
-  getTables,
-  getTableColumns 
+import {
+  testConnection,
 } from '@/lib/data-sources/database';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/lib/logger';

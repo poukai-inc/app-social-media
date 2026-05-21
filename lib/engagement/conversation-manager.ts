@@ -14,7 +14,6 @@ import ICPEngagement from '../models/ICPEngagement';
 import Page from '../models/Page';
 import { twitterAdapter } from '../platforms/twitter-adapter';
 import { createChatCompletion } from '../ai-client';
-import { generateComment } from '../openai';
 import { acquireLock, releaseLock } from '../distributed-lock';
 import { logger } from '@/lib/logger';
 
@@ -658,7 +657,7 @@ export async function monitorAndRespondToConversations(
     // Query finds:
     // 1. Engagements with conversation tracking enabled (new system)
     // 2. Engagements where they replied but conversation not yet initialized (legacy/migration)
-    const query: any = {
+    const query: Record<string, unknown> = {
       platform: 'twitter',
       $or: [
         // New conversation system - tracking enabled
@@ -701,32 +700,32 @@ export async function monitorAndRespondToConversations(
     if (useSmartPolling && allConversations.length > 0) {
       // Filter out conversations that don't need checking yet (adaptive intervals)
       const now = Date.now();
-      conversationsToProcess = allConversations.filter((eng: any) => {
+      conversationsToProcess = allConversations.filter((eng: IICPEngagement) => {
         const lastChecked = eng.conversation?.lastCheckedAt;
         if (!lastChecked) return true; // Never checked = always check
 
-        const adaptiveInterval = getAdaptiveCheckInterval(eng as IICPEngagement);
+        const adaptiveInterval = getAdaptiveCheckInterval(eng);
         const timeSinceCheck = (now - new Date(lastChecked).getTime()) / (1000 * 60); // minutes
 
         return timeSinceCheck >= adaptiveInterval;
       });
 
       // Score and sort by priority
-      const scoredConversations = conversationsToProcess.map((eng: any) => ({
+      const scoredConversations = conversationsToProcess.map((eng: IICPEngagement) => ({
         engagement: eng,
-        priority: calculateConversationPriority(eng as IICPEngagement),
+        priority: calculateConversationPriority(eng),
       }));
 
       scoredConversations.sort((a, b) => b.priority - a.priority); // Highest priority first
 
       conversationsToProcess = scoredConversations
         .slice(0, maxConversationsToCheck)
-        .map(item => item.engagement);
+        .map(item => item.engagement) as typeof allConversations;
 
       log.info('Smart polling applied', { total: allConversations.length, afterFiltering: conversationsToProcess.length });
     } else {
       // Fallback to simple time-based filtering (original logic)
-      conversationsToProcess = allConversations.filter((eng: any) => {
+      conversationsToProcess = allConversations.filter((eng: IICPEngagement) => {
         const lastChecked = eng.conversation?.lastCheckedAt;
         return !lastChecked || new Date(lastChecked) < cutoffTime;
       }).slice(0, maxConversationsToCheck);
@@ -750,7 +749,12 @@ export async function monitorAndRespondToConversations(
         // MIGRATION: Initialize conversation tracking for legacy engagements
         if (!engagement.conversation) {
           log.info('Initializing conversation tracking for legacy engagement', { engagementId: engagement._id });
-          const ourReply = (engagement as any).ourReply;
+          const engExt = engagement as unknown as {
+            ourReply?: { id?: string; content?: string; url?: string };
+            engagedAt?: Date;
+            conversation?: Record<string, unknown>;
+          };
+          const ourReply = engExt.ourReply;
           await ICPEngagement.updateOne(
             { _id: engagement._id },
             {
@@ -764,7 +768,7 @@ export async function monitorAndRespondToConversations(
                   id: ourReply.id,
                   authorId: '', // Unknown for legacy
                   content: ourReply.content || '',
-                  timestamp: (engagement as any).engagedAt || new Date(),
+                  timestamp: engExt.engagedAt || new Date(),
                   isFromUs: true,
                   url: ourReply.url,
                 }] : [],
@@ -772,7 +776,7 @@ export async function monitorAndRespondToConversations(
             }
           );
           // Reload engagement with conversation data
-          (engagement as any).conversation = {
+          engExt.conversation = {
             threadId: engagement.targetPost.id,
             autoResponseEnabled: true,
             maxAutoResponses: 3,
@@ -784,10 +788,10 @@ export async function monitorAndRespondToConversations(
 
         // Get Twitter connection for this page
         // IMPORTANT: Reload fresh from DB to avoid stale token race with token-refresh cron
-        const page = engagement.pageId as any;
+        const page = engagement.pageId as unknown as { _id?: { toString(): string }; toString(): string };
         const pageId = page._id?.toString() || page.toString();
         const freshPage = await Page.findById(pageId);
-        const twitterConnection = freshPage?.connections?.find((c: any) => c.platform === 'twitter' && c.isActive);
+        const twitterConnection = freshPage?.connections?.find((c: { platform: string; isActive: boolean }) => c.platform === 'twitter' && c.isActive);
 
         if (!twitterConnection) {
           result.errors.push(`Page ${pageId} has no active Twitter connection`);
@@ -797,7 +801,8 @@ export async function monitorAndRespondToConversations(
         // Check for new replies in this conversation
         const lastChecked = engagement.conversation?.lastCheckedAt;
         const threadId = engagement.conversation?.threadId || engagement.targetPost?.id;
-        const ourReplyId = (engagement as any).ourReply?.id;
+        const engExt2 = engagement as unknown as { ourReply?: { id?: string }; conversation?: { consecutiveFailures?: number } };
+        const ourReplyId = engExt2.ourReply?.id;
 
         log.info('Checking engagement', {
           engagementId: engagement._id,
@@ -840,7 +845,7 @@ export async function monitorAndRespondToConversations(
           } else {
             // For non-auth errors, increment a failure counter
             // Disable after 5 consecutive failures to prevent infinite retries
-            const consecutiveFailures = ((engagement as any).conversation?.consecutiveFailures || 0) + 1;
+            const consecutiveFailures = (engExt2.conversation?.consecutiveFailures || 0) + 1;
             if (consecutiveFailures >= 5) {
               log.warn('5 consecutive failures - disabling auto-response', { engagementId: engagement._id });
               await ICPEngagement.updateOne(
@@ -871,7 +876,7 @@ export async function monitorAndRespondToConversations(
         }
 
         // Reset consecutive failure counter on success
-        if ((engagement as any).conversation?.consecutiveFailures > 0) {
+        if (engExt2.conversation?.consecutiveFailures && engExt2.conversation.consecutiveFailures > 0) {
           await ICPEngagement.updateOne(
             { _id: engagement._id },
             { $set: { 'conversation.consecutiveFailures': 0 } }
@@ -890,7 +895,7 @@ export async function monitorAndRespondToConversations(
 
         // Get existing message IDs to avoid duplicates
         const existingMessageIds = new Set(
-          (engagement.conversation?.messages || []).map((m: any) => m.id)
+          (engagement.conversation?.messages || []).map((m: { id: string }) => m.id)
         );
 
         // Filter out:
@@ -1158,7 +1163,7 @@ export async function getConversationStats(pageId?: string): Promise<{
   autoResponsesEnabled: number;
   autoResponsesSent: number;
 }> {
-  const query: any = { platform: 'twitter' };
+  const query: Record<string, unknown> = { platform: 'twitter' };
   if (pageId) {
     query.pageId = new mongoose.Types.ObjectId(pageId);
   }

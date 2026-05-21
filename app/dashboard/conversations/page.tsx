@@ -6,15 +6,6 @@ import { logger } from '@/lib/logger';
 
 const log = logger.child('dashboard:conversations');
 
-interface ConversationMessage {
-  id: string;
-  authorId: string;
-  content: string;
-  timestamp: string;
-  isFromUs: boolean;
-  url?: string;
-}
-
 interface Conversation {
   id: string;
   targetPost: {
@@ -65,29 +56,20 @@ function ConversationsContent() {
   
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [stats, setStats] = useState<ConversationStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(!!pageId);
+  const [error, setError] = useState<string | null>(pageId ? null : 'Page ID is required');
   const [activeOnly, setActiveOnly] = useState(true);
-  
-  useEffect(() => {
-    if (!pageId) {
-      setError('Page ID is required');
-      setLoading(false);
-      return;
-    }
-
-    fetchConversations();
-  }, [pageId, activeOnly]);
 
   const fetchConversations = async () => {
+    if (!pageId) return;
     try {
       setLoading(true);
       const response = await fetch(`/api/conversations?pageId=${pageId}&active=${activeOnly}&limit=50`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch conversations');
       }
-      
+
       const data = await response.json();
       setConversations(data.conversations);
       setStats(data.stats);
@@ -97,6 +79,12 @@ function ConversationsContent() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (pageId) {
+      setTimeout(() => fetchConversations(), 0);
+    }
+  }, [pageId, activeOnly]);
 
   const toggleAutoResponse = async (conversationId: string, enable: boolean) => {
     try {

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
@@ -19,7 +18,6 @@ interface EngagementSettings {
 }
 
 export default function EngagementSettingsPage() {
-  const router = useRouter();
   const [settings, setSettings] = useState<EngagementSettings>({
     autoReplyEnabled: false,
     autoEngageEnabled: false,
@@ -32,10 +30,6 @@ export default function EngagementSettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
-
-  useEffect(() => {
-    fetchSettings();
-  }, []);
 
   const fetchSettings = async () => {
     try {
@@ -50,6 +44,10 @@ export default function EngagementSettingsPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    setTimeout(() => fetchSettings(), 0);
+  }, []);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -200,7 +198,7 @@ export default function EngagementSettingsPage() {
                 className="mt-1 block w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm dark:border-zinc-700 dark:bg-zinc-800"
               />
               <p className="mt-1 text-xs text-zinc-500">
-                Max likes/comments on others' posts per day
+                Max likes/comments on others&apos; posts per day
               </p>
             </div>
 

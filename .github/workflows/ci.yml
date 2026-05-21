@@ -111,13 +111,17 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm license-check
 
-  gitleaks:
-    name: Secret scan (gitleaks)
+  secret-scan:
+    name: Secret scan (trufflehog)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.pull_request.base.sha || github.event.before }}
+          head: HEAD
+          extra_args: --results=verified,unknown
