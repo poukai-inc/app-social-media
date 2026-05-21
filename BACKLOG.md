@@ -4,8 +4,8 @@
 - [MIGRATION_ANALYSIS.md](MIGRATION_ANALYSIS.md) v2.1 — multi-tenant SaaS + self-hostable rewrite
 - [STACK_ALIGNMENT_DECISIONS.md](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) (2026-05-20) — cross-repo stack alignment (D1–D7)
 
-**Last sync**: 2026-05-20
-**Total tasks**: 120 (15 C / 58 H / 27 M / 20 L)
+**Last sync**: 2026-05-21
+**Total tasks**: 121 (15 C / 58 H / 27 M / 21 L)
 
 ## Legend
 
@@ -223,20 +223,21 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 103 | `[ ]` | Post-launch evaluation: migrate to Supabase Auth / push more atoms upstream to DS | TBD |
 | 115 | `[ ]` | **[AUDIT-L1]** ICP agent human-in-loop guard — AI quality scoring alone is insufficient guardrail against adversarial tweets; replies post with no human review. Add `requireHumanApproval` config (default `true`) that saves candidates to DB for dashboard review before posting | `lib/engagement/icp-engagement-agent.ts:338`, new dashboard review route |
 | 116 | `[ ]` | **[AUDIT-L2]** Prompt injection in `improvePost` — user `instructions` param interpolated inline between quotes, no delimiters. Fix: wrap in `<INSTRUCTIONS>` XML tag; add system prompt note | `lib/openai.ts:265-272` |
+| 122 | `[ ]` | **[CI-DEBT]** Revert `setTimeout(fn, 0)` fetch-in-useEffect wraps — 14 dashboard pages + `components/post-form.tsx` were hacked to silence `react-hooks/set-state-in-effect`. Microtask delay is benign but the pattern is misleading. Proper fix: introduce TanStack Query (or SWR) and move initial-fetches out of `useEffect`, OR adopt Suspense + `use(promise)` once R19 data-fetching pattern stabilizes. Introduced in commit `1b351e1`. | `app/dashboard/**/page.tsx`, `components/post-form.tsx` |
 
 ---
 
 ## Snapshot by priority × severity
 
-_Updated after 2026-05-20 security audit (+10 tasks: 107–116) and 2026-05-20 stack alignment (+5 tasks: 117–121, see [STACK_ALIGNMENT_DECISIONS.md](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md))._
+_Updated after 2026-05-20 security audit (+10 tasks: 107–116), 2026-05-20 stack alignment (+5 tasks: 117–121, see [STACK_ALIGNMENT_DECISIONS.md](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md)), and 2026-05-21 CI-greening (+1 task: 122)._
 
 |        | C  | H  | M  | L  | **Total** |
 |--------|----|----|----|----|-----------|
 | **P0** | 15 |  0 |  0 |  0 | **15** |
 | **P1** |  0 | 43 | 13 |  0 | **56** |
 | **P2** |  0 | 15 | 14 |  0 | **29** |
-| **P3** |  0 |  0 |  0 | 20 | **20** |
-| **Total** | **15** | **58** | **27** | **20** | **120** |
+| **P3** |  0 |  0 |  0 | 21 | **21** |
+| **Total** | **15** | **58** | **27** | **21** | **121** |
 
 ## Phase ↔ tasks map
 
@@ -250,7 +251,7 @@ _Updated after 2026-05-20 security audit (+10 tasks: 107–116) and 2026-05-20 s
 | Phase 4 — Distribution packaging | 58-67 | 1 wk |
 | Phase 5 — Observability | 68-70 | 0.5 wk |
 | Phase 6 — Tests + validation + cleanup | 71-85, 112-114 | 1-1.5 wks |
-| Post-launch polish | 86-103, 115-116, 120 | rolling |
+| Post-launch polish | 86-103, 115-116, 120, 122 | rolling |
 
 **Solo**: 7-9 wks. **Pair**: 5-6 wks.
 
