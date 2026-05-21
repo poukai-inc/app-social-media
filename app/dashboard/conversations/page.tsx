@@ -80,10 +80,12 @@ function ConversationsContent() {
     }
   };
 
+  // Refactor deferred — see BACKLOG #122 (move to TanStack Query / Suspense)
   useEffect(() => {
     if (pageId) {
       setTimeout(() => fetchConversations(), 0);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageId, activeOnly]);
 
   const toggleAutoResponse = async (conversationId: string, enable: boolean) => {

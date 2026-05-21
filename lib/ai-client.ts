@@ -778,7 +778,7 @@ export { getAiProvider, getOllamaBaseUrl, getOllamaModel };
 export { GROQ_MODEL_LIMITS, MODEL_PRIORITY, FAST_MODEL_PRIORITY };
 
 // Default export for convenience
-export default {
+const aiClient = {
   createChatCompletion,
   complete,
   completeWithSystem,
@@ -788,3 +788,5 @@ export default {
   GROQ_MODEL_LIMITS,
   MODEL_PRIORITY,
 };
+
+export default aiClient;

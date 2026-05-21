@@ -1079,6 +1079,8 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export default {
+const icpEngagementAgent = {
   runICPEngagementAgent,
 };
+
+export default icpEngagementAgent;

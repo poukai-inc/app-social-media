@@ -3,6 +3,7 @@
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { Linkedin, LogOut, Menu, X, ChevronDown, Users, Clock, FileText, MessageSquare, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import NextImage from 'next/image';
 import { useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
@@ -120,10 +121,13 @@ export function Navbar() {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   {session.user?.image && (
-                    <img
+                    <NextImage
                       src={session.user.image}
                       alt={session.user.name || 'User'}
+                      width={32}
+                      height={32}
                       className="h-8 w-8 rounded-full ring-2 ring-zinc-100 dark:ring-zinc-800"
+                      unoptimized
                     />
                   )}
                   <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -170,10 +174,13 @@ export function Navbar() {
                 {/* User Info */}
                 <div className="flex items-center gap-3 px-3 py-2 mb-2">
                   {session.user?.image && (
-                    <img
+                    <NextImage
                       src={session.user.image}
                       alt={session.user.name || 'User'}
+                      width={40}
+                      height={40}
                       className="h-10 w-10 rounded-full"
+                      unoptimized
                     />
                   )}
                   <div>

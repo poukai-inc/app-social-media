@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import NextImage from 'next/image';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('dashboard:pages:new');
@@ -421,10 +422,13 @@ export default function NewPagePage() {
                           }`}
                         >
                           {account.avatar ? (
-                            <img
+                            <NextImage
                               src={account.avatar}
                               alt={account.name}
+                              width={48}
+                              height={48}
                               className="w-12 h-12 rounded-full object-cover"
+                              unoptimized
                             />
                           ) : (
                             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
@@ -767,10 +771,13 @@ export default function NewPagePage() {
                   <h3 className="font-medium text-gray-900 dark:text-white mb-2">Account</h3>
                   <div className="flex items-center gap-3">
                     {selectedAccount?.avatar ? (
-                      <img
+                      <NextImage
                         src={selectedAccount.avatar}
                         alt={selectedAccount.name}
+                        width={40}
+                        height={40}
                         className="w-10 h-10 rounded-full"
+                        unoptimized
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">

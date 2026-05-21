@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import NextImage from 'next/image';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('dashboard:pages');
@@ -161,10 +162,13 @@ function PageCard({ page }: { page: Page }) {
       <div className="p-5 border-b border-gray-100 dark:border-zinc-800">
         <div className="flex items-start gap-4">
           {page.avatar ? (
-            <img
+            <NextImage
               src={page.avatar}
               alt={page.name}
+              width={48}
+              height={48}
               className="w-12 h-12 rounded-full object-cover"
+              unoptimized
             />
           ) : (
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">

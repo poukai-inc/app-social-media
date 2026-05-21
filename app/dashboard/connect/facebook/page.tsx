@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import NextImage from 'next/image';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('dashboard:connect:facebook');
@@ -228,10 +229,13 @@ function ConnectFacebookPageContent() {
                     className="sr-only"
                   />
                   {page.picture ? (
-                    <img
+                    <NextImage
                       src={page.picture}
                       alt={page.name}
+                      width={48}
+                      height={48}
                       className="w-12 h-12 rounded-lg object-cover"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center">

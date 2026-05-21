@@ -112,10 +112,12 @@ export default function DataSourcesPage() {
     }
   };
 
+  // Refactor deferred — see BACKLOG #122 (move to TanStack Query / Suspense)
   useEffect(() => {
     if (session && pageId) {
       setTimeout(() => fetchDataSources(), 0);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, pageId]);
 
   const handleTestConnection = async () => {

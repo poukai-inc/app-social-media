@@ -478,8 +478,10 @@ Output format (JSON array only):
   return currentProfile;
 }
 
-export default {
+const icpAnalyzer = {
   analyzePageICP,
   expandSearchQueries,
   refineICPFromResults,
 };
+
+export default icpAnalyzer;

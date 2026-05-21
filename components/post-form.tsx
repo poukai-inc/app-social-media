@@ -19,6 +19,7 @@ import {
   RefreshCcw,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import NextImage from 'next/image';
 import { MediaUpload } from './media-upload';
 import type { StructuredInput } from './structured-input-form';
 import { StructuredInputForm } from './structured-input-form';
@@ -201,9 +202,11 @@ export function PostForm({
   };
 
   // Fetch organizations and pages on mount
+  // Refactor deferred — see BACKLOG #122 (move to TanStack Query / Suspense)
   useEffect(() => {
     setTimeout(() => fetchOrganizations(), 0);
     setTimeout(() => fetchPages(), 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // When page is selected, auto-fill settings from page strategy
@@ -390,7 +393,7 @@ export function PostForm({
                     : 'bg-zinc-100 dark:bg-zinc-800'
                 }`}>
                   {page.avatar ? (
-                    <img src={page.avatar} alt={page.name} className="h-5 w-5 rounded-full object-cover" />
+                    <NextImage src={page.avatar} alt={page.name} width={20} height={20} className="h-5 w-5 rounded-full object-cover" unoptimized />
                   ) : page.type === 'organization' ? (
                     <Building2 className={`h-5 w-5 ${
                       selectedPageId === page._id 
@@ -496,7 +499,7 @@ export function PostForm({
                     : 'bg-zinc-100 dark:bg-zinc-800'
                 }`}>
                   {org.logoUrl ? (
-                    <img src={org.logoUrl} alt={org.name} className="h-5 w-5 rounded-full object-cover" />
+                    <NextImage src={org.logoUrl} alt={org.name} width={20} height={20} className="h-5 w-5 rounded-full object-cover" unoptimized />
                   ) : (
                     <Building2 className={`h-5 w-5 ${
                       postAs === 'organization' && selectedOrgId === org.id 

@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import NextImage from 'next/image';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('dashboard:connect:twitter');
@@ -161,10 +162,13 @@ function ConnectTwitterPageContent() {
           <div className="mb-6 p-4 bg-gray-700/50 rounded-lg">
             <div className="flex items-center gap-4">
               {twitterData.metadata.profileImageUrl ? (
-                <img
+                <NextImage
                   src={twitterData.metadata.profileImageUrl}
                   alt={twitterData.metadata.name}
+                  width={48}
+                  height={48}
                   className="w-12 h-12 rounded-full"
+                  unoptimized
                 />
               ) : (
                 <div className="w-12 h-12 bg-sky-600 rounded-full flex items-center justify-center">
