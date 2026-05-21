@@ -1,8 +1,11 @@
 # Autopost — Migration Backlog
 
-**Source**: [MIGRATION_ANALYSIS.md](MIGRATION_ANALYSIS.md) v2.1 — multi-tenant SaaS + self-hostable rewrite
-**Last sync**: 2026-05-20
-**Total tasks**: 116 (15 C / 54 H / 26 M / 20 L)
+**Sources**:
+- [MIGRATION_ANALYSIS.md](MIGRATION_ANALYSIS.md) v2.1 — multi-tenant SaaS + self-hostable rewrite
+- [STACK_ALIGNMENT_DECISIONS.md](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) (2026-05-20) — cross-repo stack alignment (D1–D7)
+
+**Last sync**: 2026-05-21
+**Total tasks**: 121 (15 C / 58 H / 27 M / 21 L)
 
 ## Legend
 
@@ -70,6 +73,9 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 20 | `[ ]` | Mongoose interim hardening (timeouts, pool size) | `lib/mongodb.ts` |
 | 110 | `[ ]` | **[AUDIT-H1]** OAuth tokens in redirect URL — Twitter refresh token (permanent) + Facebook page tokens base64'd in `?data=` query param; appear in server access logs, browser history, Referer headers. Fix: store pending connection data in short-lived signed server-side session; redirect with opaque one-time key only | `app/api/auth/twitter/callback/route.ts:169`, `app/api/auth/facebook/callback/route.ts:229` |
 | 111 | `[ ]` | **[AUDIT-H2]** HMAC-sign OAuth state param — state is plain base64 JSON, forgeable by any authenticated user; attacker can craft state targeting another user's `pageId` or a future `email`. Fix: sign with `NEXTAUTH_SECRET` via HMAC-SHA256; verify `state.email === session.user.email` in callback. Supersedes audit scope of #71 | `app/api/auth/twitter/route.ts:52`, `app/api/auth/facebook/route.ts`, both callbacks |
+| 117 | `[ ]` | **[D2]** Bootstrap test harness — install `vitest`, `@vitest/coverage-v8`, `@playwright/test`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`, `mongodb-memory-server`, `testcontainers`. Add `vitest.config.ts`, `playwright.config.ts`. Add CI jobs for unit + integration + E2E with 80% coverage gate. Prereq for tasks #75–80. See [STACK_ALIGNMENT_DECISIONS.md#d2](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) | `package.json`, `vitest.config.ts` (new), `playwright.config.ts` (new), `.github/workflows/ci.yml` |
+| 118 | `[ ]` | **[D5]** TypeScript strict big-bang — add `tsconfig.json` overrides: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noUnusedLocals`, `noUnusedParameters`, `noImplicitOverride`, `noFallthroughCasesInSwitch`. Fix all `tsc --noEmit` errors in a single PR. Matches `poukai-ui` strictness. Coordinate with #117 — write tests for hot paths first where feasible. See [STACK_ALIGNMENT_DECISIONS.md#d5](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) | `tsconfig.json`, repo-wide |
+| 119 | `[ ]` | **[D3]** Exact-pin `next-auth` beta — change `^5.0.0-beta.30` to `5.0.0-beta.30` (exact). Add Dependabot/Renovate rule requiring manual review for any `next-auth` bump. See [STACK_ALIGNMENT_DECISIONS.md#d3](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) | `package.json`, `.github/renovate.json` |
 
 #### Phase 2 — Postgres + multi-tenancy + notifications (2-3 wks)
 
@@ -96,8 +102,8 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | ID | Status | Task | File(s) |
 |---|---|---|---|
 | 36 | `[ ]` | `.npmrc` + `NPM_TOKEN` (Vercel env); install `@poukai-inc/ui` | `.npmrc` (new) |
-| 37 | `[ ]` | React 19 ↔ DS peerDep `>=18` validation | `package.json` |
-| 38 | `[ ]` | Pin `lucide-react` to DS-compatible range (`>=0.400.0 <0.600.0`) | `package.json` |
+| 37 | `[ ]` | React 19 ↔ DS dual-CT validation (D1): widen `@poukai-inc/ui` peer to `>=18 \|\| >=19`; CI matrix runs Playwright CT under React 18 + 19; bump `@types/react` + `@types/react-dom` to support both. See [STACK_ALIGNMENT_DECISIONS.md#d1](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) | `package.json`, `poukai-ui` PR |
+| 38 | `[ ]` | Bump `lucide-react` to latest 0.5xx across all three repos (D4); tighten `@poukai-inc/ui` peer floor to `>=0.500`; audit icon renames in lucide changelog between current versions and target. See [STACK_ALIGNMENT_DECISIONS.md#d4](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) | `package.json`, `poukai-ui` PR |
 | 39 | `[ ]` | Import `@poukai-inc/ui/tokens.css` | `app/layout.tsx` |
 | 40 | `[ ]` | Build `components/ui/` app-local primitives (~25 files on Radix + DS tokens) | `components/ui/{input,textarea,select,combobox,checkbox,radio-group,switch,label,helper-text,error-message,spinner,skeleton,toast,tooltip,progress-bar,dropdown-menu,tabs,pagination,empty-state,breadcrumb,date-picker,time-picker,file-uploader,form-field,data-table}.tsx` |
 | 41 | `[ ]` | Build `AppShell` organism extending DS `SiteShell` | `components/app-shell.tsx` (new) |
@@ -109,6 +115,7 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 47 | `[ ]` | Dark mode — implement Phase 0 0f decision | `app/globals.css`, `app/brand-override.css` |
 | 48 | `[ ]` | Token-ize hardcoded brand colors | `components/navbar.tsx:57`, `components/**` |
 | 49 | `[ ]` | Extract inline platform SVGs to `components/icons/platforms/` | `components/icons/platforms/{linkedin,twitter,facebook,instagram}.tsx`, `components/post-card.tsx` |
+| 121 | `[ ]` | **[D1+D6]** Consume next `@poukai-inc/ui` release with React 19 support — wait for lib release that adds R19 dual-peer (per #37), then bump `@poukai-inc/ui` to that version simultaneously with React 19 upgrade (autopost already on R19; this re-validates the pair end-to-end). See [STACK_ALIGNMENT_DECISIONS.md#d1](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) | `package.json` |
 
 ### P1-M — Medium
 
@@ -184,6 +191,7 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 83 | `[ ]` | Document platform-adapter contract for adding Instagram | `lib/platforms/README.md` (new) |
 | 84 | `[ ]` | Document secret-rotation policy per env (Neon, R2, Resend, OAuth, Groq) | `docs/secrets-rotation.md` |
 | 85 | `[ ]` | Decide ELK vs Bugsink long-term; drop `elk` network from compose if dead | `docker-compose.yml` |
+| 120 | `[ ]` | **[D3]** Track Auth.js v5 GA release; open migration ticket within 30–60d of GA. Migration ticket must include: regression tests for every OAuth provider (LinkedIn/Twitter/Facebook), session-cookie compatibility check. Prereq: #119 (exact pin). See [STACK_ALIGNMENT_DECISIONS.md#d3](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) | `package.json`, `lib/auth.ts` |
 
 ---
 
@@ -215,34 +223,35 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 103 | `[ ]` | Post-launch evaluation: migrate to Supabase Auth / push more atoms upstream to DS | TBD |
 | 115 | `[ ]` | **[AUDIT-L1]** ICP agent human-in-loop guard — AI quality scoring alone is insufficient guardrail against adversarial tweets; replies post with no human review. Add `requireHumanApproval` config (default `true`) that saves candidates to DB for dashboard review before posting | `lib/engagement/icp-engagement-agent.ts:338`, new dashboard review route |
 | 116 | `[ ]` | **[AUDIT-L2]** Prompt injection in `improvePost` — user `instructions` param interpolated inline between quotes, no delimiters. Fix: wrap in `<INSTRUCTIONS>` XML tag; add system prompt note | `lib/openai.ts:265-272` |
+| 122 | `[ ]` | **[CI-DEBT]** Revert `setTimeout(fn, 0)` fetch-in-useEffect wraps — 14 dashboard pages + `components/post-form.tsx` were hacked to silence `react-hooks/set-state-in-effect`. Microtask delay is benign but the pattern is misleading. Proper fix: introduce TanStack Query (or SWR) and move initial-fetches out of `useEffect`, OR adopt Suspense + `use(promise)` once R19 data-fetching pattern stabilizes. Introduced in commit `1b351e1`. | `app/dashboard/**/page.tsx`, `components/post-form.tsx` |
 
 ---
 
 ## Snapshot by priority × severity
 
-_Updated after 2026-05-20 security audit (+10 tasks: 107–116)._
+_Updated after 2026-05-20 security audit (+10 tasks: 107–116), 2026-05-20 stack alignment (+5 tasks: 117–121, see [STACK_ALIGNMENT_DECISIONS.md](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md)), and 2026-05-21 CI-greening (+1 task: 122)._
 
 |        | C  | H  | M  | L  | **Total** |
 |--------|----|----|----|----|-----------|
 | **P0** | 15 |  0 |  0 |  0 | **15** |
-| **P1** |  0 | 39 | 13 |  0 | **52** |
-| **P2** |  0 | 15 | 13 |  0 | **28** |
-| **P3** |  0 |  0 |  0 | 20 | **20** |
-| **Total** | **15** | **54** | **26** | **20** | **115** |
+| **P1** |  0 | 43 | 13 |  0 | **56** |
+| **P2** |  0 | 15 | 14 |  0 | **29** |
+| **P3** |  0 |  0 |  0 | 21 | **21** |
+| **Total** | **15** | **58** | **27** | **21** | **121** |
 
 ## Phase ↔ tasks map
 
 | Phase | Tasks | Calendar |
 |---|---|---|
 | Phase 0 — Founder decisions | 1-7 | < 1 wk |
-| Phase 1 — Operational hygiene + **security P0** | 8-12, 13-20, **107-109** | 1 wk |
+| Phase 1 — Operational hygiene + **security P0** + stack alignment | 8-12, 13-20, **107-109**, 117-119 | 1 wk |
 | Phase 1 — Security hardening (H) | 110-111 | 1 wk (parallel with hygiene) |
 | Phase 2 — Postgres + tenancy + notifications | 21-35 | 2-3 wks |
-| Phase 3 — DS Path C | 36-50 | 2-3 wks |
+| Phase 3 — DS Path C | 36-50, 121 | 2-3 wks |
 | Phase 4 — Distribution packaging | 58-67 | 1 wk |
 | Phase 5 — Observability | 68-70 | 0.5 wk |
 | Phase 6 — Tests + validation + cleanup | 71-85, 112-114 | 1-1.5 wks |
-| Post-launch polish | 86-103, 115-116 | rolling |
+| Post-launch polish | 86-103, 115-116, 120, 122 | rolling |
 
 **Solo**: 7-9 wks. **Pair**: 5-6 wks.
 
