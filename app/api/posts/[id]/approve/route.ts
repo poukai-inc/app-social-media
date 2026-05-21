@@ -1,8 +1,10 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
 import Page from '@/lib/models/Page';
+import User from '@/lib/models/User';
 import { getOptimalPostingTime } from '@/lib/learning/platform-learning';
 import type { PlatformType } from '@/lib/platforms/types';
 import { logger } from '@/lib/logger';
@@ -180,6 +182,12 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Auth check — this handler was previously unauthenticated (AUDIT-C1)
+    const session = await auth();
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
     const body = await request.json();
     const { action, feedbackNote } = body;
@@ -190,9 +198,20 @@ export async function POST(
 
     await connectToDatabase();
 
+    // Resolve user to enforce ownership check below
+    const user = await User.findOne({ email: session.user.email });
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     const post = await Post.findById(id);
     if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    // Ownership check — prevent IDOR across users
+    if (post.userId?.toString() !== user._id.toString()) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     if (action === 'approve') {

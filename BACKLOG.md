@@ -2,7 +2,7 @@
 
 **Source**: [MIGRATION_ANALYSIS.md](MIGRATION_ANALYSIS.md) v2.1 — multi-tenant SaaS + self-hostable rewrite
 **Last sync**: 2026-05-20
-**Total tasks**: 103 (12 C / 45 H / 28 M / 18 L)
+**Total tasks**: 116 (15 C / 54 H / 26 M / 20 L)
 
 ## Legend
 
@@ -26,7 +26,7 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 
 ## P0 — Blockers (do first)
 
-7 founder decisions + 5 live security/correctness fixes. Nothing downstream lands until P0 clears.
+7 founder decisions + 5 live security/correctness fixes + 3 new critical security findings (2026-05-20 audit). Nothing downstream lands until P0 clears.
 
 ### P0-C — Critical
 
@@ -44,6 +44,9 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 10 | `[ ]` | Strip placeholder secrets from `Dockerfile` build env | `Dockerfile:18-31` |
 | 11 | `[ ]` | Delete tracked backup file | `lib/platforms/twitter-adapter.ts.backup` |
 | 12 | `[ ]` | Remove `EMAIL_FROM` default `noreply@schedular.primestrides.com`; env-required, fail-fast | `lib/email.ts:14` |
+| 107 | `[x]` | **[AUDIT-C1]** Add auth guard to `POST /api/posts/[id]/approve` — no `auth()` call in POST handler; any unauthenticated caller who knows a post ObjectId can approve/reject/schedule/publish. Add session check + verify `post.userId === user._id` | `app/api/posts/[id]/approve/route.ts:178` |
+| 108 | `[x]` | **[AUDIT-C2]** SSRF in blog URL fetcher — no URL validation; direct `fetch(url)` fallback when Jina fails allows probing `169.254.169.254`, `localhost`, private subnets. Fix: validate URL (allowlist `http/https`, block private/loopback/link-local ranges), remove direct-fetch fallback entirely | `app/api/blog/analyze/route.ts:30-59` |
+| 109 | `[x]` | **[AUDIT-C3]** Prompt injection — external content (blog fetch, DB data-source body, live Twitter tweets) injected verbatim into LLM prompts with no sanitization. Fix: wrap in `<UNTRUSTED_EXTERNAL>` XML delimiters, add system-prompt note marking them untrusted, strip `ignore.*instructions` / `you are now` / `disregard` patterns before injection | `lib/openai.ts:425`, `app/api/generate/route.ts:117`, `lib/engagement/icp-engagement-agent.ts:748` |
 
 ---
 
@@ -65,6 +68,8 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 18 | `[ ]` | `vercel.json` security headers (HSTS, nosniff, Referrer-Policy, Permissions-Policy) | `vercel.json` |
 | 19 | `[ ]` | Pick **one** cron transport per deploy target; document | `vercel.json`, `scheduler/`, `docs/cron.md` |
 | 20 | `[ ]` | Mongoose interim hardening (timeouts, pool size) | `lib/mongodb.ts` |
+| 110 | `[ ]` | **[AUDIT-H1]** OAuth tokens in redirect URL — Twitter refresh token (permanent) + Facebook page tokens base64'd in `?data=` query param; appear in server access logs, browser history, Referer headers. Fix: store pending connection data in short-lived signed server-side session; redirect with opaque one-time key only | `app/api/auth/twitter/callback/route.ts:169`, `app/api/auth/facebook/callback/route.ts:229` |
+| 111 | `[ ]` | **[AUDIT-H2]** HMAC-sign OAuth state param — state is plain base64 JSON, forgeable by any authenticated user; attacker can craft state targeting another user's `pageId` or a future `email`. Fix: sign with `NEXTAUTH_SECRET` via HMAC-SHA256; verify `state.email === session.user.email` in callback. Supersedes audit scope of #71 | `app/api/auth/twitter/route.ts:52`, `app/api/auth/facebook/route.ts`, both callbacks |
 
 #### Phase 2 — Postgres + multi-tenancy + notifications (2-3 wks)
 
@@ -119,6 +124,9 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 57 | `[ ]` | Axe a11y test on top 5 dashboard routes | `tests/a11y/` (new) |
 | 104 | `[~]` | Fix remaining ESLint errors blocking lint CI gate. **Progress 2026-05-20**: 1462 → 156 errors via (a) console→logger migration (~660 calls across 85 files in lib/, app/, components/), (b) `eslint --fix` auto-fix for consistent-type-imports. Remaining 156: ~98 no-unused-vars (manual review), ~27 no-explicit-any (manual typing), ~15 react-hooks/immutability, ~13 @next/next/no-img-element, ~7 react/no-unescaped-entities. After zero: remove `continue-on-error` from CI lint job | repo-wide |
 | 106 | `[ ]` | Tighten jsx-a11y beyond `next/core-web-vitals` baseline to full `recommended` set (R-024..R-033). Requires either forking next/core-web-vitals or registering jsx-a11y under an alias in eslint.config.mjs | `eslint.config.mjs` |
+| 112 | `[ ]` | **[AUDIT-M1]** Block SQL injection vectors in `executeQuery` — `SELECT LOAD_FILE`, `INTO OUTFILE`, `INTO DUMPFILE`, `SLEEP(n)`, `BENCHMARK` all pass the `startsWith('SELECT')` guard. Fix: deny-list these patterns via regex pre-check; set `multipleStatements: false` in MySQL connection config | `lib/data-sources/database.ts:129-191` |
+| 113 | `[ ]` | **[AUDIT-M3]** Upload MIME type bypass — `file.type` is client-supplied; `ext` derived from user-controlled `file.name` (path traversal risk). Fix: apply `path.basename()` before ext extraction; allowlist extensions; add magic-byte validation (first 8 bytes vs known signatures) | `app/api/upload/route.ts:40-54` |
+| 114 | `[ ]` | **[AUDIT-M4]** Encrypt connection strings at rest — external DB credentials stored plaintext in MongoDB. Fix: AES-256-GCM encrypt with `ENCRYPTION_KEY` env var before saving; decrypt on read | `app/api/pages/[id]/data-sources/route.ts:137`, `lib/data-sources/database.ts` |
 | 105 | `[x]` | ~~Fix `tsc --noEmit` errors~~ — DONE (2026-05-20): 11 errors fixed across 7 files (mongoose 9 strict types, TokenAlert.platform narrowing, countDocuments cast); typecheck CI gate now hard | done |
 
 ---
@@ -157,7 +165,7 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | ID | Status | Task | File(s) |
 |---|---|---|---|
 | 71 | `[ ]` | CSRF state validation audit (Twitter, Facebook OAuth callbacks) | `app/api/auth/twitter/callback/route.ts`, `facebook/callback/route.ts` |
-| 72 | `[ ]` | Rate limiting on `/api/generate`, `/api/blog/*`, `/api/upload` (Postgres advisory locks) | `app/api/**/route.ts` |
+| 72 | `[ ]` | Rate limiting on `/api/generate`, `/api/blog/*`, `/api/upload` (Postgres advisory locks). **[AUDIT-M2]** Confirmed by 2026-05-20 security audit — zero rate limiting on all AI + upload endpoints; authenticated user can exhaust Groq quota or S3 storage | `app/api/**/route.ts` |
 
 ### P2-M — Medium
 
@@ -205,31 +213,36 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 101 | `[ ]` | Telemetry opt-in for self-host (anonymized version + feature usage; env-gated default-off) | `lib/telemetry.ts` (new) |
 | 102 | `[ ]` | i18n scaffolding (en first, then es/pt) | `next-intl` or equivalent |
 | 103 | `[ ]` | Post-launch evaluation: migrate to Supabase Auth / push more atoms upstream to DS | TBD |
+| 115 | `[ ]` | **[AUDIT-L1]** ICP agent human-in-loop guard — AI quality scoring alone is insufficient guardrail against adversarial tweets; replies post with no human review. Add `requireHumanApproval` config (default `true`) that saves candidates to DB for dashboard review before posting | `lib/engagement/icp-engagement-agent.ts:338`, new dashboard review route |
+| 116 | `[ ]` | **[AUDIT-L2]** Prompt injection in `improvePost` — user `instructions` param interpolated inline between quotes, no delimiters. Fix: wrap in `<INSTRUCTIONS>` XML tag; add system prompt note | `lib/openai.ts:265-272` |
 
 ---
 
 ## Snapshot by priority × severity
 
+_Updated after 2026-05-20 security audit (+10 tasks: 107–116)._
+
 |        | C  | H  | M  | L  | **Total** |
 |--------|----|----|----|----|-----------|
-| **P0** | 12 |  0 |  0 |  0 | **12** |
-| **P1** |  0 | 37 |  8 |  0 | **45** |
+| **P0** | 15 |  0 |  0 |  0 | **15** |
+| **P1** |  0 | 39 | 13 |  0 | **52** |
 | **P2** |  0 | 15 | 13 |  0 | **28** |
-| **P3** |  0 |  0 |  0 | 18 | **18** |
-| **Total** | **12** | **52** | **21** | **18** | **103** |
+| **P3** |  0 |  0 |  0 | 20 | **20** |
+| **Total** | **15** | **54** | **26** | **20** | **115** |
 
 ## Phase ↔ tasks map
 
 | Phase | Tasks | Calendar |
 |---|---|---|
 | Phase 0 — Founder decisions | 1-7 | < 1 wk |
-| Phase 1 — Operational hygiene | 8-12, 13-20 | 1 wk |
+| Phase 1 — Operational hygiene + **security P0** | 8-12, 13-20, **107-109** | 1 wk |
+| Phase 1 — Security hardening (H) | 110-111 | 1 wk (parallel with hygiene) |
 | Phase 2 — Postgres + tenancy + notifications | 21-35 | 2-3 wks |
 | Phase 3 — DS Path C | 36-50 | 2-3 wks |
 | Phase 4 — Distribution packaging | 58-67 | 1 wk |
 | Phase 5 — Observability | 68-70 | 0.5 wk |
-| Phase 6 — Tests + validation + cleanup | 71-85 | 1-1.5 wks |
-| Post-launch polish | 86-103 | rolling |
+| Phase 6 — Tests + validation + cleanup | 71-85, 112-114 | 1-1.5 wks |
+| Post-launch polish | 86-103, 115-116 | rolling |
 
 **Solo**: 7-9 wks. **Pair**: 5-6 wks.
 
