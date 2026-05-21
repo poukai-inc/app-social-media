@@ -2,11 +2,14 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
 import User from '@/lib/models/User';
-import { 
-  EngagementTarget, 
-  CommentReply, 
+import type {
+  EngagementStatus,
+  ReplyStatus} from '@/lib/models/Engagement';
+import {
+  EngagementTarget,
+  CommentReply,
   EngagementSettings,
-  getOrCreateEngagementSettings 
+  getOrCreateEngagementSettings
 } from '@/lib/models/Engagement';
 import { 
   engageWithPost, 
@@ -14,6 +17,9 @@ import {
   replyToComment 
 } from '@/lib/linkedin-engagement';
 import { generateComment, generateReply } from '@/lib/openai';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('cron:engage');
 
 // This API route processes engagement tasks
 // Run every 15-30 minutes via cron job
@@ -27,14 +33,7 @@ export async function GET(request: Request) {
     const cronSecret = process.env.CRON_SECRET;
     if (cronSecret) {
       const authHeader = request.headers.get('authorization') ?? '';
-      const xCronSecret = request.headers.get('x-cron-secret') ?? '';
-      const url = new URL(request.url);
-      const querySecret = url.searchParams.get('key') ?? url.searchParams.get('cron_secret') ?? url.searchParams.get('token') ?? '';
-
-      const bearerToken = authHeader.toLowerCase().startsWith('bearer ') ? authHeader.slice(7) : '';
-      const authorized = bearerToken === cronSecret || xCronSecret === cronSecret || querySecret === cronSecret;
-
-      if (!authorized) {
+      if (authHeader !== `Bearer ${cronSecret}`) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }
@@ -101,7 +100,8 @@ export async function GET(request: Request) {
 
         if (remainingEngagements > 0) {
           // Get pending engagements (approved or auto-approved based on settings)
-          const statusFilter = settings.requireApproval ? ['approved'] : ['pending', 'approved'];
+          // safe: values are hard-coded EngagementStatus literals, not user input
+          const statusFilter: EngagementStatus[] = settings.requireApproval ? ['approved'] : ['pending', 'approved'];
           
           const pendingEngagements = await EngagementTarget.find({
             userId: user._id,
@@ -143,7 +143,7 @@ export async function GET(request: Request) {
                 });
                 engagement.aiGeneratedComment = commentToPost;
               } catch (aiErr) {
-                console.error('AI comment generation failed:', aiErr);
+                log.error('AI comment generation failed', { error: aiErr instanceof Error ? aiErr.message : String(aiErr) });
                 engagement.status = 'failed';
                 engagement.error = 'Failed to generate AI comment';
                 await engagement.save();
@@ -218,7 +218,7 @@ export async function GET(request: Request) {
                 style: settings.engagementStyle,
               });
             } catch (aiErr) {
-              console.error('AI reply generation failed:', aiErr);
+              log.error('AI reply generation failed', { error: aiErr instanceof Error ? aiErr.message : String(aiErr) });
             }
 
             await CommentReply.create({
@@ -247,8 +247,9 @@ export async function GET(request: Request) {
         const remainingReplies = settings.dailyReplyLimit - todayReplies;
 
         if (remainingReplies > 0) {
-          const statusFilter = settings.requireApproval ? ['approved'] : ['pending', 'approved'];
-          
+          // safe: values are hard-coded ReplyStatus literals, not user input
+          const statusFilter: ReplyStatus[] = settings.requireApproval ? ['approved'] : ['pending', 'approved'];
+
           const pendingReplies = await CommentReply.find({
             userId: user._id,
             status: { $in: statusFilter },
@@ -303,7 +304,7 @@ export async function GET(request: Request) {
       debug,
     });
   } catch (error) {
-    console.error('Engagement cron error:', error);
+    log.error('Engagement cron error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown' },
       { status: 500 }

@@ -1,14 +1,20 @@
 import mongoose from 'mongoose';
-import EngagementHistory, { IEngagementHistory, PlatformEngagement } from '../models/EngagementHistory';
-import { PlatformType } from '../platforms/types';
-import { EngagementDataPoint } from '../platforms/schedule-optimizer';
+import type { PlatformEngagement } from '../models/EngagementHistory';
+import EngagementHistory from '../models/EngagementHistory';
+import type { PlatformType } from '../platforms/types';
+import type { EngagementDataPoint } from '../platforms/schedule-optimizer';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('learning:platform-learning');
+import type {
+  PostAnalysis,
+  PostMetrics
+} from './stats-reviewer';
 import { 
   analyzePostMetrics, 
   generateLearningPrompt, 
   comparePosts as comparePostMetrics,
-  getPlatformMetricGuide,
-  PostAnalysis,
-  PostMetrics
+  getPlatformMetricGuide
 } from './stats-reviewer';
 
 /**
@@ -98,7 +104,7 @@ export async function getPlatformInsights(
 ): Promise<PlatformInsights> {
   // Validate inputs
   if (!isValidObjectId(pageId)) {
-    console.error(`Invalid pageId format: ${pageId}`);
+    log.error('Invalid pageId format', { pageId });
     return getEmptyInsights(platform);
   }
   
@@ -325,7 +331,7 @@ export async function getPlatformInsights(
     topPosts,
   };
   } catch (error) {
-    console.error(`Error getting platform insights for ${platform}:`, error);
+    log.error('Error getting platform insights', { platform, error: error instanceof Error ? error.message : String(error) });
     return getEmptyInsights(platform);
   }
 }
@@ -574,7 +580,7 @@ export async function analyzePostPerformance(
 
     return analyzePostMetrics(platform, metrics, undefined, content);
   } catch (error) {
-    console.error(`Error analyzing post performance:`, error);
+    log.error('Error analyzing post performance', { error: error instanceof Error ? error.message : String(error) });
     return null;
   }
 }
@@ -671,7 +677,7 @@ export async function getPerformanceInsightsForAI(
 
     return lines.join('\n');
   } catch (error) {
-    console.error(`Error getting performance insights:`, error);
+    log.error('Error getting performance insights', { error: error instanceof Error ? error.message : String(error) });
     return getPlatformMetricGuide(platform);
   }
 }
@@ -839,7 +845,7 @@ export async function getContentStrategyReport(
       benchmarkComparison,
     };
   } catch (error) {
-    console.error(`Error generating content strategy report:`, error);
+    log.error('Error generating content strategy report', { error: error instanceof Error ? error.message : String(error) });
     return {
       summary: 'Error generating report.',
       topPatterns: [],

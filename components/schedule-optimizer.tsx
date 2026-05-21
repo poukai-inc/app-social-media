@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { PlatformType } from '@/lib/platforms/types';
+import type { PlatformType } from '@/lib/platforms/types';
 
 interface PlatformTiming {
   platform: PlatformType;

@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('component:post-form');
 import { 
   Calendar, 
   Clock, 
@@ -16,10 +19,12 @@ import {
   RefreshCcw,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import NextImage from 'next/image';
 import { MediaUpload } from './media-upload';
-import { StructuredInputForm, StructuredInput } from './structured-input-form';
+import type { StructuredInput } from './structured-input-form';
+import { StructuredInputForm } from './structured-input-form';
 import PlatformSelector from './platform-selector';
-import { PlatformType } from '@/lib/platforms/types';
+import type { PlatformType } from '@/lib/platforms/types';
 
 type PostMode = 'manual' | 'structured' | 'ai' | 'blog_repurpose';
 
@@ -145,7 +150,7 @@ export function PostForm({
   // Page state
   const [selectedPageId, setSelectedPageId] = useState<string>(initialPageId || '');
   const [pages, setPages] = useState<PageInfo[]>([]);
-  const [isLoadingPages, setIsLoadingPages] = useState(false);
+  const [, setIsLoadingPages] = useState(false);
   
   // Platform state
   const [targetPlatforms, setTargetPlatforms] = useState<PlatformType[]>(
@@ -157,32 +162,6 @@ export function PostForm({
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
 
-  // Fetch organizations on mount
-  useEffect(() => {
-    fetchOrganizations();
-    fetchPages();
-  }, []);
-
-  // When page is selected, auto-fill settings from page strategy
-  useEffect(() => {
-    if (selectedPageId) {
-      const page = pages.find(p => p._id === selectedPageId);
-      if (page) {
-        // Set postAs based on page type
-        setPostAs(page.type === 'organization' ? 'organization' : 'person');
-        if (page.organizationId) {
-          setSelectedOrgId(page.organizationId);
-        }
-        // Use page strategy settings if available
-        if (page.contentStrategy) {
-          if (page.contentStrategy.targetAudience) {
-            setTargetAudience(page.contentStrategy.targetAudience);
-          }
-        }
-      }
-    }
-  }, [selectedPageId, pages]);
-
   const fetchPages = async () => {
     setIsLoadingPages(true);
     try {
@@ -192,7 +171,7 @@ export function PostForm({
         setPages(data.pages || []);
       }
     } catch (err) {
-      console.error('Failed to fetch pages:', err);
+      log.error('Failed to fetch pages', { error: err instanceof Error ? err.message : String(err) });
     } finally {
       setIsLoadingPages(false);
     }
@@ -216,11 +195,40 @@ export function PostForm({
         }
       }
     } catch (err) {
-      console.error('Failed to fetch organizations:', err);
+      log.error('Failed to fetch organizations', { error: err instanceof Error ? err.message : String(err) });
     } finally {
       setIsLoadingOrgs(false);
     }
   };
+
+  // Fetch organizations and pages on mount
+  // Refactor deferred — see BACKLOG #122 (move to TanStack Query / Suspense)
+  useEffect(() => {
+    setTimeout(() => fetchOrganizations(), 0);
+    setTimeout(() => fetchPages(), 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // When page is selected, auto-fill settings from page strategy
+  useEffect(() => {
+    if (selectedPageId) {
+      const page = pages.find(p => p._id === selectedPageId);
+      if (page) {
+        // Set postAs based on page type
+        const nextPostAs = page.type === 'organization' ? 'organization' : 'person';
+        setTimeout(() => {
+          setPostAs(nextPostAs);
+          if (page.organizationId) {
+            setSelectedOrgId(page.organizationId);
+          }
+          // Use page strategy settings if available
+          if (page.contentStrategy?.targetAudience) {
+            setTargetAudience(page.contentStrategy.targetAudience);
+          }
+        }, 0);
+      }
+    }
+  }, [selectedPageId, pages]);
 
   const selectedOrg = organizations.find(org => org.id === selectedOrgId);
 
@@ -385,7 +393,7 @@ export function PostForm({
                     : 'bg-zinc-100 dark:bg-zinc-800'
                 }`}>
                   {page.avatar ? (
-                    <img src={page.avatar} alt={page.name} className="h-5 w-5 rounded-full object-cover" />
+                    <NextImage src={page.avatar} alt={page.name} width={20} height={20} className="h-5 w-5 rounded-full object-cover" unoptimized />
                   ) : page.type === 'organization' ? (
                     <Building2 className={`h-5 w-5 ${
                       selectedPageId === page._id 
@@ -491,7 +499,7 @@ export function PostForm({
                     : 'bg-zinc-100 dark:bg-zinc-800'
                 }`}>
                   {org.logoUrl ? (
-                    <img src={org.logoUrl} alt={org.name} className="h-5 w-5 rounded-full object-cover" />
+                    <NextImage src={org.logoUrl} alt={org.name} width={20} height={20} className="h-5 w-5 rounded-full object-cover" unoptimized />
                   ) : (
                     <Building2 className={`h-5 w-5 ${
                       postAs === 'organization' && selectedOrgId === org.id 

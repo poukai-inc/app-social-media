@@ -94,7 +94,7 @@ export default async function Home() {
                 Draft & Edit
               </h3>
               <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-                Save drafts and edit your posts until they're perfect before publishing.
+                Save drafts and edit your posts until they&apos;re perfect before publishing.
               </p>
             </div>
 
@@ -106,7 +106,7 @@ export default async function Home() {
                 Track Status
               </h3>
               <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-                Monitor all your posts in one place. See what's scheduled, published, or needs attention.
+                Monitor all your posts in one place. See what&apos;s scheduled, published, or needs attention.
               </p>
             </div>
 

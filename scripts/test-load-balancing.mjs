@@ -14,12 +14,10 @@ await connectDB();
 
 // Import the AI client
 const aiClient = await import('../lib/ai-client.ts');
-const { 
-  getUsageStatus, 
-  getTotalCapacity, 
+const {
+  getTotalCapacity,
   getSelectedModel,
   createChatCompletion,
-  MODEL_PRIORITY 
 } = aiClient;
 
 async function testLoadBalancing() {

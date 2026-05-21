@@ -3,7 +3,10 @@ import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import Page from '@/lib/models/Page';
-import { PlatformConnection } from '@/lib/platforms/types';
+import type { PlatformConnection } from '@/lib/platforms/types';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:pages:[id]:connections:linkedin');
 
 /**
  * POST /api/pages/[id]/connections/linkedin
@@ -97,7 +100,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('LinkedIn connection error:', error);
+    log.error('LinkedIn connection error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to connect LinkedIn' },
       { status: 500 }

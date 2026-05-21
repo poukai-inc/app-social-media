@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { PlatformType } from '@/lib/platforms/types';
+import type { PlatformType } from '@/lib/platforms/types';
 
 interface PlatformConnectionDisplay {
   platform: PlatformType;
@@ -59,10 +59,10 @@ export default function PlatformConnections({
   const handleConnect = async (platform: PlatformType) => {
     if (platform === 'facebook') {
       // Redirect to Facebook OAuth
-      window.location.href = `/api/auth/facebook?pageId=${pageId}`;
+      window.location.assign(`/api/auth/facebook?pageId=${pageId}`);
     } else if (platform === 'twitter') {
       // Redirect to Twitter OAuth
-      window.location.href = `/api/auth/twitter?pageId=${pageId}`;
+      window.location.assign(`/api/auth/twitter?pageId=${pageId}`);
     } else if (platform === 'linkedin') {
       // For LinkedIn, we can use the current session's credentials
       // This will connect the page to the user's LinkedIn profile

@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ScheduleOptimizer from '@/components/schedule-optimizer';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:schedule');
 
 interface Page {
   _id: string;
@@ -30,8 +33,8 @@ export default function SchedulePage() {
             setSelectedPageId(data.pages[0]._id);
           }
         }
-      } catch {
-        console.error('Failed to fetch pages');
+      } catch (err) {
+        log.error('Failed to fetch pages', { error: err instanceof Error ? err.message : String(err) });
       } finally {
         setIsLoading(false);
       }

@@ -1,6 +1,6 @@
 /**
  * Conversation Manager
- * 
+ *
  * Handles bidirectional conversations for ICP engagement.
  * - Monitors existing conversations for new replies
  * - Generates contextual follow-up responses
@@ -9,12 +9,15 @@
  */
 
 import mongoose from 'mongoose';
-import ICPEngagement, { IICPEngagement } from '../models/ICPEngagement';
+import type { IICPEngagement } from '../models/ICPEngagement';
+import ICPEngagement from '../models/ICPEngagement';
 import Page from '../models/Page';
 import { twitterAdapter } from '../platforms/twitter-adapter';
 import { createChatCompletion } from '../ai-client';
-import { generateComment } from '../openai';
 import { acquireLock, releaseLock } from '../distributed-lock';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('engagement:conversation-manager');
 
 // ============================================
 // Production Safety Configuration
@@ -80,7 +83,7 @@ async function validateResponseSafety(
   theirMessage: string,
   engagement: IICPEngagement
 ): Promise<{ safe: boolean; reason?: string; severity?: 'low' | 'medium' | 'high'; qualityScore?: number }> {
-  
+
   // 1. LENGTH & FORMAT CHECKS
   if (response.length < 20) {
     return { safe: false, reason: 'Response too short', severity: 'low' };
@@ -88,7 +91,7 @@ async function validateResponseSafety(
   if (response.length > 280) {
     return { safe: false, reason: 'Response exceeds Twitter limit', severity: 'high' };
   }
-  
+
   // 2. SPAM PATTERN DETECTION
   const spamPatterns = [
     /check out|click here|link in bio|dm me|follow me/i,
@@ -96,53 +99,53 @@ async function validateResponseSafety(
     /\b(viagra|cialis|forex|crypto|nft)\b/i,
     /(https?:\/\/|www\.)/i, // No URLs in responses
   ];
-  
+
   for (const pattern of spamPatterns) {
     if (pattern.test(response)) {
       return { safe: false, reason: 'Spam pattern detected', severity: 'high' };
     }
   }
-  
+
   // 3. REPETITION CHECK - Don't say the same thing twice
   const previousResponses = engagement.conversation?.messages
     .filter(m => m.isFromUs)
     .map(m => m.content) || [];
-  
+
   for (const prev of previousResponses) {
     const similarity = calculateStringSimilarity(response, prev);
     if (similarity > 0.8) {
       return { safe: false, reason: 'Response too similar to previous message', severity: 'medium' };
     }
   }
-  
+
   // 4. CONTEXT RELEVANCE - Must relate to their message
   if (!doesResponseAddressMessage(response, theirMessage)) {
     return { safe: false, reason: 'Response not relevant to their message', severity: 'medium' };
   }
-  
+
   // 5. AI QUALITY SCORE
   const qualityScore = await scoreResponseQuality(response, theirMessage);
   if (qualityScore < PRODUCTION_LIMITS.qualityScoreThreshold) {
-    return { 
-      safe: false, 
-      reason: `Quality score too low: ${qualityScore.toFixed(2)}`, 
+    return {
+      safe: false,
+      reason: `Quality score too low: ${qualityScore.toFixed(2)}`,
       severity: 'medium',
-      qualityScore 
+      qualityScore,
     };
   }
-  
+
   // 6. TOXICITY CHECK (if enabled)
   if (PRODUCTION_LIMITS.toxicityCheckEnabled) {
     const toxicityResult = await checkToxicity(response);
     if (toxicityResult.isToxic) {
-      return { 
-        safe: false, 
-        reason: `Toxicity detected: ${toxicityResult.reason}`, 
-        severity: 'high' 
+      return {
+        safe: false,
+        reason: `Toxicity detected: ${toxicityResult.reason}`,
+        severity: 'high',
       };
     }
   }
-  
+
   // All checks passed
   return { safe: true, qualityScore };
 }
@@ -153,13 +156,13 @@ async function validateResponseSafety(
 function calculateStringSimilarity(str1: string, str2: string): number {
   const s1 = str1.toLowerCase().replace(/[^\w\s]/g, '');
   const s2 = str2.toLowerCase().replace(/[^\w\s]/g, '');
-  
+
   const words1 = new Set(s1.split(/\s+/));
   const words2 = new Set(s2.split(/\s+/));
-  
+
   const intersection = new Set([...words1].filter(w => words2.has(w)));
   const union = new Set([...words1, ...words2]);
-  
+
   return intersection.size / union.size;
 }
 
@@ -172,20 +175,20 @@ function doesResponseAddressMessage(response: string, theirMessage: string): boo
     .replace(/[^\w\s]/g, '')
     .split(/\s+/)
     .filter(w => w.length > 4); // Focus on meaningful words
-  
+
   const responseWords = response.toLowerCase()
     .replace(/[^\w\s]/g, '')
     .split(/\s+/);
-  
+
   // Response should share at least 2 meaningful words or directly answer
   const sharedWords = theirWords.filter(w => responseWords.includes(w));
-  
+
   // Also check for question patterns - if they asked something, we should respond with substance
   const hasQuestion = /\?/.test(theirMessage);
   if (hasQuestion && response.length < 30) {
     return false; // Too short for a question response
   }
-  
+
   return sharedWords.length >= 1 || response.length > 50;
 }
 
@@ -209,22 +212,22 @@ Return ONLY a single decimal number between 0 and 1 (example: 0.8). No text, no 
       maxTokens: 10,
       preferFast: true,
     });
-    
-    console.log(`[Conversation Monitor] Quality score AI response: "${result.content}"`);
-    
+
+    log.info('Quality score AI response', { content: result.content });
+
     // Try to extract a number from the response
     const content = result.content || '';
     const numberMatch = content.match(/(\d+\.?\d*)/);
     const score = numberMatch ? parseFloat(numberMatch[1]) : NaN;
-    
+
     if (isNaN(score)) {
-      console.warn(`[Conversation Monitor] Could not parse quality score, defaulting to 0.7`);
+      log.warn('Could not parse quality score, defaulting to 0.7');
       return 0.7; // Default to passing score if we can't parse
     }
-    
+
     return Math.max(0, Math.min(1, score));
   } catch (error) {
-    console.warn('Failed to score response quality:', error);
+    log.warn('Failed to score response quality', { error: error instanceof Error ? error.message : String(error) });
     return 0.7; // Default to passing score if scoring fails
   }
 }
@@ -235,25 +238,25 @@ Return ONLY a single decimal number between 0 and 1 (example: 0.8). No text, no 
 async function checkToxicity(text: string): Promise<{ isToxic: boolean; reason?: string }> {
   // Simple rule-based toxicity check
   // In production, consider using Perspective API or similar
-  
+
   const toxicPatterns = [
     /\b(fuck|shit|damn|hell|ass|bitch|bastard)\b/i,
     /\b(stupid|idiot|moron|dumb|loser)\b/i,
     /\b(hate|kill|die|death)\b/i,
   ];
-  
+
   for (const pattern of toxicPatterns) {
     if (pattern.test(text)) {
       return { isToxic: true, reason: 'Inappropriate language detected' };
     }
   }
-  
+
   // Check for all caps (shouting)
   const capsRatio = (text.match(/[A-Z]/g) || []).length / text.length;
   if (capsRatio > 0.6 && text.length > 20) {
     return { isToxic: true, reason: 'Excessive capitalization (appears aggressive)' };
   }
-  
+
   return { isToxic: false };
 }
 
@@ -265,7 +268,7 @@ let dailyUsageCache: DailyUsage | null = null;
 
 async function checkDailyLimits(): Promise<{ allowed: boolean; reason?: string }> {
   const today = new Date().toISOString().split('T')[0];
-  
+
   // Check cache first
   if (dailyUsageCache && dailyUsageCache.date === today) {
     if (dailyUsageCache.responsesSent >= PRODUCTION_LIMITS.maxResponsesPerDay) {
@@ -276,12 +279,12 @@ async function checkDailyLimits(): Promise<{ allowed: boolean; reason?: string }
     }
     return { allowed: true };
   }
-  
+
   // Query database for today's usage
   const todayStart = new Date(today);
   const todayEnd = new Date(today);
   todayEnd.setDate(todayEnd.getDate() + 1);
-  
+
   const stats = await ICPEngagement.aggregate([
     {
       $match: {
@@ -318,10 +321,10 @@ async function checkDailyLimits(): Promise<{ allowed: boolean; reason?: string }
       },
     },
   ]);
-  
+
   const totalResponses = stats[0]?.totalResponses || 0;
   const estimatedCost = totalResponses * 0.02; // Rough estimate: $0.02 per response
-  
+
   dailyUsageCache = {
     date: today,
     responsesGenerated: totalResponses,
@@ -329,14 +332,14 @@ async function checkDailyLimits(): Promise<{ allowed: boolean; reason?: string }
     estimatedCost,
     errors: 0,
   };
-  
+
   if (totalResponses >= PRODUCTION_LIMITS.maxResponsesPerDay) {
     return { allowed: false, reason: `Daily limit reached: ${totalResponses}/${PRODUCTION_LIMITS.maxResponsesPerDay}` };
   }
   if (estimatedCost >= PRODUCTION_LIMITS.costBudgetPerDay) {
     return { allowed: false, reason: `Daily budget exceeded: $${estimatedCost.toFixed(2)}` };
   }
-  
+
   return { allowed: true };
 }
 
@@ -410,23 +413,23 @@ Context: This is a professional social media conversation where we initially eng
     });
 
     const content = result.content || '';
-    console.log(`[Conversation Monitor] AI analysis raw response: ${content.slice(0, 200)}`);
-    
+    log.info('AI analysis raw response', { preview: content.slice(0, 200) });
+
     // Try to extract JSON from the response (handle markdown code blocks)
     let jsonStr = content;
-    
+
     // Remove markdown code blocks if present
     const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) {
       jsonStr = jsonMatch[1].trim();
     }
-    
+
     // Try to find JSON object in the string
     const jsonObjMatch = jsonStr.match(/\{[\s\S]*\}/);
     if (jsonObjMatch) {
       jsonStr = jsonObjMatch[0];
     }
-    
+
     const analysis = JSON.parse(jsonStr);
     return {
       shouldRespond: analysis.shouldRespond === true,
@@ -434,7 +437,7 @@ Context: This is a professional social media conversation where we initially eng
       suggestedTone: analysis.suggestedTone || 'friendly',
     };
   } catch (error) {
-    console.warn('Failed to analyze conversation context:', error);
+    log.warn('Failed to analyze conversation context', { error: error instanceof Error ? error.message : String(error) });
     // Default to responding if analysis fails - better to engage than miss opportunities
     return {
       shouldRespond: true,
@@ -455,7 +458,7 @@ async function generateConversationResponse(
   platform: 'twitter' | 'linkedin'
 ): Promise<string> {
   const maxLength = platform === 'twitter' ? 250 : 300; // Leave room for potential handles
-  
+
   const conversationText = conversationHistory.slice(-4) // Last 4 messages for context
     .map(msg => `${msg.isFromUs ? '[US]' : '[THEM]'}: ${msg.content}`)
     .join('\n');
@@ -478,10 +481,8 @@ Rules:
 - Avoid "Great point!" or "Thanks for sharing!"
 - If they asked a question, answer it`;
 
-  console.log(`[Conversation Monitor] Generating response for ${platform} conversation...`);
-  console.log(`[Conversation Monitor] Prompt length: ${prompt.length} chars`);
-  console.log(`[Conversation Monitor] Conversation history: ${conversationHistory.length} messages`);
-  
+  log.info('Generating conversation response', { platform, historyLength: conversationHistory.length, promptLength: prompt.length });
+
   // Retry up to 3 times if we get empty response
   for (let attempt = 1; attempt <= 3; attempt++) {
     const result = await createChatCompletion({
@@ -494,10 +495,10 @@ Rules:
       preferFast: attempt > 1 ? false : true, // Use slower model on retry
     });
 
-    console.log(`[Conversation Monitor] AI result (attempt ${attempt}): content type=${typeof result.content}, length=${result.content?.length || 0}`);
-    
+    log.info('AI result', { attempt, contentType: typeof result.content, contentLength: result.content?.length || 0 });
+
     const response = result.content?.trim() || '';
-    
+
     if (response.length > 0) {
       // Truncate if too long (AI doesn't always respect length limits)
       let finalResponse = response;
@@ -507,7 +508,7 @@ Rules:
         const lastSentence = truncated.lastIndexOf('.');
         const lastQuestion = truncated.lastIndexOf('?');
         const breakPoint = Math.max(lastSentence, lastQuestion);
-        
+
         if (breakPoint > 150) {
           finalResponse = truncated.slice(0, breakPoint + 1);
         } else {
@@ -515,17 +516,20 @@ Rules:
           const lastSpace = truncated.lastIndexOf(' ');
           finalResponse = truncated.slice(0, lastSpace) + '...';
         }
-        console.log(`[Conversation Monitor] Truncated response from ${response.length} to ${finalResponse.length} chars`);
+        log.info('Response truncated', { originalLength: response.length, finalLength: finalResponse.length });
       }
-      
-      console.log(`[Conversation Monitor] Generated response (${finalResponse.length} chars): "${finalResponse.slice(0, 100)}${finalResponse.length > 100 ? '...' : ''}"`);
+
+      log.info('Generated response', { length: finalResponse.length, preview: finalResponse.slice(0, 100) });
       return finalResponse;
     }
-    
-    console.warn(`[Conversation Monitor] Empty response on attempt ${attempt}, ${attempt < 3 ? 'retrying with different model...' : 'all retries exhausted'}`);
+
+    log.warn('Empty response on attempt', {
+      attempt,
+      nextAction: attempt < 3 ? 'retrying with different model' : 'all retries exhausted',
+    });
   }
-  
-  console.error(`[Conversation Monitor] All 3 response generation attempts returned empty`);
+
+  log.error('All response generation attempts returned empty');
   return '';
 }
 
@@ -540,7 +544,7 @@ Rules:
 function calculateConversationPriority(engagement: IICPEngagement): number {
   let score = 0;
   const now = Date.now();
-  
+
   // Recent activity = high priority
   const lastReplyTime = engagement.conversation?.messages?.[engagement.conversation.messages.length - 1]?.timestamp;
   if (lastReplyTime) {
@@ -549,23 +553,23 @@ function calculateConversationPriority(engagement: IICPEngagement): number {
     else if (hoursSinceReply < 24) score += 50;   // Recent (< 1 day)
     else if (hoursSinceReply < 72) score += 20;   // Somewhat recent (< 3 days)
   }
-  
+
   // Active conversations = higher priority
   const messageCount = engagement.conversation?.messages?.length || 0;
   score += Math.min(messageCount * 5, 30); // Up to +30 for active conversations
-  
+
   // Never checked = medium priority (might be new)
   if (!engagement.conversation?.lastCheckedAt) {
     score += 40;
   }
-  
+
   // Long time since last check = increase priority
   const lastChecked = engagement.conversation?.lastCheckedAt;
   if (lastChecked) {
     const hoursSinceCheck = (now - new Date(lastChecked).getTime()) / (1000 * 60 * 60);
     if (hoursSinceCheck > 12) score += 15;
   }
-  
+
   return score;
 }
 
@@ -575,19 +579,19 @@ function calculateConversationPriority(engagement: IICPEngagement): number {
  */
 function getAdaptiveCheckInterval(engagement: IICPEngagement): number {
   const baseInterval = PRODUCTION_LIMITS.minTimeBetweenChecks; // 30 minutes default
-  
+
   // If conversation is very active, check more frequently
   const lastReplyTime = engagement.conversation?.messages?.[engagement.conversation.messages.length - 1]?.timestamp;
   if (lastReplyTime) {
     const hoursSinceReply = (Date.now() - new Date(lastReplyTime).getTime()) / (1000 * 60 * 60);
-    
+
     if (hoursSinceReply < 2) return baseInterval * 0.5;      // 15 min - very active
     if (hoursSinceReply < 6) return baseInterval;             // 30 min - active
     if (hoursSinceReply < 24) return baseInterval * 2;        // 60 min - recent
     if (hoursSinceReply < 72) return baseInterval * 4;        // 120 min - older
     return baseInterval * 8;                                   // 240 min - very old
   }
-  
+
   return baseInterval; // Default if no message history
 }
 
@@ -630,10 +634,10 @@ export async function monitorAndRespondToConversations(
     lockName: lockKey,
     ttlSeconds: 300, // 5 minute lock
   });
-  
+
   if (!lockResult.acquired) {
     result.errors.push('Another instance is already processing conversations');
-    console.log(`[Conversation Monitor] Lock not acquired - ${lockResult.error}`);
+    log.info('Lock not acquired', { error: lockResult.error });
     return result;
   }
 
@@ -643,17 +647,17 @@ export async function monitorAndRespondToConversations(
       const limitCheck = await checkDailyLimits();
       if (!limitCheck.allowed) {
         result.errors.push(`Daily limits exceeded: ${limitCheck.reason}`);
-        console.warn(`[Conversation Monitor] ${limitCheck.reason}`);
+        log.warn('Daily limit exceeded', { reason: limitCheck.reason });
         return result;
       }
     }
     // Find active conversations that need checking
     const cutoffTime = new Date(Date.now() - minTimeBetweenChecks * 60 * 1000);
-    
+
     // Query finds:
     // 1. Engagements with conversation tracking enabled (new system)
     // 2. Engagements where they replied but conversation not yet initialized (legacy/migration)
-    const query: any = {
+    const query: Record<string, unknown> = {
       platform: 'twitter',
       $or: [
         // New conversation system - tracking enabled
@@ -692,36 +696,36 @@ export async function monitorAndRespondToConversations(
 
     // OPTIMIZATION: Apply smart polling logic
     let conversationsToProcess = allConversations;
-    
+
     if (useSmartPolling && allConversations.length > 0) {
       // Filter out conversations that don't need checking yet (adaptive intervals)
       const now = Date.now();
-      conversationsToProcess = allConversations.filter((eng: any) => {
+      conversationsToProcess = allConversations.filter((eng: IICPEngagement) => {
         const lastChecked = eng.conversation?.lastCheckedAt;
         if (!lastChecked) return true; // Never checked = always check
-        
-        const adaptiveInterval = getAdaptiveCheckInterval(eng as IICPEngagement);
+
+        const adaptiveInterval = getAdaptiveCheckInterval(eng);
         const timeSinceCheck = (now - new Date(lastChecked).getTime()) / (1000 * 60); // minutes
-        
+
         return timeSinceCheck >= adaptiveInterval;
       });
-      
+
       // Score and sort by priority
-      const scoredConversations = conversationsToProcess.map((eng: any) => ({
+      const scoredConversations = conversationsToProcess.map((eng: IICPEngagement) => ({
         engagement: eng,
-        priority: calculateConversationPriority(eng as IICPEngagement),
+        priority: calculateConversationPriority(eng),
       }));
-      
+
       scoredConversations.sort((a, b) => b.priority - a.priority); // Highest priority first
-      
+
       conversationsToProcess = scoredConversations
         .slice(0, maxConversationsToCheck)
-        .map(item => item.engagement);
-      
-      console.log(`[Conversation Monitor] Smart polling: ${allConversations.length} total → ${conversationsToProcess.length} after filtering & prioritization`);
+        .map(item => item.engagement) as typeof allConversations;
+
+      log.info('Smart polling applied', { total: allConversations.length, afterFiltering: conversationsToProcess.length });
     } else {
       // Fallback to simple time-based filtering (original logic)
-      conversationsToProcess = allConversations.filter((eng: any) => {
+      conversationsToProcess = allConversations.filter((eng: IICPEngagement) => {
         const lastChecked = eng.conversation?.lastCheckedAt;
         return !lastChecked || new Date(lastChecked) < cutoffTime;
       }).slice(0, maxConversationsToCheck);
@@ -729,13 +733,13 @@ export async function monitorAndRespondToConversations(
 
     const activeConversations = conversationsToProcess;
 
-    console.log(`[Conversation Monitor] Found ${activeConversations.length} conversations to check`);
+    log.info('Conversations to check', { count: activeConversations.length });
 
     let responsesSent = 0;
 
     for (const engagement of activeConversations) {
       if (responsesSent >= maxResponsesToSend) {
-        console.log(`[Conversation Monitor] Reached max responses limit (${maxResponsesToSend})`);
+        log.info('Reached max responses limit', { maxResponsesToSend });
         break;
       }
 
@@ -744,8 +748,13 @@ export async function monitorAndRespondToConversations(
 
         // MIGRATION: Initialize conversation tracking for legacy engagements
         if (!engagement.conversation) {
-          console.log(`[Conversation Monitor] Initializing conversation tracking for legacy engagement ${engagement._id}`);
-          const ourReply = (engagement as any).ourReply;
+          log.info('Initializing conversation tracking for legacy engagement', { engagementId: engagement._id });
+          const engExt = engagement as unknown as {
+            ourReply?: { id?: string; content?: string; url?: string };
+            engagedAt?: Date;
+            conversation?: Record<string, unknown>;
+          };
+          const ourReply = engExt.ourReply;
           await ICPEngagement.updateOne(
             { _id: engagement._id },
             {
@@ -759,7 +768,7 @@ export async function monitorAndRespondToConversations(
                   id: ourReply.id,
                   authorId: '', // Unknown for legacy
                   content: ourReply.content || '',
-                  timestamp: (engagement as any).engagedAt || new Date(),
+                  timestamp: engExt.engagedAt || new Date(),
                   isFromUs: true,
                   url: ourReply.url,
                 }] : [],
@@ -767,7 +776,7 @@ export async function monitorAndRespondToConversations(
             }
           );
           // Reload engagement with conversation data
-          (engagement as any).conversation = {
+          engExt.conversation = {
             threadId: engagement.targetPost.id,
             autoResponseEnabled: true,
             maxAutoResponses: 3,
@@ -779,11 +788,11 @@ export async function monitorAndRespondToConversations(
 
         // Get Twitter connection for this page
         // IMPORTANT: Reload fresh from DB to avoid stale token race with token-refresh cron
-        const page = engagement.pageId as any;
+        const page = engagement.pageId as unknown as { _id?: { toString(): string }; toString(): string };
         const pageId = page._id?.toString() || page.toString();
         const freshPage = await Page.findById(pageId);
-        const twitterConnection = freshPage?.connections?.find((c: any) => c.platform === 'twitter' && c.isActive);
-        
+        const twitterConnection = freshPage?.connections?.find((c: { platform: string; isActive: boolean }) => c.platform === 'twitter' && c.isActive);
+
         if (!twitterConnection) {
           result.errors.push(`Page ${pageId} has no active Twitter connection`);
           continue;
@@ -792,13 +801,16 @@ export async function monitorAndRespondToConversations(
         // Check for new replies in this conversation
         const lastChecked = engagement.conversation?.lastCheckedAt;
         const threadId = engagement.conversation?.threadId || engagement.targetPost?.id;
-        const ourReplyId = (engagement as any).ourReply?.id;
-        
-        console.log(`[Conversation Monitor] Checking engagement ${engagement._id}:`);
-        console.log(`  - threadId: ${threadId}`);
-        console.log(`  - targetPost.id: ${engagement.targetPost?.id}`);
-        console.log(`  - ourReply.id: ${ourReplyId}`);
-        
+        const engExt2 = engagement as unknown as { ourReply?: { id?: string }; conversation?: { consecutiveFailures?: number } };
+        const ourReplyId = engExt2.ourReply?.id;
+
+        log.info('Checking engagement', {
+          engagementId: engagement._id,
+          threadId,
+          targetPostId: engagement.targetPost?.id,
+          ourReplyId,
+        });
+
         const conversationResult = await twitterAdapter.checkConversationReplies(
           twitterConnection,
           threadId,
@@ -809,7 +821,7 @@ export async function monitorAndRespondToConversations(
         if (!conversationResult.success) {
           const errorMsg = conversationResult.error || 'Unknown error';
           result.errors.push(`Failed to check conversation ${engagement._id}: ${errorMsg}`);
-          
+
           // PRODUCTION FIX: If the error is auth-related (401, "Could not get user info",
           // "Unauthorized"), disable auto-response to stop retrying a broken connection.
           const isAuthError = errorMsg.includes('401') ||
@@ -817,9 +829,9 @@ export async function monitorAndRespondToConversations(
             errorMsg.includes('Could not get user info') ||
             errorMsg.includes('Could not get user ID') ||
             errorMsg.includes('invalid or expired');
-          
+
           if (isAuthError) {
-            console.warn(`[Conversation Monitor] Auth error for engagement ${engagement._id} — disabling auto-response`);
+            log.warn('Auth error - disabling auto-response', { engagementId: engagement._id, error: errorMsg });
             await ICPEngagement.updateOne(
               { _id: engagement._id },
               {
@@ -833,9 +845,9 @@ export async function monitorAndRespondToConversations(
           } else {
             // For non-auth errors, increment a failure counter
             // Disable after 5 consecutive failures to prevent infinite retries
-            const consecutiveFailures = ((engagement as any).conversation?.consecutiveFailures || 0) + 1;
+            const consecutiveFailures = (engExt2.conversation?.consecutiveFailures || 0) + 1;
             if (consecutiveFailures >= 5) {
-              console.warn(`[Conversation Monitor] 5 consecutive failures for ${engagement._id} — disabling auto-response`);
+              log.warn('5 consecutive failures - disabling auto-response', { engagementId: engagement._id });
               await ICPEngagement.updateOne(
                 { _id: engagement._id },
                 {
@@ -859,12 +871,12 @@ export async function monitorAndRespondToConversations(
               );
             }
           }
-          
+
           continue;
         }
 
         // Reset consecutive failure counter on success
-        if ((engagement as any).conversation?.consecutiveFailures > 0) {
+        if (engExt2.conversation?.consecutiveFailures && engExt2.conversation.consecutiveFailures > 0) {
           await ICPEngagement.updateOne(
             { _id: engagement._id },
             { $set: { 'conversation.consecutiveFailures': 0 } }
@@ -873,35 +885,41 @@ export async function monitorAndRespondToConversations(
 
         // Get our user ID to filter out our own tweets
         const ourUserId = await twitterAdapter.getOwnUserId(twitterConnection);
-        
+
         if (!ourUserId) {
           result.errors.push(`Could not get own user ID for engagement ${engagement._id} — Twitter API may be failing`);
           // Don't disable here since checkConversationReplies already succeeded
           // Just skip this iteration
           continue;
         }
-        
+
         // Get existing message IDs to avoid duplicates
         const existingMessageIds = new Set(
-          (engagement.conversation?.messages || []).map((m: any) => m.id)
+          (engagement.conversation?.messages || []).map((m: { id: string }) => m.id)
         );
-        
+
         // Filter out:
         // 1. Our own tweets
         // 2. Replies we've already processed (by ID)
         const newRepliesFromOthers = conversationResult.newReplies.filter(reply => {
           const isFromOthers = reply.authorId !== ourUserId;
           const isNotAlreadyProcessed = !existingMessageIds.has(reply.id);
-          
-          console.log(`[Conversation Monitor] Reply ${reply.id}: from=${reply.authorId}, ours=${ourUserId}, isOthers=${isFromOthers}, alreadyProcessed=${!isNotAlreadyProcessed}`);
-          
+
+          log.info('Reply filter check', {
+            replyId: reply.id,
+            authorId: reply.authorId,
+            ourUserId,
+            isFromOthers,
+            alreadyProcessed: !isNotAlreadyProcessed,
+          });
+
           return isFromOthers && isNotAlreadyProcessed;
         });
 
         // Update last checked time
         await ICPEngagement.updateOne(
           { _id: engagement._id },
-          { 
+          {
             $set: { 'conversation.lastCheckedAt': new Date() },
           }
         );
@@ -910,12 +928,12 @@ export async function monitorAndRespondToConversations(
           continue; // No new replies to process
         }
 
-        console.log(`[Conversation Monitor] Found ${newRepliesFromOthers.length} new replies for engagement ${engagement._id}`);
+        log.info('New replies found', { count: newRepliesFromOthers.length, engagementId: engagement._id });
         result.updatesFound++;
 
         // Process the most recent reply
         const latestReply = newRepliesFromOthers[newRepliesFromOthers.length - 1];
-        
+
         // Update conversation history with new messages
         const newMessages = newRepliesFromOthers.map(reply => ({
           id: reply.id,
@@ -932,8 +950,12 @@ export async function monitorAndRespondToConversations(
           ...existingMessages,
           ...newMessages,
         ];
-        
-        console.log(`[Conversation Monitor] Conversation history: ${existingMessages.length} existing + ${newMessages.length} new = ${conversationHistory.length} total`);
+
+        log.info('Conversation history', {
+          existing: existingMessages.length,
+          new: newMessages.length,
+          total: conversationHistory.length,
+        });
 
         // Add new messages to conversation history in DB
         await ICPEngagement.updateOne(
@@ -952,15 +974,19 @@ export async function monitorAndRespondToConversations(
           { content: latestReply.text, isFromUs: false }
         );
 
-        console.log(`[Conversation Monitor] Analysis for ${engagement._id}: ${analysis.shouldRespond ? 'RESPOND' : 'SKIP'} - ${analysis.reason}`);
-        console.log(`[Conversation Monitor] shouldRespond value: ${analysis.shouldRespond} (type: ${typeof analysis.shouldRespond})`);
+        log.info('Analysis result', {
+          engagementId: engagement._id,
+          shouldRespond: analysis.shouldRespond,
+          reason: analysis.reason,
+          shouldRespondType: typeof analysis.shouldRespond,
+        });
 
         if (!analysis.shouldRespond) {
-          console.log(`[Conversation Monitor] Skipping response for ${engagement._id} per analysis`);
+          log.info('Skipping response per analysis', { engagementId: engagement._id });
           continue; // Don't respond to this message
         }
 
-        console.log(`[Conversation Monitor] Proceeding to generate response...`);
+        log.info('Proceeding to generate response');
 
         // Generate response
         const response = await generateConversationResponse(
@@ -974,7 +1000,7 @@ export async function monitorAndRespondToConversations(
         );
 
         if (!response || response.length === 0) {
-          console.error(`[Conversation Monitor] Response generation returned empty for ${engagement._id}`);
+          log.error('Response generation returned empty', { engagementId: engagement._id });
           result.errors.push(`Failed to generate response for engagement ${engagement._id}`);
           continue;
         }
@@ -982,23 +1008,23 @@ export async function monitorAndRespondToConversations(
         // SAFETY CHECK: Validate response quality and safety
         const safetyCheck = await validateResponseSafety(response, latestReply.text, engagement);
         if (!safetyCheck.safe) {
-          console.log(`[Conversation Monitor] Response rejected for ${engagement._id}: ${safetyCheck.reason}`);
+          log.info('Response rejected by safety check', { engagementId: engagement._id, reason: safetyCheck.reason });
           result.errors.push(`Response rejected: ${safetyCheck.reason}`);
-          
+
           // Disable auto-response if multiple safety failures
           if (safetyCheck.severity === 'high') {
             await disableAutoResponse(engagement._id.toString());
-            console.warn(`[Conversation Monitor] Auto-response disabled for ${engagement._id} due to safety concern`);
+            log.warn('Auto-response disabled due to safety concern', { engagementId: engagement._id });
           }
           continue;
         }
 
-        console.log(`[Conversation Monitor] Generated response for ${engagement._id}: "${response.slice(0, 100)}..."`);
+        log.info('Generated response', { engagementId: engagement._id, preview: response.slice(0, 100) });
         result.responsesGenerated++;
         incrementDailyUsage(false); // Track generation
 
         if (dryRun) {
-          console.log(`[Conversation Monitor] DRY RUN - Would send: "${response}"`);
+          log.info('DRY RUN - Would send response', { response });
           continue;
         }
 
@@ -1006,7 +1032,7 @@ export async function monitorAndRespondToConversations(
         const finalLimitCheck = await checkDailyLimits();
         if (!finalLimitCheck.allowed) {
           result.errors.push(`Hit daily limit before sending: ${finalLimitCheck.reason}`);
-          console.warn(`[Conversation Monitor] Hit limit, stopping: ${finalLimitCheck.reason}`);
+          log.warn('Hit limit, stopping', { reason: finalLimitCheck.reason });
           break; // Stop processing more conversations
         }
 
@@ -1045,7 +1071,7 @@ export async function monitorAndRespondToConversations(
           }
         );
 
-        console.log(`[Conversation Monitor] Successfully sent response for engagement ${engagement._id}`);
+        log.info('Successfully sent response', { engagementId: engagement._id });
         result.responsesSent++;
         responsesSent++;
         incrementDailyUsage(true); // Track sent response
@@ -1055,16 +1081,23 @@ export async function monitorAndRespondToConversations(
 
       } catch (error) {
         result.errors.push(`Error processing engagement ${engagement._id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        console.error(`[Conversation Monitor] Error processing engagement ${engagement._id}:`, error);
+        log.error('Error processing engagement', {
+          engagementId: engagement._id,
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        });
       }
     }
 
-    console.log(`[Conversation Monitor] Completed: ${result.conversationsChecked} checked, ${result.responsesSent} responses sent`);
+    log.info('Completed', { conversationsChecked: result.conversationsChecked, responsesSent: result.responsesSent });
     return result;
 
   } catch (error) {
     result.errors.push(`Fatal error in conversation monitor: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    console.error('[Conversation Monitor] Fatal error:', error);
+    log.error('Fatal error', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return result;
   } finally {
     // PRODUCTION SAFETY: Always release the lock
@@ -1083,7 +1116,7 @@ export async function initializeConversation(
   ourReplyUrl?: string
 ): Promise<void> {
   const ourUserId = ''; // Will be filled when we send the reply
-  
+
   await ICPEngagement.updateOne(
     { _id: engagementId },
     {
@@ -1130,7 +1163,7 @@ export async function getConversationStats(pageId?: string): Promise<{
   autoResponsesEnabled: number;
   autoResponsesSent: number;
 }> {
-  const query: any = { platform: 'twitter' };
+  const query: Record<string, unknown> = { platform: 'twitter' };
   if (pageId) {
     query.pageId = new mongoose.Types.ObjectId(pageId);
   }

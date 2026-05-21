@@ -2,7 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import NextImage from 'next/image';
 import { format } from 'date-fns';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('component:post-card');
 import {
   Calendar,
   CheckCircle,
@@ -16,7 +20,7 @@ import {
   FileText,
   Sparkles,
   Wand2,
-  Image,
+  Image as ImageIcon,
   Video,
   Building2,
   User,
@@ -170,7 +174,7 @@ export function PostCard({ post }: PostCardProps) {
         router.refresh();
       }
     } catch (error) {
-      console.error('Error deleting post:', error);
+      log.error('Error deleting post', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsDeleting(false);
       setShowMenu(false);
@@ -190,7 +194,7 @@ export function PostCard({ post }: PostCardProps) {
         router.refresh();
       }
     } catch (error) {
-      console.error('Error publishing post:', error);
+      log.error('Error publishing post', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsPublishing(false);
       setShowMenu(false);
@@ -210,7 +214,7 @@ export function PostCard({ post }: PostCardProps) {
         router.refresh();
       }
     } catch (error) {
-      console.error('Error approving post:', error);
+      log.error('Error approving post', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsApproving(false);
       setShowMenu(false);
@@ -232,7 +236,7 @@ export function PostCard({ post }: PostCardProps) {
         router.refresh();
       }
     } catch (error) {
-      console.error('Error rejecting post:', error);
+      log.error('Error rejecting post', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsRejecting(false);
       setShowMenu(false);
@@ -282,7 +286,7 @@ export function PostCard({ post }: PostCardProps) {
               <span className="inline-flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
                 {imageCount > 0 && (
                   <span className="flex items-center gap-0.5">
-                    <Image className="h-3 w-3" />
+                    <ImageIcon className="h-3 w-3" />
                     {imageCount}
                   </span>
                 )}
@@ -406,7 +410,7 @@ export function PostCard({ post }: PostCardProps) {
               {post.media.slice(0, 4).map((item, index) => (
                 <div key={item.id} className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
                   {item.type === 'image' ? (
-                    <img src={item.url} alt="" className="h-full w-full object-cover" />
+                    <NextImage src={item.url} alt="" width={64} height={64} className="h-full w-full object-cover" unoptimized />
                   ) : (
                     <video src={item.url} className="h-full w-full object-cover" />
                   )}

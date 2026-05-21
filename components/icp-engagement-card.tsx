@@ -2,10 +2,9 @@
 
 import { useState } from 'react';
 import { 
-  Twitter, 
-  ExternalLink, 
-  User, 
-  MessageSquare, 
+  Twitter,
+  ExternalLink,
+  MessageSquare,
   Heart,
   Repeat,
   ChevronDown,
@@ -247,7 +246,7 @@ export function ICPEngagementCard({ engagement }: { engagement: ICPEngagementDat
               <div>
                 <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Search Query:</span>
                 <p className="text-sm text-zinc-700 dark:text-zinc-300 mt-1">
-                  "{engagement.icpMatch.searchQuery}"
+                  &ldquo;{engagement.icpMatch.searchQuery}&rdquo;
                 </p>
               </div>
             )}

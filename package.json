@@ -2,11 +2,20 @@
   "name": "social-media-auto-posting",
   "version": "0.1.0",
   "private": true,
+  "license": "SEE LICENSE IN LICENSE",
+  "engines": {
+    "node": ">=20 <21"
+  },
+  "packageManager": "pnpm@10.33.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"**/*.{ts,tsx,mjs,json,md,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,mjs,json,md,css}\"",
+    "license-check": "node .github/scripts/license-check.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.971.0",
@@ -16,7 +25,7 @@
     "lucide-react": "^0.562.0",
     "mongoose": "^9.1.4",
     "mysql2": "^3.16.2",
-    "next": "16.1.3",
+    "next": "16.2.6",
     "next-auth": "^5.0.0-beta.30",
     "openai": "^6.16.0",
     "react": "19.2.3",
@@ -30,7 +39,9 @@
     "@types/react-dom": "^19",
     "@types/uuid": "^10.0.0",
     "eslint": "^9",
-    "eslint-config-next": "16.1.3",
+    "eslint-config-next": "16.2.6",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "prettier": "^3.8.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

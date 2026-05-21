@@ -61,7 +61,7 @@ async function fetchStats() {
     } else if (insightsData.error) {
       console.log('Insights not available:', insightsData.error.message);
     }
-  } catch (e) {
+  } catch {
     console.log('Could not fetch insights');
   }
   

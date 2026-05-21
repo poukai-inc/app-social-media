@@ -1,14 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
 import Page from '@/lib/models/Page';
+import User from '@/lib/models/User';
 import { getOptimalPostingTime } from '@/lib/learning/platform-learning';
-import { PlatformType } from '@/lib/platforms/types';
+import type { PlatformType } from '@/lib/platforms/types';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:posts:[id]:approve');
 
 /**
  * Get the next occurrence of a specific day and hour
  */
-function getNextOccurrence(dayOfWeek: number, hour: number, timezone?: string): Date {
+function getNextOccurrence(dayOfWeek: number, hour: number, _timezone?: string): Date {
   const now = new Date();
   const result = new Date(now);
   
@@ -47,11 +53,11 @@ async function calculateScheduledTime(
     );
     
     if (optimalTime && optimalTime.confidence > 0.5) {
-      console.log(`Using AI-learned optimal time for ${platform}: Day ${optimalTime.day}, Hour ${optimalTime.hour}`);
+      log.info('Using AI-learned optimal time', { platform, day: optimalTime.day, hour: optimalTime.hour });
       return getNextOccurrence(optimalTime.day, optimalTime.hour, page.schedule?.timezone);
     }
   } catch (error) {
-    console.warn('Could not get optimal posting time:', error);
+    log.warn('Could not get optimal posting time', { error: error instanceof Error ? error.message : String(error) });
   }
   
   // Fall back to preferred times from page settings
@@ -67,7 +73,7 @@ async function calculateScheduledTime(
     scheduledFor.setDate(scheduledFor.getDate() + 1);
   }
   
-  console.log(`Using preferred time fallback for ${platform}: ${scheduledFor.toISOString()}`);
+  log.info('Using preferred time fallback', { platform, scheduledFor: scheduledFor.toISOString() });
   return scheduledFor;
 }
 
@@ -159,7 +165,7 @@ export async function GET(
       action === 'approve' ? 'Post approved and scheduled!' : 'Post rejected'
     );
   } catch (error) {
-    console.error('Approval error:', error);
+    log.error('Approval error', { error: error instanceof Error ? error.message : String(error) });
     return redirectWithMessage('error', 'Failed to process approval');
   }
 }
@@ -176,6 +182,12 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Auth check — this handler was previously unauthenticated (AUDIT-C1)
+    const session = await auth();
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
     const body = await request.json();
     const { action, feedbackNote } = body;
@@ -186,9 +198,20 @@ export async function POST(
 
     await connectToDatabase();
 
+    // Resolve user to enforce ownership check below
+    const user = await User.findOne({ email: session.user.email });
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     const post = await Post.findById(id);
     if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    // Ownership check — prevent IDOR across users
+    if (post.userId?.toString() !== user._id.toString()) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     if (action === 'approve') {
@@ -261,7 +284,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('Approval API error:', error);
+    log.error('Approval API error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to process approval' }, { status: 500 });
   }
 }

@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { MongoClient, ObjectId } = require('mongodb');
 require('dotenv').config();
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 async function main() {
   const client = new MongoClient(process.env.MONGODB_URI);

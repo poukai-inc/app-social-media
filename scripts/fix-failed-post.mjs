@@ -23,7 +23,7 @@ import { MongoClient, ObjectId } from 'mongodb';
 import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
-import { writeFile, readFile, unlink, mkdir } from 'fs/promises';
+import { writeFile, readFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import dotenv from 'dotenv';
@@ -180,13 +180,6 @@ async function runFfmpeg(args) {
       reject(new Error(`Failed to spawn ffmpeg: ${err.message}`));
     });
   });
-}
-
-async function getVideoDuration(filePath) {
-  const probeCmd = `ffprobe -v quiet -print_format json -show_format "${filePath}"`;
-  const { stdout } = await execAsync(probeCmd, { maxBuffer: 50 * 1024 * 1024 });
-  const data = JSON.parse(stdout);
-  return parseFloat(data.format?.duration || '0');
 }
 
 async function getVideoInfo(filePath) {

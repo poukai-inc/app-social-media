@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import NextImage from 'next/image';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:pages:[id]:settings');
 import {
   ArrowLeft,
   Save,
@@ -16,7 +20,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import PlatformConnections from '@/components/platform-connections';
-import { PlatformType } from '@/lib/platforms/types';
+import type { PlatformType } from '@/lib/platforms/types';
 
 interface Page {
   _id: string;
@@ -125,7 +129,6 @@ export default function PageSettings() {
 
   // Input helpers
   const [topicInput, setTopicInput] = useState('');
-  const [avoidInput, setAvoidInput] = useState('');
   const [blogInput, setBlogInput] = useState('');
   const [keywordInput, setKeywordInput] = useState('');
   const [timeInput, setTimeInput] = useState('');
@@ -135,12 +138,6 @@ export default function PageSettings() {
       router.push('/login');
     }
   }, [status, router]);
-
-  useEffect(() => {
-    if (session && pageId) {
-      fetchPage();
-    }
-  }, [session, pageId]);
 
   const fetchPage = async () => {
     try {
@@ -184,11 +181,19 @@ export default function PageSettings() {
         router.push('/dashboard/pages');
       }
     } catch (error) {
-      console.error('Failed to fetch page:', error);
+      log.error('Failed to fetch page', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);
     }
   };
+
+  // Refactor deferred — see BACKLOG #122 (move to TanStack Query / Suspense)
+  useEffect(() => {
+    if (session && pageId) {
+      setTimeout(() => fetchPage(), 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, pageId]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -211,7 +216,7 @@ export default function PageSettings() {
         alert(error.error || 'Failed to save settings');
       }
     } catch (error) {
-      console.error('Failed to save:', error);
+      log.error('Failed to save', { error: error instanceof Error ? error.message : String(error) });
       alert('Failed to save settings');
     } finally {
       setSaving(false);
@@ -232,7 +237,7 @@ export default function PageSettings() {
         alert(error.error || 'Failed to delete page');
       }
     } catch (error) {
-      console.error('Failed to delete:', error);
+      log.error('Failed to delete', { error: error instanceof Error ? error.message : String(error) });
       alert('Failed to delete page');
     } finally {
       setDeleting(false);
@@ -305,10 +310,13 @@ export default function PageSettings() {
 
           <div className="flex items-center gap-4">
             {page.avatar ? (
-              <img
+              <NextImage
                 src={page.avatar}
                 alt={page.name}
+                width={48}
+                height={48}
                 className="w-12 h-12 rounded-full object-cover"
+                unoptimized
               />
             ) : (
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">

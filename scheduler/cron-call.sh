@@ -16,6 +16,4 @@ fi
 : "${APP_URL:?APP_URL is required}"
 : "${CRON_SECRET:?CRON_SECRET is required}"
 
-# Some endpoints use ?key= param, others use Bearer header
-# Try query param method first (more compatible)
-curl -G -fsS --data-urlencode "key=$CRON_SECRET" "$APP_URL/api/cron/$endpoint"
+curl -fsS -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/$endpoint"

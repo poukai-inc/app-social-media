@@ -1,16 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import Page from '@/lib/models/Page';
 import Post from '@/lib/models/Post';
-import { PlatformType } from '@/lib/platforms/types';
+import type { PlatformType } from '@/lib/platforms/types';
+import type {
+  EngagementDataPoint} from '@/lib/platforms/schedule-optimizer';
 import {
   analyzeAndRecommendSchedule,
   quickAnalyzeSchedule,
-  getDefaultTimingRecommendations,
-  EngagementDataPoint,
+  getDefaultTimingRecommendations
 } from '@/lib/platforms/schedule-optimizer';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:schedule:optimize');
 
 /**
  * GET /api/schedule/optimize
@@ -192,7 +197,7 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('Schedule optimization error:', error);
+    log.error('Schedule optimization error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to analyze schedule' },
       { status: 500 }
@@ -284,7 +289,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Schedule apply error:', error);
+    log.error('Schedule apply error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to apply schedule' },
       { status: 500 }

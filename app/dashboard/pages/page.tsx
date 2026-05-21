@@ -4,14 +4,14 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import NextImage from 'next/image';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:pages');
 import {
   Plus,
   Settings,
-  BarChart3,
   FileText,
-  Clock,
-  CheckCircle,
-  AlertCircle,
   User,
   Building2,
   ChevronRight,
@@ -58,12 +58,6 @@ export default function PagesPage() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (session) {
-      fetchPages();
-    }
-  }, [session]);
-
   const fetchPages = async () => {
     try {
       const response = await fetch('/api/pages?includeStats=true');
@@ -72,11 +66,17 @@ export default function PagesPage() {
         setPages(data.pages);
       }
     } catch (error) {
-      console.error('Failed to fetch pages:', error);
+      log.error('Failed to fetch pages', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (session) {
+      setTimeout(() => fetchPages(), 0);
+    }
+  }, [session]);
 
   if (status === 'loading' || loading) {
     return (
@@ -152,7 +152,6 @@ export default function PagesPage() {
 }
 
 function PageCard({ page }: { page: Page }) {
-  const totalPosts = Object.values(page.postStats || {}).reduce((a, b) => a + b, 0);
   const publishedPosts = page.postStats?.published || 0;
   const scheduledPosts = page.postStats?.scheduled || 0;
   const pendingPosts = page.postStats?.pending_approval || 0;
@@ -163,10 +162,13 @@ function PageCard({ page }: { page: Page }) {
       <div className="p-5 border-b border-gray-100 dark:border-zinc-800">
         <div className="flex items-start gap-4">
           {page.avatar ? (
-            <img
+            <NextImage
               src={page.avatar}
               alt={page.name}
+              width={48}
+              height={48}
               className="w-12 h-12 rounded-full object-cover"
+              unoptimized
             />
           ) : (
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">

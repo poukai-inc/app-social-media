@@ -1,8 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
 import User from '@/lib/models/User';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:posts:[id]:analytics');
 
 interface SocialMetadataResponse {
   reactionSummaries?: Record<string, { reactionType: string; count: number }>;
@@ -110,7 +114,7 @@ export async function GET(
         }
       }
     } catch (err) {
-      console.error('Error fetching social metadata:', err);
+      log.error('Error fetching social metadata', { error: err instanceof Error ? err.message : String(err) });
     }
 
     // For organization posts, fetch additional share statistics (impressions, clicks, etc.)
@@ -140,10 +144,10 @@ export async function GET(
           }
         } else {
           const errorText = await orgStatsResponse.text();
-          console.error('Org stats error:', orgStatsResponse.status, errorText);
+          log.error('Org stats error', { status: orgStatsResponse.status, error: errorText });
         }
       } catch (err) {
-        console.error('Error fetching organization share statistics:', err);
+        log.error('Error fetching organization share statistics', { error: err instanceof Error ? err.message : String(err) });
       }
     }
 
@@ -154,7 +158,7 @@ export async function GET(
       analytics,
     });
   } catch (error) {
-    console.error('Error fetching post analytics:', error);
+    log.error('Error fetching post analytics', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

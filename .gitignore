@@ -38,6 +38,9 @@ stack.env.*
 # vercel
 .vercel
 
+# tool state (oh-my-claudecode)
+.omc/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

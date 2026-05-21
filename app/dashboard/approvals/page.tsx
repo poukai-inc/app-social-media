@@ -4,6 +4,9 @@ import { Suspense, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:approvals');
 
 interface AIAnalysis {
   confidence: number;
@@ -46,30 +49,21 @@ function ApprovalsContent() {
   const [patterns, setPatterns] = useState<ApprovalPatterns | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
-
-  useEffect(() => {
-    // Check for URL messages
+  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(() => {
     const success = searchParams.get('success');
     const error = searchParams.get('error');
     const info = searchParams.get('info');
-    
-    if (success) setMessage({ type: 'success', text: success });
-    else if (error) setMessage({ type: 'error', text: error });
-    else if (info) setMessage({ type: 'info', text: info });
-  }, [searchParams]);
+    if (success) return { type: 'success', text: success };
+    if (error) return { type: 'error', text: error };
+    if (info) return { type: 'info', text: info };
+    return null;
+  });
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
-
-  useEffect(() => {
-    if (session) {
-      fetchPendingPosts();
-    }
-  }, [session]);
 
   const fetchPendingPosts = async () => {
     try {
@@ -81,11 +75,17 @@ function ApprovalsContent() {
         setPatterns(data.approvalPatterns);
       }
     } catch (error) {
-      console.error('Failed to fetch pending posts:', error);
+      log.error('Failed to fetch pending posts', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (session) {
+      setTimeout(() => fetchPendingPosts(), 0);
+    }
+  }, [session]); // fetchPendingPosts is stable (defined in component scope)
 
   const handleAction = async (postId: string, action: 'approve' | 'reject') => {
     setActionLoading(postId);
@@ -105,7 +105,7 @@ function ApprovalsContent() {
       } else {
         setMessage({ type: 'error', text: 'Failed to process action' });
       }
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'An error occurred' });
     } finally {
       setActionLoading(null);

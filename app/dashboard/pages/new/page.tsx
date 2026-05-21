@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import NextImage from 'next/image';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:pages:new');
 import {
   ArrowLeft,
   ArrowRight,
@@ -84,16 +88,13 @@ export default function NewPagePage() {
     autoApprove: false,
     minConfidenceForAutoApprove: 0.8,
   });
-  const [contentSources, setContentSources] = useState({
+  const [contentSources] = useState({
     blogUrls: [] as string[],
     keywords: [] as string[],
   });
 
   // Input helpers
   const [topicInput, setTopicInput] = useState('');
-  const [avoidInput, setAvoidInput] = useState('');
-  const [blogInput, setBlogInput] = useState('');
-  const [keywordInput, setKeywordInput] = useState('');
   const [timeInput, setTimeInput] = useState('');
 
   useEffect(() => {
@@ -101,12 +102,6 @@ export default function NewPagePage() {
       router.push('/login');
     }
   }, [status, router]);
-
-  useEffect(() => {
-    if (session) {
-      fetchAvailableAccounts();
-    }
-  }, [session]);
 
   const fetchAvailableAccounts = async () => {
     try {
@@ -116,11 +111,17 @@ export default function NewPagePage() {
         setAccounts(data.accounts);
       }
     } catch (error) {
-      console.error('Failed to fetch accounts:', error);
+      log.error('Failed to fetch accounts', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (session) {
+      setTimeout(() => fetchAvailableAccounts(), 0);
+    }
+  }, [session]);
 
   const handleSubmit = async () => {
     // For manual mode, we don't need a selected account
@@ -164,7 +165,7 @@ export default function NewPagePage() {
         alert(error.error || 'Failed to create page');
       }
     } catch (error) {
-      console.error('Failed to create page:', error);
+      log.error('Failed to create page', { error: error instanceof Error ? error.message : String(error) });
       alert('Failed to create page');
     } finally {
       setSaving(false);
@@ -421,10 +422,13 @@ export default function NewPagePage() {
                           }`}
                         >
                           {account.avatar ? (
-                            <img
+                            <NextImage
                               src={account.avatar}
                               alt={account.name}
+                              width={48}
+                              height={48}
                               className="w-12 h-12 rounded-full object-cover"
+                              unoptimized
                             />
                           ) : (
                             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
@@ -767,10 +771,13 @@ export default function NewPagePage() {
                   <h3 className="font-medium text-gray-900 dark:text-white mb-2">Account</h3>
                   <div className="flex items-center gap-3">
                     {selectedAccount?.avatar ? (
-                      <img
+                      <NextImage
                         src={selectedAccount.avatar}
                         alt={selectedAccount.name}
+                        width={40}
+                        height={40}
                         className="w-10 h-10 rounded-full"
+                        unoptimized
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">

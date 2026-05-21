@@ -1,10 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { generatePostFromBlogAngle, type PostAngle } from '@/lib/openai';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import Post from '@/lib/models/Post';
 import { generateApprovalToken, getTokenExpiration, sendApprovalEmail } from '@/lib/email';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:blog:generate');
 
 // POST /api/blog/generate - Generate posts from a blog angle
 export async function POST(request: NextRequest) {
@@ -120,7 +124,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Post generation error:', error);
+    log.error('Post generation error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to generate post' },
       { status: 500 }

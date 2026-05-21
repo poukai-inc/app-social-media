@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import NextImage from 'next/image';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:pages:[id]');
 import {
   ArrowLeft,
   Settings,
@@ -18,11 +22,9 @@ import {
   Eye,
   ThumbsUp,
   MessageSquare,
-  Share2,
   Sparkles,
   Calendar,
   RefreshCw,
-  MoreVertical,
   Linkedin,
   Facebook,
   Twitter,
@@ -151,14 +153,6 @@ export default function PageDashboard() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (session && pageId) {
-      fetchPage();
-      fetchPosts();
-      fetchIcpStats();
-    }
-  }, [session, pageId, statusFilter]);
-
   const fetchPage = async () => {
     try {
       const response = await fetch(`/api/pages/${pageId}`);
@@ -169,7 +163,7 @@ export default function PageDashboard() {
         router.push('/dashboard/pages');
       }
     } catch (error) {
-      console.error('Failed to fetch page:', error);
+      log.error('Failed to fetch page', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);
     }
@@ -196,7 +190,7 @@ export default function PageDashboard() {
         });
       }
     } catch (error) {
-      console.error('Failed to fetch posts:', error);
+      log.error('Failed to fetch posts', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setPostsLoading(false);
     }
@@ -219,9 +213,19 @@ export default function PageDashboard() {
         });
       }
     } catch (error) {
-      console.error('Failed to fetch ICP stats:', error);
+      log.error('Failed to fetch ICP stats', { error: error instanceof Error ? error.message : String(error) });
     }
   };
+
+  // Refactor deferred — see BACKLOG #122 (move to TanStack Query / Suspense)
+  useEffect(() => {
+    if (session && pageId) {
+      setTimeout(() => fetchPage(), 0);
+      setTimeout(() => fetchPosts(), 0);
+      setTimeout(() => fetchIcpStats(), 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, pageId, statusFilter]);
 
   const handleGeneratePost = async () => {
     if (!page) return;
@@ -245,7 +249,7 @@ export default function PageDashboard() {
         alert(error.error || 'Failed to generate post');
       }
     } catch (error) {
-      console.error('Failed to generate:', error);
+      log.error('Failed to generate', { error: error instanceof Error ? error.message : String(error) });
       alert('Failed to generate post');
     } finally {
       setGenerating(false);
@@ -267,7 +271,7 @@ export default function PageDashboard() {
         alert(error.error || 'Failed to approve post');
       }
     } catch (error) {
-      console.error('Failed to approve:', error);
+      log.error('Failed to approve', { error: error instanceof Error ? error.message : String(error) });
       alert('Failed to approve post');
     }
   };
@@ -287,7 +291,7 @@ export default function PageDashboard() {
         alert(error.error || 'Failed to reject post');
       }
     } catch (error) {
-      console.error('Failed to reject:', error);
+      log.error('Failed to reject', { error: error instanceof Error ? error.message : String(error) });
       alert('Failed to reject post');
     }
   };
@@ -315,7 +319,7 @@ export default function PageDashboard() {
         alert(error.error || 'Failed to retry post');
       }
     } catch (error) {
-      console.error('Failed to retry:', error);
+      log.error('Failed to retry', { error: error instanceof Error ? error.message : String(error) });
       alert('Failed to retry post');
     } finally {
       setRetrying(null);
@@ -344,7 +348,7 @@ export default function PageDashboard() {
         alert(error.error || 'Failed to delete post');
       }
     } catch (error) {
-      console.error('Failed to delete:', error);
+      log.error('Failed to delete', { error: error instanceof Error ? error.message : String(error) });
       alert('Failed to delete post');
     }
   };
@@ -381,10 +385,13 @@ export default function PageDashboard() {
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
               {page.avatar ? (
-                <img
+                <NextImage
                   src={page.avatar}
                   alt={page.name}
+                  width={64}
+                  height={64}
                   className="w-16 h-16 rounded-full object-cover"
+                  unoptimized
                 />
               ) : (
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">

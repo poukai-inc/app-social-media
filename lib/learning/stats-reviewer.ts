@@ -11,7 +11,7 @@
  * - etc.
  */
 
-import { PlatformType } from '../platforms/types';
+import type { PlatformType } from '../platforms/types';
 
 // ============================================
 // Types
@@ -663,7 +663,7 @@ export function analyzePostMetrics(
   platform: PlatformType,
   metrics: PostMetrics,
   followers?: number,
-  content?: string
+  _content?: string
 ): PostAnalysis {
   const totalEngagements = metrics.likes + metrics.comments + metrics.shares + (metrics.saves || 0);
   

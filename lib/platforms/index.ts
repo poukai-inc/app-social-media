@@ -1,4 +1,5 @@
-import { IPlatformAdapter, PlatformType, PLATFORM_CONFIGS } from './types';
+import type { IPlatformAdapter, PlatformType} from './types';
+import { PLATFORM_CONFIGS } from './types';
 import { linkedInAdapter } from './linkedin-adapter';
 import { facebookAdapter } from './facebook-adapter';
 import { twitterAdapter } from './twitter-adapter';

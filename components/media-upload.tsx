@@ -1,7 +1,11 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { X, Upload, Image, Video, Loader2 } from 'lucide-react';
+import { X, Upload, Image as ImageIcon, Video, Loader2 } from 'lucide-react';
+import NextImage from 'next/image';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('component:media-upload');
 
 interface MediaItem {
   id: string;
@@ -68,7 +72,7 @@ export function MediaUpload({ media, onMediaChange, maxFiles = 9 }: MediaUploadP
         method: 'DELETE',
       });
     } catch (err) {
-      console.error('Error deleting file:', err);
+      log.error('Error deleting file', { error: err instanceof Error ? err.message : String(err) });
     }
     
     onMediaChange(media.filter(m => m.id !== item.id));
@@ -114,7 +118,7 @@ export function MediaUpload({ media, onMediaChange, maxFiles = 9 }: MediaUploadP
         ) : (
           <div className="flex flex-col items-center gap-2">
             <div className="flex items-center gap-2">
-              <Image className="h-6 w-6 text-zinc-400" />
+              <ImageIcon className="h-6 w-6 text-zinc-400" />
               <Video className="h-6 w-6 text-zinc-400" />
               <Upload className="h-6 w-6 text-zinc-400" />
             </div>
@@ -141,10 +145,13 @@ export function MediaUpload({ media, onMediaChange, maxFiles = 9 }: MediaUploadP
               className="group relative overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800"
             >
               {item.type === 'image' ? (
-                <img
+                <NextImage
                   src={item.url}
                   alt={item.filename}
+                  width={300}
+                  height={128}
                   className="h-32 w-full object-cover"
+                  unoptimized
                 />
               ) : (
                 <video
@@ -172,7 +179,7 @@ export function MediaUpload({ media, onMediaChange, maxFiles = 9 }: MediaUploadP
 
               {/* Type indicator */}
               <div className="absolute right-2 top-2 rounded bg-black/50 px-1.5 py-0.5 text-xs text-white">
-                {item.type === 'video' ? <Video className="h-3 w-3" /> : <Image className="h-3 w-3" />}
+                {item.type === 'video' ? <Video className="h-3 w-3" /> : <ImageIcon className="h-3 w-3" />}
               </div>
             </div>
           ))}

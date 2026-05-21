@@ -1,0 +1,140 @@
+POUKAI INTERNAL-USE LICENSE
+Version 1.0 — 2026-05-20
+
+==============================================================================
+TEMPLATE — NOT YET LEGALLY REVIEWED. DO NOT ATTACH TO ANY CUSTOMER AGREEMENT
+OR INCLUDE IN ANY DISTRIBUTED ARTIFACT UNTIL A LICENSED ATTORNEY HAS REVIEWED,
+EDITED, AND APPROVED THIS TEXT IN ITS ENTIRETY. This file is engineering-drafted
+boilerplate to unblock internal architectural work; it is NOT a substitute for
+counsel-reviewed contract language.
+==============================================================================
+
+Licensor:      Poukai, Inc. (TODO: confirm legal entity name and address)
+Licensed Work: The "Software" — autopost, including its source code, compiled
+               artifacts, configuration files, documentation, and any bundled
+               dependencies authored by Licensor including but not limited to
+               @poukai-inc/ui.
+Copyright:     (c) 2026 Poukai, Inc. All rights reserved.
+
+1. GRANT OF LICENSE
+
+   Subject to the terms of this License and the existence of an active
+   Customer Agreement between Licensor and Licensee, Licensor grants Licensee
+   a non-exclusive, non-transferable, non-sublicensable, revocable license to:
+
+     (a) Install and run the Software on infrastructure owned or controlled
+         by Licensee, solely for Licensee's internal business operations.
+     (b) Read, inspect, audit, and analyze the source code of the Software
+         within Licensee's installation, for the purpose of security review,
+         compliance, debugging, and integration with Licensee's own systems.
+     (c) Apply Licensor-published updates, patches, and configuration changes
+         to the installed Software.
+
+2. RESTRICTIONS
+
+   Licensee shall not, and shall not permit any third party to:
+
+     (a) Distribute, sublicense, rent, lease, sell, resell, or otherwise
+         transfer the Software or any portion thereof to any third party.
+     (b) Offer the Software, in whole or in part, as a hosted, managed, or
+         embedded service to any third party.
+     (c) Modify, adapt, translate, or create derivative works of the Software,
+         except for configuration changes explicitly contemplated by Licensor's
+         published documentation.
+     (d) Reverse-engineer, decompile, or disassemble the Software, except to
+         the extent such activity is expressly permitted by applicable law
+         notwithstanding this restriction.
+     (e) Remove, alter, or obscure any copyright, trademark, or other
+         proprietary notices contained in the Software.
+     (f) Use the Software to develop, train, or improve any product or service
+         that competes with the Software or with any service offered by
+         Licensor.
+     (g) Use the Software in any way that violates applicable law or any
+         third-party rights.
+
+3. INTELLECTUAL PROPERTY
+
+   The Software is licensed, not sold. Licensor retains all right, title, and
+   interest in and to the Software, including all intellectual property rights
+   therein. No rights are granted to Licensee other than as expressly set
+   forth in this License. All rights not expressly granted are reserved by
+   Licensor.
+
+4. TERM AND TERMINATION
+
+   This License is effective for as long as Licensee maintains an active
+   Customer Agreement with Licensor. This License terminates automatically,
+   without notice, upon:
+
+     (a) Expiration or termination of Licensee's Customer Agreement with
+         Licensor, for any reason.
+     (b) Material breach by Licensee of any provision of this License.
+
+   Upon termination, Licensee shall (i) immediately cease all use of the
+   Software, (ii) uninstall and delete all copies of the Software from all
+   systems under Licensee's control, and (iii) certify in writing to Licensor
+   within thirty (30) days that Licensee has complied with this Section 4.
+
+5. THIRD-PARTY DEPENDENCIES
+
+   The Software incorporates third-party open-source components, each licensed
+   under its own license terms. A list of such components and their respective
+   licenses is provided in the file NOTICE (TODO: generate and ship a NOTICE
+   file as part of the release pipeline). Nothing in this License modifies or
+   supersedes the terms of those third-party licenses with respect to the
+   third-party components themselves.
+
+6. DISCLAIMER OF WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF
+   ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+   OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND
+   NON-INFRINGEMENT. LICENSOR DOES NOT WARRANT THAT THE SOFTWARE WILL BE
+   UNINTERRUPTED, ERROR-FREE, OR SECURE.
+
+7. LIMITATION OF LIABILITY
+
+   IN NO EVENT SHALL LICENSOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+   CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR FOR ANY LOSS OF PROFITS, REVENUE,
+   DATA, OR USE, ARISING OUT OF OR IN CONNECTION WITH THIS LICENSE OR THE USE
+   OF OR INABILITY TO USE THE SOFTWARE, WHETHER IN CONTRACT, TORT, OR
+   OTHERWISE, EVEN IF LICENSOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
+   DAMAGES. LICENSOR'S AGGREGATE LIABILITY ARISING OUT OF OR RELATED TO THIS
+   LICENSE SHALL NOT EXCEED THE AMOUNTS PAID BY LICENSEE TO LICENSOR UNDER
+   THE APPLICABLE CUSTOMER AGREEMENT IN THE TWELVE (12) MONTHS PRECEDING THE
+   EVENT GIVING RISE TO THE CLAIM.
+
+8. GOVERNING LAW
+
+   This License shall be governed by and construed in accordance with the laws
+   of TODO (e.g., the State of Delaware, USA), without regard to its conflict
+   of laws principles. Any dispute arising out of or related to this License
+   shall be resolved exclusively in the courts located in TODO (e.g., New
+   Castle County, Delaware).
+
+9. ENTIRE AGREEMENT; ORDER OF PRECEDENCE
+
+   This License, together with the applicable Customer Agreement between
+   Licensor and Licensee, constitutes the entire agreement between the parties
+   with respect to the Software and supersedes all prior or contemporaneous
+   communications and proposals, whether oral or written. In the event of a
+   conflict between this License and the Customer Agreement, the Customer
+   Agreement controls.
+
+10. CONTACT
+
+    For licensing inquiries, contact: TODO (e.g., licensing@pouk.ai).
+
+==============================================================================
+END OF POUKAI INTERNAL-USE LICENSE, VERSION 1.0 (TEMPLATE)
+
+REMINDER: This text was drafted by engineering as a placeholder. It is NOT
+legal advice and is NOT counsel-reviewed. Before first client distribution:
+  1. Engage qualified legal counsel.
+  2. Have counsel revise this text to align with Poukai's actual contractual,
+     jurisdictional, and regulatory posture.
+  3. Resolve every "TODO" marker above.
+  4. Generate and ship a NOTICE file listing third-party dependencies.
+  5. Decide whether this LICENSE ships in the public repo, in the customer
+     install bundle only, or both.
+==============================================================================

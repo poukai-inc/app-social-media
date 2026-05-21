@@ -3,6 +3,10 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import NextImage from 'next/image';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:connect:twitter');
 
 interface TwitterData {
   platform: 'twitter';
@@ -21,24 +25,28 @@ interface TwitterData {
 function ConnectTwitterPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [twitterData, setTwitterData] = useState<TwitterData | null>(null);
+  const [twitterData, _setTwitterData] = useState<TwitterData | null>(() => {
+    const dataParam = searchParams.get('data');
+    if (!dataParam) return null;
+    try {
+      return JSON.parse(Buffer.from(dataParam, 'base64').toString()) as TwitterData;
+    } catch {
+      return null;
+    }
+  });
   const [appPages, setAppPages] = useState<{ _id: string; name: string }[]>([]);
   const [targetAppPage, setTargetAppPage] = useState<string>('');
   const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Decode the data from URL
+  const [error, setError] = useState<string | null>(() => {
     const dataParam = searchParams.get('data');
-    if (dataParam) {
-      try {
-        const decoded = JSON.parse(Buffer.from(dataParam, 'base64').toString());
-        setTwitterData(decoded);
-      } catch {
-        setError('Invalid data received');
-      }
+    if (!dataParam) return null;
+    try {
+      JSON.parse(Buffer.from(dataParam, 'base64').toString());
+      return null;
+    } catch {
+      return 'Invalid data received';
     }
-  }, [searchParams]);
+  });
 
   useEffect(() => {
     // Fetch user's app pages
@@ -52,8 +60,8 @@ function ConnectTwitterPageContent() {
             setTargetAppPage(data.pages[0]._id);
           }
         }
-      } catch {
-        console.error('Failed to fetch pages');
+      } catch (err) {
+        log.error('Failed to fetch pages', { error: err instanceof Error ? err.message : String(err) });
       }
     };
     fetchAppPages();
@@ -154,10 +162,13 @@ function ConnectTwitterPageContent() {
           <div className="mb-6 p-4 bg-gray-700/50 rounded-lg">
             <div className="flex items-center gap-4">
               {twitterData.metadata.profileImageUrl ? (
-                <img
+                <NextImage
                   src={twitterData.metadata.profileImageUrl}
                   alt={twitterData.metadata.name}
+                  width={48}
+                  height={48}
                   className="w-12 h-12 rounded-full"
+                  unoptimized
                 />
               ) : (
                 <div className="w-12 h-12 bg-sky-600 rounded-full flex items-center justify-center">

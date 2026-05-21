@@ -1,15 +1,19 @@
-import { 
+import type { 
   IPlatformAdapter, 
   PlatformConnection, 
   PlatformContent, 
   PlatformPublishResult,
   PlatformMetrics,
   MediaUploadResult,
-  ContentStrategyInput,
+  ContentStrategyInput} from './types';
+import {
   PLATFORM_CONFIGS,
 } from './types';
-import { IPlatformConnection } from '../models/Page';
+import type { IPlatformConnection } from '../models/Page';
 import { BasePlatformAdapter } from './base-adapter';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('platform:twitter');
 import { fetchWithTimeout } from '../circuit-breaker';
 import crypto from 'crypto';
 
@@ -111,8 +115,8 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
    * - Can include threads for longer content
    */
   async adaptContent(
-    baseContent: string, 
-    strategy?: ContentStrategyInput
+    baseContent: string,
+    _strategy?: ContentStrategyInput
   ): Promise<PlatformContent> {
     const config = PLATFORM_CONFIGS.twitter;
     
@@ -227,7 +231,6 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
       
       const mediaBuffer = await mediaResponse.arrayBuffer();
       const base64Media = Buffer.from(mediaBuffer).toString('base64');
-      const contentType = mediaResponse.headers.get('content-type') || 'image/jpeg';
       
       // Twitter uses v1.1 for media upload with OAuth 1.0a
       const uploadUrl = 'https://upload.twitter.com/1.1/media/upload.json';
@@ -351,7 +354,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
         const checkAfterSecs = data.processing_info?.check_after_secs || 5;
         await new Promise(resolve => setTimeout(resolve, checkAfterSecs * 1000));
       } catch (error) {
-        console.error('Error checking media status:', error);
+        log.error('Error checking media status', { error: error instanceof Error ? error.message : String(error) });
         await new Promise(resolve => setTimeout(resolve, 5000));
       }
     }
@@ -394,7 +397,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
         clicks: nonPublic.url_link_clicks,
         lastUpdated: new Date(),
       };
-    } catch (error) {
+    } catch {
       return {
         platform: 'twitter',
         connectionId: connection.platformId,
@@ -510,7 +513,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
 
       // Log token info for debugging (last 8 chars of token to check staleness)
       const tokenSuffix = connection.accessToken?.slice(-8) || 'MISSING';
-      console.log(`[Twitter Search] Executing query: "${searchQuery}" (token: ...${tokenSuffix})`);
+      log.info('Twitter Search: executing query', { searchQuery, tokenSuffix });
 
       const response = await fetchWithTimeout(
         `${TWITTER_API_BASE}/tweets/search/recent?${params.toString()}`,
@@ -522,7 +525,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
         }
       );
 
-      console.log(`[Twitter Search] Response status: ${response.status} for query: "${query}"`);
+      log.info('Twitter Search: response status', { status: response.status, query });
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
@@ -555,7 +558,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
       // Log search metadata for debugging (result count, query used)
       const resultCount = data.meta?.result_count ?? data.data?.length ?? 0;
       if (resultCount === 0) {
-        console.log(`[Twitter Search] Query "${query}" → 0 results (meta: ${JSON.stringify(data.meta || {})})`);
+        log.info('Twitter Search: query returned 0 results', { query, meta: data.meta || {} });
       }
       
       // Map users by ID for easy lookup
@@ -837,13 +840,13 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
       // Strategy: Use mentions timeline (works on Free tier)
       // This gets all tweets that mention/reply to us
       // Note: Don't use start_time with mentions - it can cause errors
-      let url = `${TWITTER_API_BASE}/users/${ourUserId}/mentions?` +
+      const url = `${TWITTER_API_BASE}/users/${ourUserId}/mentions?` +
         `tweet.fields=author_id,created_at,conversation_id,in_reply_to_user_id,text,referenced_tweets&` +
         `expansions=author_id,referenced_tweets.id&` +
         `user.fields=id,name,username,public_metrics,verified&` +
         `max_results=100`;
 
-      console.log(`[Twitter] Checking mentions for user ${ourUserId}`);
+      log.info('Checking mentions for user', { ourUserId });
       
       const response = await fetchWithTimeout(url, {
         headers: {
@@ -854,7 +857,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.log(`[Twitter] Mentions API error: ${response.status}`, errorData);
+        log.error('Mentions API error', { status: response.status, errorData });
         return {
           success: false,
           newReplies: [],
@@ -865,12 +868,14 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
       const data = await response.json();
       const tweets = data.data || [];
       const users = data.includes?.users || [];
-      const referencedTweets = data.includes?.tweets || [];
 
-      console.log(`[Twitter] Found ${tweets.length} mentions total`);
+      log.info('Found mentions', { count: tweets.length });
+
+      type MentionUser = { id: string; name: string; username: string; public_metrics?: { followers_count?: number }; verified?: boolean };
+      type MentionTweet = { id: string; text: string; author_id: string; created_at: string; conversation_id: string; in_reply_to_user_id?: string; referenced_tweets?: Array<{ type: string; id: string }> };
 
       // Create user lookup map
-      const userMap = new Map(users.map((user: any) => [user.id, {
+      const userMap = new Map(users.map((user: MentionUser) => [user.id, {
         id: user.id,
         name: user.name,
         username: user.username,
@@ -882,27 +887,27 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
       // A reply is in our conversation if:
       // 1. Its conversation_id matches our thread
       // 2. OR it references our reply tweet
-      const relevantReplies = tweets.filter((tweet: any) => {
+      const relevantReplies = tweets.filter((tweet: MentionTweet) => {
         // Skip our own tweets
         if (tweet.author_id === ourUserId) return false;
-        
+
         // Check if it's in the same conversation
         if (tweet.conversation_id === conversationId) return true;
-        
+
         // Check if it's a reply to our specific tweet
         if (ourReplyId && tweet.referenced_tweets) {
           const isReplyToOurs = tweet.referenced_tweets.some(
-            (ref: any) => ref.type === 'replied_to' && ref.id === ourReplyId
+            (ref) => ref.type === 'replied_to' && ref.id === ourReplyId
           );
           if (isReplyToOurs) return true;
         }
-        
+
         return false;
       });
 
-      console.log(`[Twitter] Found ${relevantReplies.length} relevant replies in conversation ${conversationId}`);
+      log.info('Found relevant replies in conversation', { count: relevantReplies.length, conversationId });
 
-      const newReplies = relevantReplies.map((tweet: any) => ({
+      const newReplies = relevantReplies.map((tweet: MentionTweet) => ({
         id: tweet.id,
         text: tweet.text,
         authorId: tweet.author_id,
@@ -939,14 +944,14 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
       });
 
       if (!response.ok) {
-        console.warn(`Failed to get own user ID from Twitter API (${response.status})`);
+        log.warn('Failed to get own user ID from Twitter API', { status: response.status });
         return null;
       }
 
       const data = await response.json();
       return data.data?.id || null;
     } catch (error) {
-      console.warn('Error getting own user ID:', error);
+      log.warn('Error getting own user ID', { error: error instanceof Error ? error.message : String(error) });
       return null;
     }
   }

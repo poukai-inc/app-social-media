@@ -4,7 +4,7 @@
  * Supports both Ollama (local) and Groq (cloud) backends via OpenAI-compatible API.
  * Configure via environment variables:
  *   AI_PROVIDER=ollama|groq (default: ollama)
- *   OLLAMA_BASE_URL=http://192.168.1.9:11434 (default)
+ *   OLLAMA_BASE_URL=http://... (REQUIRED when AI_PROVIDER=ollama; no default)
  *   OLLAMA_MODEL=qwen2.5:7b (default)
  *   GROQ_API_KEY=... (only needed if AI_PROVIDER=groq)
  * 
@@ -24,19 +24,50 @@ import AIUsage, {
   FAST_MODEL_PRIORITY,
   getDateKey,
   getMinuteKey,
-  type ModelLimits,
-  type IAIUsage,
 } from './models/AIUsage';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('ai-client');
 
 // ============================================
-// Provider Configuration
+// Provider Configuration (lazy-loaded)
 // ============================================
 
-const AI_PROVIDER = (process.env.AI_PROVIDER || 'ollama') as 'ollama' | 'groq';
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://192.168.1.9:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'qwen2.5:7b';
+let _aiClient: OpenAI | null = null;
+let _aiProvider: 'ollama' | 'groq' | null = null;
+let _ollamaModel: string | null = null;
 
-console.log(`[AI] Provider: ${AI_PROVIDER}, ${AI_PROVIDER === 'ollama' ? `Model: ${OLLAMA_MODEL}, URL: ${OLLAMA_BASE_URL}` : 'Groq Cloud'}`);
+function getAiConfig(): { client: OpenAI; provider: 'ollama' | 'groq'; model: string } {
+  if (_aiClient && _aiProvider && _ollamaModel !== null) {
+    return { client: _aiClient, provider: _aiProvider, model: _ollamaModel };
+  }
+  const provider = (process.env.AI_PROVIDER || 'ollama') as 'ollama' | 'groq';
+  if (provider === 'ollama') {
+    const baseURL = process.env.OLLAMA_BASE_URL;
+    if (!baseURL) {
+      throw new Error('OLLAMA_BASE_URL is required when AI_PROVIDER=ollama');
+    }
+    const model = process.env.OLLAMA_MODEL || 'qwen2.5:7b';
+    _aiClient = new OpenAI({ apiKey: 'ollama', baseURL: `${baseURL}/v1` });
+    _aiProvider = 'ollama';
+    _ollamaModel = model;
+    log.info('Provider configured', { provider: 'ollama', model, url: baseURL });
+  } else {
+    _aiClient = new OpenAI({
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: 'https://api.groq.com/openai/v1',
+    });
+    _aiProvider = 'groq';
+    _ollamaModel = ''; // unused in groq mode
+    log.info('Provider configured', { provider: 'groq' });
+  }
+  return { client: _aiClient, provider: _aiProvider, model: _ollamaModel };
+}
+
+// Convenience accessors (lazy)
+function getAiProvider(): 'ollama' | 'groq' { return getAiConfig().provider; }
+function getOllamaModel(): string { return getAiConfig().model; }
+function getOllamaBaseUrl(): string | undefined { return process.env.OLLAMA_BASE_URL; }
 
 // Safety threshold - switch models at this % of limit
 const DAILY_THRESHOLD = 0.90;   // 90% of daily limit
@@ -102,7 +133,7 @@ async function refreshDailyCache(): Promise<void> {
       });
     }
   } catch (error) {
-    console.warn('[AI] Error refreshing cache:', error);
+    log.warn('Error refreshing cache', { error: error instanceof Error ? error.message : String(error) });
   }
 }
 
@@ -156,8 +187,7 @@ function getMinuteUsage(model: string): { tokens: number; requests: number } {
  */
 async function recordUsage(model: string, tokens: number, success: boolean = true): Promise<void> {
   const today = getDateKey();
-  const currentMinute = getMinuteKey();
-  
+
   // Update in-memory caches immediately
   updateMinuteCache(model, tokens);
   const cached = dailyCache.usage.get(model) || { tokens: 0, requests: 0, rateLimitHits: 0 };
@@ -186,12 +216,12 @@ async function recordUsage(model: string, tokens: number, success: boolean = tru
     const limits = GROQ_MODEL_LIMITS[model];
     if (limits?.tokensPerDay) {
       const percentUsed = ((result.tokensUsed / limits.tokensPerDay) * 100).toFixed(1);
-      console.log(`[AI] ${model}: ${result.tokensUsed.toLocaleString()}/${limits.tokensPerDay.toLocaleString()} tokens (${percentUsed}%)`);
+      log.info('Token usage recorded', { model, tokensUsed: result.tokensUsed, tokensLimit: limits.tokensPerDay, percentUsed });
     } else {
-      console.log(`[AI] ${model}: ${result.tokensUsed.toLocaleString()} tokens (no daily limit)`);
+      log.info('Token usage recorded', { model, tokensUsed: result.tokensUsed, dailyLimit: 'none' });
     }
   } catch (error) {
-    console.error('[AI] Error recording usage:', error);
+    log.error('Error recording usage', { error: error instanceof Error ? error.message : String(error) });
   }
 }
 
@@ -210,14 +240,14 @@ async function recordRateLimitHit(model: string): Promise<void> {
     rateLimitHits: (dailyCache.usage.get(model)?.rateLimitHits || 0) + 1,
   });
   
-  console.log(`[AI] Marked ${model} as exhausted (${exhaustedTokens} tokens)`);
-  
+  log.info('Model marked as exhausted', { model, exhaustedTokens });
+
   try {
     await AIUsage.updateOne(
       { date: today, modelName: model },
-      { 
+      {
         $inc: { rateLimitHits: 1 },
-        $set: { 
+        $set: {
           lastUpdated: new Date(),
           tokensUsed: exhaustedTokens,  // Mark as exhausted in DB too
         },
@@ -225,7 +255,7 @@ async function recordRateLimitHit(model: string): Promise<void> {
       { upsert: true }
     );
   } catch (error) {
-    console.error('[AI] Error recording rate limit:', error);
+    log.error('Error recording rate limit', { error: error instanceof Error ? error.message : String(error) });
   }
 }
 
@@ -328,8 +358,9 @@ async function getUsagePercent(model: string): Promise<number> {
  */
 async function getAvailableModel(preferFast: boolean = false, estimatedTokens: number = 2000): Promise<string> {
   // Ollama mode: always use the configured model (no rotation needed)
-  if (AI_PROVIDER === 'ollama') {
-    return OLLAMA_MODEL;
+  const { provider, model: ollamaModel } = getAiConfig();
+  if (provider === 'ollama') {
+    return ollamaModel;
   }
 
   const allModels = preferFast ? FAST_MODEL_PRIORITY : MODEL_PRIORITY;
@@ -363,18 +394,18 @@ async function getAvailableModel(preferFast: boolean = false, estimatedTokens: n
   
   if (availableModels.length === 0) {
     // No models available - find the one with lowest usage (might still work)
-    console.warn('[AI] All models near capacity!');
-    
+    log.warn('All models near capacity!');
+
     // Prefer unlimited models as last resort
     const unlimited = modelStats.find(m => m.isUnlimited);
     if (unlimited) {
-      console.log(`[AI] Falling back to ${unlimited.model} (no daily limit)`);
+      log.info('Falling back to unlimited model', { model: unlimited.model });
       return unlimited.model;
     }
-    
+
     // Otherwise pick lowest usage
     const sorted = [...modelStats].sort((a, b) => a.usagePercent - b.usagePercent);
-    console.log(`[AI] Using ${sorted[0].model} (${(sorted[0].usagePercent * 100).toFixed(1)}% used)`);
+    log.info('Using lowest-usage model', { model: sorted[0].model, usagePercent: (sorted[0].usagePercent * 100).toFixed(1) });
     return sorted[0].model;
   }
   
@@ -390,59 +421,21 @@ async function getAvailableModel(preferFast: boolean = false, estimatedTokens: n
     
     // Only log if switching or notable
     if (selected.usagePercent > 0.5) {
-      console.log(`[AI] Selected ${selected.model} (${(selected.usagePercent * 100).toFixed(1)}% used - lowest available)`);
+      log.info('Selected model', { model: selected.model, usagePercent: (selected.usagePercent * 100).toFixed(1) });
     }
-    
+
     return selected.model;
   }
-  
+
   // Only unlimited models available
   const selected = unlimitedModels[0];
-  console.log(`[AI] Using ${selected.model} (unlimited - all limited models exhausted)`);
+  log.info('Using unlimited model (all limited models exhausted)', { model: selected.model });
   return selected.model;
 }
 
 // ============================================
 // AI Client (supports Ollama and Groq)
 // ============================================
-
-const aiClient = AI_PROVIDER === 'ollama'
-  ? new OpenAI({
-      apiKey: 'ollama',  // Ollama doesn't need a real key
-      baseURL: `${OLLAMA_BASE_URL}/v1`,
-    })
-  : new OpenAI({
-      apiKey: process.env.GROQ_API_KEY,
-      baseURL: 'https://api.groq.com/openai/v1',
-    });
-
-/**
- * Parse retry-after from error or headers
- */
-function parseRetryAfter(error: unknown): number | undefined {
-  if (error && typeof error === 'object') {
-    // Check for retry-after in headers
-    const headers = (error as { headers?: { get?: (key: string) => string | null } }).headers;
-    if (headers?.get) {
-      const retryAfter = headers.get('retry-after');
-      if (retryAfter) {
-        return parseInt(retryAfter, 10);
-      }
-    }
-    
-    // Parse from error message
-    const message = (error as { message?: string }).message || '';
-    const match = message.match(/try again in (\d+(?:\.\d+)?)(s|m|h)/i);
-    if (match) {
-      const value = parseFloat(match[1]);
-      const unit = match[2].toLowerCase();
-      if (unit === 'm') return Math.ceil(value * 60);
-      if (unit === 'h') return Math.ceil(value * 3600);
-      return Math.ceil(value);
-    }
-  }
-  return undefined;
-}
 
 /**
  * Estimate tokens for a request (rough heuristic: 4 chars ≈ 1 token)
@@ -503,38 +496,38 @@ export async function createChatCompletion(
     triedModels.add(model);
     
     try {
-      console.log(`[AI] Using ${model} (attempt ${attempt + 1}/${maxRetries + 1})`);
+      log.info('Using model', { model, attempt: attempt + 1, maxAttempts: maxRetries + 1 });
       
+      const { client: aiClient } = getAiConfig();
       const response = await aiClient.chat.completions.create({
         model,
         messages,
         temperature,
         max_tokens: maxTokens,
       });
-      
+
       // Record actual usage
       if (response.usage) {
         await recordUsage(model, response.usage.total_tokens, true);
       }
-      
+
       let content = response.choices[0]?.message?.content || null;
       const finishReason = response.choices[0]?.finish_reason;
-      
+
       // Strip <think> tags that qwen and other reasoning models output
       if (content) {
         content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
         content = content.replace(/<think>[\s\S]*/gi, '').trim(); // unclosed tags
       }
-      
+
       // Debug: Log finish reason and content info
-      console.log(`[AI] Response: finish_reason=${finishReason}, content_length=${content?.length || 0}`);
-      
+      log.info('Response received', { finishReason, contentLength: content?.length || 0 });
+
       // Debug: Log if content is empty despite successful response
       if (!content && response.choices.length > 0) {
-        console.warn(`[AI] Warning: Response has choices but content is empty/null`);
-        console.warn(`[AI] Choices:`, JSON.stringify(response.choices, null, 2));
+        log.warn('Response has choices but content is empty/null', { choices: JSON.stringify(response.choices, null, 2) });
       }
-      
+
       return {
         content,
         model,
@@ -546,22 +539,23 @@ export async function createChatCompletion(
       };
     } catch (error) {
       lastError = error as Error;
-      
+
       // Check if it's a rate limit error (Groq only - Ollama doesn't rate limit)
       const status = (error as { status?: number }).status;
       const code = (error as { code?: string }).code;
-      
-      if (AI_PROVIDER === 'groq' && (status === 429 || code === 'rate_limit_exceeded')) {
+      const currentProvider = getAiConfig().provider;
+
+      if (currentProvider === 'groq' && (status === 429 || code === 'rate_limit_exceeded')) {
         await recordRateLimitHit(model);
-        console.log(`[AI] Rate limited on ${model}, switching to next model...`);
+        log.info('Rate limited, switching to next model', { model });
         continue;
       }
 
       // For Ollama connection errors, provide helpful message
-      if (AI_PROVIDER === 'ollama') {
+      if (currentProvider === 'ollama') {
         const msg = (error as Error).message || '';
         if (msg.includes('ECONNREFUSED') || msg.includes('fetch failed')) {
-          console.error(`[AI] Cannot connect to Ollama at ${OLLAMA_BASE_URL}. Is Ollama running?`);
+          log.error('Cannot connect to Ollama', { url: process.env.OLLAMA_BASE_URL });
         }
       }
       
@@ -620,10 +614,11 @@ export async function getUsageStatus(): Promise<Record<string, {
   rateLimitHits: number;
 }>> {
   await refreshDailyCache();
-  const status: Record<string, any> = {};
+  const status: Record<string, { tokensUsed: number; tokensLimit: number | null; requestsUsed: number; requestsLimit: number; percentUsed: number | null; available: boolean; rateLimitHits: number }> = {};
   
   // In Ollama mode, just show the Ollama model
-  const modelsToCheck = AI_PROVIDER === 'ollama' ? [OLLAMA_MODEL] : MODEL_PRIORITY;
+  const { provider, model: ollamaModel } = getAiConfig();
+  const modelsToCheck = provider === 'ollama' ? [ollamaModel] : MODEL_PRIORITY;
   
   for (const model of modelsToCheck) {
     const limits = GROQ_MODEL_LIMITS[model];
@@ -701,14 +696,15 @@ export async function getSelectedModel(preferFast: boolean = false): Promise<{
   }>;
 }> {
   // In Ollama mode, return the single configured model
-  if (AI_PROVIDER === 'ollama') {
-    const usage = await getDailyUsage(OLLAMA_MODEL);
+  const { provider: selectedProvider, model: ollamaModel } = getAiConfig();
+  if (selectedProvider === 'ollama') {
+    const usage = await getDailyUsage(ollamaModel);
     return {
-      model: OLLAMA_MODEL,
+      model: ollamaModel,
       usagePercent: 0,
-      reasoning: `Ollama local model (${OLLAMA_BASE_URL})`,
+      reasoning: `Ollama local model (${process.env.OLLAMA_BASE_URL})`,
       allModels: [{
-        model: OLLAMA_MODEL,
+        model: ollamaModel,
         usagePercent: 0,
         hasCapacity: true,
         tokensUsed: usage.tokens,
@@ -771,17 +767,18 @@ export async function getSelectedModel(preferFast: boolean = false): Promise<{
   };
 }
 
-// Export the raw client for advanced usage
-export { aiClient, aiClient as groqClient };  // groqClient alias for backward compatibility
+// Export the raw client for advanced usage (lazy getter)
+export function getGroqClient(): OpenAI { return getAiConfig().client; }
+export { getGroqClient as groqClient };  // groqClient alias for backward compatibility
 
-// Export provider config
-export { AI_PROVIDER, OLLAMA_BASE_URL, OLLAMA_MODEL };
+// Export provider config as functions (lazy)
+export { getAiProvider, getOllamaBaseUrl, getOllamaModel };
 
 // Export model lists and limits
 export { GROQ_MODEL_LIMITS, MODEL_PRIORITY, FAST_MODEL_PRIORITY };
 
 // Default export for convenience
-export default {
+const aiClient = {
   createChatCompletion,
   complete,
   completeWithSystem,
@@ -791,3 +788,5 @@ export default {
   GROQ_MODEL_LIMITS,
   MODEL_PRIORITY,
 };
+
+export default aiClient;

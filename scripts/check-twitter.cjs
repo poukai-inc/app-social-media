@@ -1,6 +1,8 @@
 // Check Twitter connection status
+/* eslint-disable @typescript-eslint/no-require-imports */
 const mongoose = require('mongoose');
 require('dotenv').config();
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 async function run() {
   await mongoose.connect(process.env.MONGODB_URI);

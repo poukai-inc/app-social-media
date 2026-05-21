@@ -1,11 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
-import Page from '@/lib/models/Page';
-import EngagementHistory, { PlatformEngagement, MetricSnapshot } from '@/lib/models/EngagementHistory';
+import type Page from '@/lib/models/Page';
+import type { PlatformEngagement, MetricSnapshot } from '@/lib/models/EngagementHistory';
+import EngagementHistory from '@/lib/models/EngagementHistory';
 import { platformRegistry } from '@/lib/platforms';
-import { PlatformType, PlatformConnection } from '@/lib/platforms/types';
-import { IPlatformConnection } from '@/lib/models/Page';
+import type { PlatformType, PlatformConnection } from '@/lib/platforms/types';
+import type { IPlatformConnection } from '@/lib/models/Page';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('cron:collect-metrics');
 
 /**
  * Metrics Collection Cron Job
@@ -130,12 +135,7 @@ export async function GET(request: NextRequest) {
     const cronSecret = process.env.CRON_SECRET;
     if (cronSecret) {
       const authHeader = request.headers.get('authorization') ?? '';
-      const url = new URL(request.url);
-      const querySecret = url.searchParams.get('key') ?? url.searchParams.get('cron_secret') ?? url.searchParams.get('token') ?? '';
-      const bearerToken = authHeader.toLowerCase().startsWith('bearer ') ? authHeader.slice(7) : '';
-      const authorized = bearerToken === cronSecret || querySecret === cronSecret;
-
-      if (!authorized) {
+      if (authHeader !== `Bearer ${cronSecret}`) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }
@@ -153,7 +153,7 @@ export async function GET(request: NextRequest) {
       publishedAt: { $gte: thirtyDaysAgo },
     }).populate('pageId');
 
-    console.log(`Processing ${publishedPosts.length} published posts for metrics collection`);
+    log.info('Processing published posts for metrics collection', { count: publishedPosts.length });
 
     for (const post of publishedPosts) {
       const page = post.pageId as typeof Page.prototype;
@@ -319,7 +319,7 @@ export async function GET(request: NextRequest) {
           });
 
         } catch (error) {
-          console.error(`Failed to fetch metrics for post ${post._id} on ${platform}:`, error);
+          log.error('Failed to fetch metrics for post', { postId: post._id, platform, error: error instanceof Error ? error.message : String(error) });
           results.push({
             postId: post._id.toString(),
             platform,
@@ -376,7 +376,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Metrics collection cron error:', error);
+    log.error('Metrics collection cron error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Cron job failed' },
       { status: 500 }

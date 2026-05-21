@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
-import { DatabaseSource } from '@/lib/models/Page';
+import type { DatabaseSource } from '@/lib/models/Page';
 import mongoose from 'mongoose';
 import { 
   testConnection, 
@@ -12,6 +13,9 @@ import {
   fetchFromSource,
   transformResults
 } from '@/lib/data-sources/database';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:pages:[id]:data-sources:test');
 
 // POST /api/pages/[id]/data-sources/test - Test connection or preview query
 export async function POST(
@@ -140,7 +144,7 @@ export async function POST(
         );
     }
   } catch (error) {
-    console.error('Data source test error:', error);
+    log.error('Data source test error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Operation failed' },
       { status: 500 }

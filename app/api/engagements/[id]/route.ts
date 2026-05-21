@@ -1,10 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
-import { EngagementTarget, EngagementStatus, EngagementType } from '@/lib/models/Engagement';
+import type { EngagementStatus, EngagementType } from '@/lib/models/Engagement';
+import { EngagementTarget } from '@/lib/models/Engagement';
 import { engageWithPost } from '@/lib/linkedin-engagement';
 import { generateComment } from '@/lib/openai';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:engagements:[id]');
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -54,7 +59,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       },
     });
   } catch (error) {
-    console.error('Error fetching engagement:', error);
+    log.error('Error fetching engagement', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch engagement' }, { status: 500 });
   }
 }
@@ -111,7 +116,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
           style: 'professional',
         });
       } catch (aiError) {
-        console.error('AI comment regeneration failed:', aiError);
+        log.error('AI comment regeneration failed', { error: aiError instanceof Error ? aiError.message : String(aiError) });
       }
     }
 
@@ -142,7 +147,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       },
     });
   } catch (error) {
-    console.error('Error updating engagement:', error);
+    log.error('Error updating engagement', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to update engagement' }, { status: 500 });
   }
 }
@@ -199,7 +204,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         // Save the generated comment
         engagement.aiGeneratedComment = commentToPost;
       } catch (aiError) {
-        console.error('AI comment generation failed:', aiError);
+        log.error('AI comment generation failed', { error: aiError instanceof Error ? aiError.message : String(aiError) });
         return NextResponse.json({ 
           error: 'Failed to generate comment. Please add a comment manually or try again.' 
         }, { status: 500 });
@@ -237,7 +242,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       },
     });
   } catch (error) {
-    console.error('Error executing engagement:', error);
+    log.error('Error executing engagement', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to execute engagement' }, { status: 500 });
   }
 }
@@ -270,7 +275,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting engagement:', error);
+    log.error('Error deleting engagement', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to delete engagement' }, { status: 500 });
   }
 }

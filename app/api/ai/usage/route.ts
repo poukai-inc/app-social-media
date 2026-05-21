@@ -15,8 +15,11 @@ import { auth } from '@/lib/auth';
 import { getUsageStatus, getTotalCapacity, getSelectedModel, GROQ_MODEL_LIMITS, MODEL_PRIORITY } from '@/lib/ai-client';
 import connectDB from '@/lib/mongodb';
 import AIUsage, { getDateKey } from '@/lib/models/AIUsage';
+import { logger } from '@/lib/logger';
 
-export async function GET(request: Request) {
+const log = logger.child('api:ai:usage');
+
+export async function GET(_request: Request) {
   try {
     // Optional: Require authentication
     const session = await auth();
@@ -27,7 +30,7 @@ export async function GET(request: Request) {
     await connectDB();
     
     // Get current usage status
-    const status = await getUsageStatus();
+    await getUsageStatus();
     const capacity = await getTotalCapacity();
     const selectedModel = await getSelectedModel();
     
@@ -43,7 +46,7 @@ export async function GET(request: Request) {
       .lean();
     
     // Group by date
-    const byDate: Record<string, Record<string, any>> = {};
+    const byDate: Record<string, Record<string, unknown>> = {};
     for (const record of historicalData) {
       const dateStr = record.date.toISOString().split('T')[0];
       if (!byDate[dateStr]) {
@@ -85,7 +88,7 @@ export async function GET(request: Request) {
       limits: GROQ_MODEL_LIMITS,
     });
   } catch (error) {
-    console.error('[AI Usage API] Error:', error);
+    log.error('AI usage API error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { 
         success: false, 

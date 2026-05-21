@@ -14,26 +14,21 @@
  * - Prevents spam with smart rate limiting
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import { monitorAndRespondToConversations, getConversationStats } from '@/lib/engagement/conversation-manager';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('cron:conversation-monitor');
 
 // Verify cron secret (same as other cron jobs)
 function verifyCronSecret(request: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) return true; // Allow if no secret configured (dev)
-  
-  // Allow localhost in development
-  const host = request.headers.get('host') || '';
-  const isDev = process.env.NODE_ENV !== 'production' && (host.includes('localhost') || host.includes('127.0.0.1'));
-  if (isDev) return true;
-  
+
   const authHeader = request.headers.get('authorization') ?? '';
-  const url = new URL(request.url);
-  const querySecret = url.searchParams.get('key') ?? url.searchParams.get('cron_secret') ?? url.searchParams.get('token') ?? '';
-  const bearerToken = authHeader.toLowerCase().startsWith('bearer ') ? authHeader.slice(7) : '';
-  
-  return bearerToken === cronSecret || querySecret === cronSecret;
+  return authHeader === `Bearer ${cronSecret}`;
 }
 
 export async function GET(request: NextRequest) {
@@ -55,8 +50,7 @@ export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
 
-    console.log(`[Conversation Cron] Starting conversation monitoring${pageId ? ` for page ${pageId}` : ' for all pages'}`);
-    console.log(`[Conversation Cron] Config: maxConversations=${maxConversations}, maxResponses=${maxResponses}, dryRun=${dryRun}, forceCheck=${forceCheck}`);
+    log.info('Starting conversation monitoring', { pageId: pageId || 'all', maxConversations, maxResponses, dryRun, forceCheck });
 
     // Run the conversation monitoring
     const result = await monitorAndRespondToConversations(pageId || undefined, {
@@ -72,14 +66,10 @@ export async function GET(request: NextRequest) {
 
     const duration = Date.now() - startTime;
 
-    console.log(`[Conversation Cron] Completed in ${duration}ms`);
-    console.log(`[Conversation Cron] Results: ${result.conversationsChecked} checked, ${result.responsesSent} responses sent`);
-    
+    log.info('Conversation monitoring completed', { durationMs: duration, conversationsChecked: result.conversationsChecked, responsesSent: result.responsesSent });
+
     if (result.errors.length > 0) {
-      console.log(`[Conversation Cron] Errors: ${result.errors.length}`);
-      result.errors.forEach((error, i) => {
-        console.log(`[Conversation Cron] Error ${i + 1}: ${error}`);
-      });
+      log.warn('Conversation monitoring errors', { count: result.errors.length, errors: result.errors });
     }
 
     return NextResponse.json({
@@ -98,7 +88,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Conversation Cron] Fatal error:', error);
+    log.error('Fatal error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       {
         success: false,

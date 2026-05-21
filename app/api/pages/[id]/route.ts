@@ -1,9 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import Page from '@/lib/models/Page';
 import Post from '@/lib/models/Post';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:pages:[id]');
 
 // GET /api/pages/[id] - Get a single page with full details
 export async function GET(
@@ -98,7 +102,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Page fetch error:', error);
+    log.error('Page fetch error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch page' }, { status: 500 });
   }
 }
@@ -170,7 +174,7 @@ export async function PATCH(
 
     return NextResponse.json({ page });
   } catch (error) {
-    console.error('Page update error:', error);
+    log.error('Page update error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to update page' }, { status: 500 });
   }
 }
@@ -224,7 +228,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, deletedPostLinks: force ? postCount : 0 });
   } catch (error) {
-    console.error('Page delete error:', error);
+    log.error('Page delete error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to delete page' }, { status: 500 });
   }
 }

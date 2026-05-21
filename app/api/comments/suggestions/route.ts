@@ -1,9 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import type { CommentStatus } from '@/lib/models/CommentSuggestion';
 import CommentSuggestion from '@/lib/models/CommentSuggestion';
-import { generateComment, generateCommentVariations, EngagementStyle } from '@/lib/openai';
+import type { EngagementStyle } from '@/lib/openai';
+import { generateComment, generateCommentVariations } from '@/lib/openai';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:comments:suggestions');
 
 // GET /api/comments/suggestions - Get pending comment suggestions
 export async function GET(request: NextRequest) {
@@ -20,8 +26,14 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status') || 'pending';
+    const rawStatus = searchParams.get('status') || 'pending';
     const limit = parseInt(searchParams.get('limit') || '20');
+
+    // Validate against allowed CommentStatus values before passing to Mongoose query
+    const ALLOWED_COMMENT_STATUSES: ReadonlyArray<CommentStatus> = ['pending', 'approved', 'posted', 'skipped'];
+    const status: CommentStatus = ALLOWED_COMMENT_STATUSES.includes(rawStatus as CommentStatus)
+      ? (rawStatus as CommentStatus)
+      : 'pending';
 
     const suggestions = await CommentSuggestion.find({
       userId: user._id,
@@ -59,7 +71,7 @@ export async function GET(request: NextRequest) {
       dailyGoal: 10, // Per system.md: 5-10 comments/day
     });
   } catch (error) {
-    console.error('Suggestions fetch error:', error);
+    log.error('Suggestions fetch error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch suggestions' }, { status: 500 });
   }
 }
@@ -147,7 +159,7 @@ export async function POST(request: NextRequest) {
       suggestion,
     });
   } catch (error) {
-    console.error('Suggestion creation error:', error);
+    log.error('Suggestion creation error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to create suggestion' }, { status: 500 });
   }
 }

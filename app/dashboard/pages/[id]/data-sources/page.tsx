@@ -4,19 +4,19 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('dashboard:pages:[id]:data-sources');
 import {
   ArrowLeft,
   Database,
   Plus,
   Trash2,
   Play,
-  RefreshCw,
   CheckCircle,
   XCircle,
   Eye,
-  Settings,
   Loader2,
-  Table,
   Code,
   AlertCircle,
 } from 'lucide-react';
@@ -98,12 +98,6 @@ export default function DataSourcesPage() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (session && pageId) {
-      fetchDataSources();
-    }
-  }, [session, pageId]);
-
   const fetchDataSources = async () => {
     try {
       const response = await fetch(`/api/pages/${pageId}/data-sources`);
@@ -112,11 +106,19 @@ export default function DataSourcesPage() {
         setDataSources(data.dataSources || []);
       }
     } catch (error) {
-      console.error('Failed to fetch data sources:', error);
+      log.error('Failed to fetch data sources', { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);
     }
   };
+
+  // Refactor deferred — see BACKLOG #122 (move to TanStack Query / Suspense)
+  useEffect(() => {
+    if (session && pageId) {
+      setTimeout(() => fetchDataSources(), 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, pageId]);
 
   const handleTestConnection = async () => {
     setTesting(true);
@@ -135,7 +137,7 @@ export default function DataSourcesPage() {
 
       const result = await response.json();
       setTestResult(result);
-    } catch (error) {
+    } catch {
       setTestResult({ success: false, message: 'Connection test failed' });
     } finally {
       setTesting(false);
@@ -164,7 +166,7 @@ export default function DataSourcesPage() {
 
       const result = await response.json();
       setPreviewResults(result);
-    } catch (error) {
+    } catch {
       setPreviewResults({ success: false, error: 'Preview failed' });
     } finally {
       setPreviewLoading(false);
@@ -198,7 +200,7 @@ export default function DataSourcesPage() {
         const data = await response.json();
         alert(data.error || 'Failed to add data source');
       }
-    } catch (error) {
+    } catch {
       alert('Failed to add data source');
     } finally {
       setSaving(false);
@@ -219,7 +221,7 @@ export default function DataSourcesPage() {
       } else {
         alert('Failed to delete data source');
       }
-    } catch (error) {
+    } catch {
       alert('Failed to delete data source');
     }
   };
@@ -239,7 +241,7 @@ export default function DataSourcesPage() {
         fetchDataSources();
       }
     } catch (error) {
-      console.error('Failed to toggle source:', error);
+      log.error('Failed to toggle source', { error: error instanceof Error ? error.message : String(error) });
     }
   };
 

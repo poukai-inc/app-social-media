@@ -1,6 +1,9 @@
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import { CircuitBreaker, fetchWithTimeout } from '@/lib/circuit-breaker';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('platform:linkedin-engagement');
 
 // ============================================
 // Types
@@ -135,7 +138,7 @@ export async function scrapeLinkedInPost(postUrl: string): Promise<{ success: bo
 
     return { success: true, data };
   } catch (error) {
-    console.error('Error scraping LinkedIn post:', error);
+    log.error('Error scraping LinkedIn post', { error: error instanceof Error ? error.message : String(error) });
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -260,7 +263,7 @@ export async function getPostComments(
 
     if (!breaker.allowRequest()) {
       const reason = breaker.getRejectionReason();
-      console.log(`[LinkedIn] Skipping comments fetch: ${reason}`);
+      log.info('Skipping comments fetch', { reason });
       return { success: false, error: reason };
     }
 
@@ -283,7 +286,7 @@ export async function getPostComments(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('LinkedIn comments API error:', response.status, errorText);
+      log.error('LinkedIn comments API error', { status: response.status, errorText });
       breaker.recordFailure(response.status);
       return { success: false, error: `Failed to fetch comments: ${response.status}` };
     }
@@ -306,7 +309,7 @@ export async function getPostComments(
 
     return { success: true, comments };
   } catch (error) {
-    console.error('Error fetching comments:', error);
+    log.error('Error fetching comments', { error: error instanceof Error ? error.message : String(error) });
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -344,14 +347,14 @@ export async function postComment(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('LinkedIn comment post error:', errorText);
+      log.error('LinkedIn comment post error', { errorText });
       return { success: false, error: `Failed to post comment: ${response.status}` };
     }
 
     const data = await response.json();
     return { success: true, commentUrn: data['$URN'] || data.id };
   } catch (error) {
-    console.error('Error posting comment:', error);
+    log.error('Error posting comment', { error: error instanceof Error ? error.message : String(error) });
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -391,14 +394,14 @@ export async function replyToComment(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('LinkedIn reply error:', errorText);
+      log.error('LinkedIn reply error', { errorText });
       return { success: false, error: `Failed to post reply: ${response.status}` };
     }
 
     const data = await response.json();
     return { success: true, replyUrn: data['$URN'] || data.id };
   } catch (error) {
-    console.error('Error posting reply:', error);
+    log.error('Error posting reply', { error: error instanceof Error ? error.message : String(error) });
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -442,13 +445,13 @@ export async function reactToPost(
         return { success: true };
       }
       const errorText = await response.text();
-      console.error('LinkedIn reaction error:', errorText);
+      log.error('LinkedIn reaction error', { errorText });
       return { success: false, error: `Failed to react: ${response.status}` };
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Error reacting to post:', error);
+    log.error('Error reacting to post', { error: error instanceof Error ? error.message : String(error) });
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -470,7 +473,7 @@ export async function getPostReactions(
 
     if (!breaker.allowRequest()) {
       const reason = breaker.getRejectionReason();
-      console.log(`[LinkedIn] Skipping reactions fetch: ${reason}`);
+      log.info('Skipping reactions fetch', { reason });
       return { success: false, error: reason };
     }
 
@@ -492,7 +495,7 @@ export async function getPostReactions(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('LinkedIn reactions API error:', response.status, errorText);
+      log.error('LinkedIn reactions API error', { status: response.status, errorText });
       breaker.recordFailure(response.status);
       return { success: false, error: `Failed to fetch reactions: ${response.status}` };
     }
@@ -511,7 +514,7 @@ export async function getPostReactions(
 
     return { success: true, reactions };
   } catch (error) {
-    console.error('Error fetching reactions:', error);
+    log.error('Error fetching reactions', { error: error instanceof Error ? error.message : String(error) });
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -563,7 +566,7 @@ export async function getPostDetails(
 
     return { success: true, post };
   } catch (error) {
-    console.error('Error fetching post details:', error);
+    log.error('Error fetching post details', { error: error instanceof Error ? error.message : String(error) });
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }

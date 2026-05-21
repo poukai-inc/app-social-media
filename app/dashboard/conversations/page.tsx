@@ -2,15 +2,9 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { logger } from '@/lib/logger';
 
-interface ConversationMessage {
-  id: string;
-  authorId: string;
-  content: string;
-  timestamp: string;
-  isFromUs: boolean;
-  url?: string;
-}
+const log = logger.child('dashboard:conversations');
 
 interface Conversation {
   id: string;
@@ -62,29 +56,20 @@ function ConversationsContent() {
   
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [stats, setStats] = useState<ConversationStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(!!pageId);
+  const [error, setError] = useState<string | null>(pageId ? null : 'Page ID is required');
   const [activeOnly, setActiveOnly] = useState(true);
-  
-  useEffect(() => {
-    if (!pageId) {
-      setError('Page ID is required');
-      setLoading(false);
-      return;
-    }
-
-    fetchConversations();
-  }, [pageId, activeOnly]);
 
   const fetchConversations = async () => {
+    if (!pageId) return;
     try {
       setLoading(true);
       const response = await fetch(`/api/conversations?pageId=${pageId}&active=${activeOnly}&limit=50`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch conversations');
       }
-      
+
       const data = await response.json();
       setConversations(data.conversations);
       setStats(data.stats);
@@ -94,6 +79,14 @@ function ConversationsContent() {
       setLoading(false);
     }
   };
+
+  // Refactor deferred — see BACKLOG #122 (move to TanStack Query / Suspense)
+  useEffect(() => {
+    if (pageId) {
+      setTimeout(() => fetchConversations(), 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageId, activeOnly]);
 
   const toggleAutoResponse = async (conversationId: string, enable: boolean) => {
     try {
@@ -113,7 +106,7 @@ function ConversationsContent() {
       // Refresh conversations
       fetchConversations();
     } catch (err) {
-      console.error('Error toggling auto response:', err);
+      log.error('Error toggling auto response', { error: err instanceof Error ? err.message : String(err) });
       alert('Failed to update conversation settings');
     }
   };
@@ -135,7 +128,7 @@ function ConversationsContent() {
 
       fetchConversations();
     } catch (err) {
-      console.error('Error resetting count:', err);
+      log.error('Error resetting count', { error: err instanceof Error ? err.message : String(err) });
       alert('Failed to reset response count');
     }
   };

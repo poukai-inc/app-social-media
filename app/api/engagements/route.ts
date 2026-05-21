@@ -1,14 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
-import { 
-  EngagementTarget, 
-  IEngagementTarget,
-  EngagementType 
+import type {
+  EngagementType,
+  EngagementStatus
+} from '@/lib/models/Engagement';
+import {
+  EngagementTarget,
 } from '@/lib/models/Engagement';
 import { extractPostUrn, getPostDetails, scrapeLinkedInPost } from '@/lib/linkedin-engagement';
-import { generateComment, generateCommentVariations } from '@/lib/openai';
+import { generateComment } from '@/lib/openai';
+import { logger } from '@/lib/logger';
+
+const log = logger.child('api:engagements');
 
 // GET /api/engagements - List engagement targets
 export async function GET(request: NextRequest) {
@@ -29,9 +35,11 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    const query: { userId: typeof user._id; status?: string } = { userId: user._id };
-    if (status) {
-      query.status = status;
+    const ALLOWED_ENGAGEMENT_STATUSES: ReadonlyArray<EngagementStatus> = ['pending', 'approved', 'engaged', 'failed', 'skipped'];
+    const query: { userId: typeof user._id; status?: EngagementStatus } = { userId: user._id };
+    // safe: validated against ALLOWED_ENGAGEMENT_STATUSES before assigning
+    if (status && ALLOWED_ENGAGEMENT_STATUSES.includes(status as EngagementStatus)) {
+      query.status = status as EngagementStatus;
     }
 
     const engagements = await EngagementTarget.find(query)
@@ -57,7 +65,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ engagements: serialized });
   } catch (error) {
-    console.error('Error fetching engagements:', error);
+    log.error('Error fetching engagements', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch engagements' }, { status: 500 });
   }
 }
@@ -162,7 +170,7 @@ export async function POST(request: NextRequest) {
           });
         }
       } catch (aiError) {
-        console.error('AI comment generation failed:', aiError);
+        log.error('AI comment generation failed', { error: aiError instanceof Error ? aiError.message : String(aiError) });
         // Continue without AI comment
       }
     }
@@ -195,7 +203,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error creating engagement:', error);
+    log.error('Error creating engagement', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to create engagement' }, { status: 500 });
   }
 }
@@ -324,7 +332,7 @@ export async function PUT(request: NextRequest) {
       results,
     });
   } catch (error) {
-    console.error('Error bulk creating engagements:', error);
+    log.error('Error bulk creating engagements', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to create engagements' }, { status: 500 });
   }
 }

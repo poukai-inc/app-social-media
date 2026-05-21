@@ -31,7 +31,7 @@ interface GeneratedPost {
 }
 
 export default function BlogRepurposePage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   
   const [step, setStep] = useState<'input' | 'analyze' | 'generate' | 'preview'>('input');
@@ -138,7 +138,7 @@ export default function BlogRepurposePage() {
   const handleSaveAsDraft = async () => {
     // The post is already created, redirect to edit
     if (generatedPost) {
-      router.push(`/dashboard/edit/${(generatedPost as any).id || 'draft'}`);
+      router.push(`/dashboard/edit/${(generatedPost as { id?: string }).id || 'draft'}`);
     }
   };
 
@@ -303,7 +303,7 @@ export default function BlogRepurposePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Tone</label>
                     <select
                       value={tone}
-                      onChange={(e) => setTone(e.target.value as any)}
+                      onChange={(e) => setTone(e.target.value as typeof tone)}
                       className="w-full px-4 py-2 border rounded-lg"
                     >
                       <option value="professional">Professional</option>
