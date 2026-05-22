@@ -5,7 +5,7 @@
 - [STACK_ALIGNMENT_DECISIONS.md](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) (2026-05-20) — cross-repo stack alignment (D1–D7)
 
 **Last sync**: 2026-05-21
-**Total tasks**: 121 (15 C / 58 H / 27 M / 21 L)
+**Total tasks**: 122 (15 C / 58 H / 27 M / 22 L)
 
 ## Legend
 
@@ -101,7 +101,7 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 
 | ID | Status | Task | File(s) |
 |---|---|---|---|
-| 36 | `[ ]` | `.npmrc` + `NPM_TOKEN` (Vercel env); install `@poukai-inc/ui` | `.npmrc` (new) |
+| 36 | `[~]` | `.npmrc` + `NPM_TOKEN` (Vercel env); install `@poukai-inc/ui`. **Progress 2026-05-21**: `.npmrc` configured for `@poukai-inc` scope; `@poukai-inc/ui@1.2.0` installed; lockfile committed; CI workflow exposes `NPM_TOKEN` to install steps; Dockerfile accepts `NPM_TOKEN` via `--mount=type=secret`; `.github/renovate.json` watches `@poukai-inc/*` (see #123). Remaining: user adds `NPM_TOKEN` to GitHub Actions secrets + Vercel env + Renovate/Mend credentials per `docs/setup-npm-token.md`. | `.npmrc`, `package.json`, `pnpm-lock.yaml`, `.github/workflows/ci.yml`, `Dockerfile`, `.github/renovate.json`, `docs/setup-npm-token.md` |
 | 37 | `[ ]` | React 19 ↔ DS dual-CT validation (D1): widen `@poukai-inc/ui` peer to `>=18 \|\| >=19`; CI matrix runs Playwright CT under React 18 + 19; bump `@types/react` + `@types/react-dom` to support both. See [STACK_ALIGNMENT_DECISIONS.md#d1](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) | `package.json`, `poukai-ui` PR |
 | 38 | `[ ]` | Bump `lucide-react` to latest 0.5xx across all three repos (D4); tighten `@poukai-inc/ui` peer floor to `>=0.500`; audit icon renames in lucide changelog between current versions and target. See [STACK_ALIGNMENT_DECISIONS.md#d4](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) | `package.json`, `poukai-ui` PR |
 | 39 | `[ ]` | Import `@poukai-inc/ui/tokens.css` | `app/layout.tsx` |
@@ -224,20 +224,21 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 115 | `[ ]` | **[AUDIT-L1]** ICP agent human-in-loop guard — AI quality scoring alone is insufficient guardrail against adversarial tweets; replies post with no human review. Add `requireHumanApproval` config (default `true`) that saves candidates to DB for dashboard review before posting | `lib/engagement/icp-engagement-agent.ts:338`, new dashboard review route |
 | 116 | `[ ]` | **[AUDIT-L2]** Prompt injection in `improvePost` — user `instructions` param interpolated inline between quotes, no delimiters. Fix: wrap in `<INSTRUCTIONS>` XML tag; add system prompt note | `lib/openai.ts:265-272` |
 | 122 | `[ ]` | **[CI-DEBT]** Revert `setTimeout(fn, 0)` fetch-in-useEffect wraps — 14 dashboard pages + `components/post-form.tsx` were hacked to silence `react-hooks/set-state-in-effect`. Microtask delay is benign but the pattern is misleading. Proper fix: introduce TanStack Query (or SWR) and move initial-fetches out of `useEffect`, OR adopt Suspense + `use(promise)` once R19 data-fetching pattern stabilizes. Introduced in commit `1b351e1`. | `app/dashboard/**/page.tsx`, `components/post-form.tsx` |
+| 123 | `[ ]` | **[RENOVATE]** Install Renovate (Mend) GitHub App on `poukai-inc/autopost`; add `NPM_TOKEN` credential in Mend dashboard for `npm.pkg.github.com`. After install, Mend opens the Dependency Dashboard issue; from there it watches `@poukai-inc/*` (PR immediately, pin exact, no auto-merge per `.github/renovate.json`). Activates the version-bump tracking that the config currently only declares. | (no repo changes; GitHub org settings + Mend dashboard) |
 
 ---
 
 ## Snapshot by priority × severity
 
-_Updated after 2026-05-20 security audit (+10 tasks: 107–116), 2026-05-20 stack alignment (+5 tasks: 117–121, see [STACK_ALIGNMENT_DECISIONS.md](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md)), and 2026-05-21 CI-greening (+1 task: 122)._
+_Updated after 2026-05-20 security audit (+10 tasks: 107–116), 2026-05-20 stack alignment (+5 tasks: 117–121, see [STACK_ALIGNMENT_DECISIONS.md](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md)), 2026-05-21 CI-greening (+1 task: 122), and 2026-05-21 Renovate wiring (+1 task: 123, #36 in-progress)._
 
 |        | C  | H  | M  | L  | **Total** |
 |--------|----|----|----|----|-----------|
 | **P0** | 15 |  0 |  0 |  0 | **15** |
 | **P1** |  0 | 43 | 13 |  0 | **56** |
 | **P2** |  0 | 15 | 14 |  0 | **29** |
-| **P3** |  0 |  0 |  0 | 21 | **21** |
-| **Total** | **15** | **58** | **27** | **21** | **121** |
+| **P3** |  0 |  0 |  0 | 22 | **22** |
+| **Total** | **15** | **58** | **27** | **22** | **122** |
 
 ## Phase ↔ tasks map
 
@@ -251,7 +252,7 @@ _Updated after 2026-05-20 security audit (+10 tasks: 107–116), 2026-05-20 stac
 | Phase 4 — Distribution packaging | 58-67 | 1 wk |
 | Phase 5 — Observability | 68-70 | 0.5 wk |
 | Phase 6 — Tests + validation + cleanup | 71-85, 112-114 | 1-1.5 wks |
-| Post-launch polish | 86-103, 115-116, 120, 122 | rolling |
+| Post-launch polish | 86-103, 115-116, 120, 122-123 | rolling |
 
 **Solo**: 7-9 wks. **Pair**: 5-6 wks.
 

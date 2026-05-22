@@ -6,11 +6,18 @@ RUN corepack enable
 
 WORKDIR /app
 
-# Copy lockfile + manifest + npmrc (engine-strict=false; future @poukai-inc registry config)
+# Copy lockfile + manifest + npmrc (engine-strict=false + @poukai-inc registry)
 COPY package.json pnpm-lock.yaml .npmrc ./
 
+# NPM_TOKEN — GitHub PAT with read:packages, passed via build secret.
+# Required to install @poukai-inc/* from GitHub Packages.
+# See docs/setup-npm-token.md.
+ARG NPM_TOKEN
+
 # Install dependencies — frozen lockfile enforces R-066
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=secret,id=npm_token,env=NPM_TOKEN \
+    NPM_TOKEN="${NPM_TOKEN:-$(cat /run/secrets/npm_token 2>/dev/null || true)}" \
+    pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
