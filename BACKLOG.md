@@ -5,7 +5,7 @@
 - [STACK_ALIGNMENT_DECISIONS.md](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) (2026-05-20) — cross-repo stack alignment (D1–D7)
 
 **Last sync**: 2026-05-21
-**Total tasks**: 122 (15 C / 58 H / 27 M / 22 L)
+**Total tasks**: 123 (15 C / 58 H / 27 M / 23 L)
 
 ## Legend
 
@@ -225,20 +225,21 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 116 | `[ ]` | **[AUDIT-L2]** Prompt injection in `improvePost` — user `instructions` param interpolated inline between quotes, no delimiters. Fix: wrap in `<INSTRUCTIONS>` XML tag; add system prompt note | `lib/openai.ts:265-272` |
 | 122 | `[ ]` | **[CI-DEBT]** Revert `setTimeout(fn, 0)` fetch-in-useEffect wraps — 14 dashboard pages + `components/post-form.tsx` were hacked to silence `react-hooks/set-state-in-effect`. Microtask delay is benign but the pattern is misleading. Proper fix: introduce TanStack Query (or SWR) and move initial-fetches out of `useEffect`, OR adopt Suspense + `use(promise)` once R19 data-fetching pattern stabilizes. Introduced in commit `1b351e1`. | `app/dashboard/**/page.tsx`, `components/post-form.tsx` |
 | 123 | `[ ]` | **[RENOVATE]** Install Renovate (Mend) GitHub App on `poukai-inc/autopost`; add `NPM_TOKEN` credential in Mend dashboard for `npm.pkg.github.com`. After install, Mend opens the Dependency Dashboard issue; from there it watches `@poukai-inc/*` (PR immediately, pin exact, no auto-merge per `.github/renovate.json`). Activates the version-bump tracking that the config currently only declares. | (no repo changes; GitHub org settings + Mend dashboard) |
+| 124 | `[ ]` | **[LICENSE]** Remove transitional `UNLICENSED` acceptance from `.github/scripts/license-check.mjs` once [poukai-inc/poukai-ui#144](https://github.com/poukai-inc/poukai-ui/issues/144) ships a patched DS release with `"license": "SEE LICENSE IN LICENSE"`. Then bump `@poukai-inc/ui` to the patched version in `package.json` and revert the script's `FIRST_PARTY_ACCEPTED` set back to a single-value `Set([FIRST_PARTY_OPAQUE])`. | `.github/scripts/license-check.mjs`, `package.json` |
 
 ---
 
 ## Snapshot by priority × severity
 
-_Updated after 2026-05-20 security audit (+10 tasks: 107–116), 2026-05-20 stack alignment (+5 tasks: 117–121, see [STACK_ALIGNMENT_DECISIONS.md](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md)), 2026-05-21 CI-greening (+1 task: 122), and 2026-05-21 Renovate wiring (+1 task: 123, #36 in-progress)._
+_Updated after 2026-05-20 security audit (+10 tasks: 107–116), 2026-05-20 stack alignment (+5 tasks: 117–121, see [STACK_ALIGNMENT_DECISIONS.md](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md)), 2026-05-21 CI-greening (+1 task: 122), 2026-05-21 Renovate wiring (+1 task: 123, #36 in-progress), and 2026-05-21 license transitional (+1 task: 124)._
 
 |        | C  | H  | M  | L  | **Total** |
 |--------|----|----|----|----|-----------|
 | **P0** | 15 |  0 |  0 |  0 | **15** |
 | **P1** |  0 | 43 | 13 |  0 | **56** |
 | **P2** |  0 | 15 | 14 |  0 | **29** |
-| **P3** |  0 |  0 |  0 | 22 | **22** |
-| **Total** | **15** | **58** | **27** | **22** | **122** |
+| **P3** |  0 |  0 |  0 | 23 | **23** |
+| **Total** | **15** | **58** | **27** | **23** | **123** |
 
 ## Phase ↔ tasks map
 
@@ -252,7 +253,7 @@ _Updated after 2026-05-20 security audit (+10 tasks: 107–116), 2026-05-20 stac
 | Phase 4 — Distribution packaging | 58-67 | 1 wk |
 | Phase 5 — Observability | 68-70 | 0.5 wk |
 | Phase 6 — Tests + validation + cleanup | 71-85, 112-114 | 1-1.5 wks |
-| Post-launch polish | 86-103, 115-116, 120, 122-123 | rolling |
+| Post-launch polish | 86-103, 115-116, 120, 122-124 | rolling |
 
 **Solo**: 7-9 wks. **Pair**: 5-6 wks.
 
