@@ -1,0 +1,239 @@
+name: DS package bump
+
+# Listens for the DS repo's post-publish dispatch event and opens a draft
+# PR bumping @poukai-inc/ui in package.json + regenerating pnpm-lock.yaml.
+#
+# Mirrors the pouk.ai workflow of the same name; adapted for autopost's
+# Next.js stack and for the case where @poukai-inc/ui is not yet a
+# dependency (the dep is on autopost's backlog as row #36 — until that
+# lands, this workflow short-circuits cleanly).
+#
+# To trigger manually (e.g. testing): from the DS repo or any authorized
+# context, hit the GitHub API:
+#   gh api -X POST repos/poukai-inc/autopost/dispatches \
+#     -f event_type=ds-package-published \
+#     -f client_payload[version]=0.x.y
+
+on:
+  repository_dispatch:
+    types: [ds-package-published]
+  # Manual override — useful when bootstrapping or testing
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Target @poukai-inc/ui version (e.g. 0.2.3)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    env:
+      DS_VERSION: ${{ github.event.client_payload.version || inputs.version }}
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+    steps:
+      - name: Validate version input
+        run: |
+          if [ -z "$DS_VERSION" ]; then
+            echo "::error::No version provided in dispatch payload or workflow input."
+            exit 1
+          fi
+          if ! echo "$DS_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+([.-][a-zA-Z0-9.-]+)?$'; then
+            echo "::error::Version '$DS_VERSION' is not a valid SemVer."
+            exit 1
+          fi
+          echo "Bumping to @poukai-inc/ui@$DS_VERSION"
+
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Check if @poukai-inc/ui is consumed + if bump is needed
+        id: check
+        run: |
+          current=$(node -e "
+            const pkg = require('./package.json');
+            process.stdout.write((pkg.dependencies && pkg.dependencies['@poukai-inc/ui']) || '');
+          ")
+          echo "Current pinned version: '$current'"
+          echo "Target version:         $DS_VERSION"
+          if [ -z "$current" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::@poukai-inc/ui is not yet a dependency of autopost (BACKLOG row #36). Skipping — no PR opened. Re-run after the dep lands."
+          elif [ "$current" = "$DS_VERSION" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Already on $DS_VERSION; nothing to do."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Bump package.json
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.dependencies['@poukai-inc/ui'] = process.env.DS_VERSION;
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+      - name: Install deps (regenerates pnpm-lock.yaml against registry)
+        if: steps.check.outputs.skip != 'true'
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Typecheck
+        if: steps.check.outputs.skip != 'true'
+        run: pnpm typecheck
+
+      - name: Lint
+        if: steps.check.outputs.skip != 'true'
+        run: pnpm lint
+
+      - name: Build
+        if: steps.check.outputs.skip != 'true'
+        run: pnpm build
+
+      - name: Capture .next build size summary
+        id: sizes
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          {
+            echo 'table<<SIZES_END'
+            echo '| Path | Size |'
+            echo '|---|---:|'
+            for p in .next/static .next/server .next/standalone; do
+              if [ -d "$p" ]; then
+                size=$(du -sh "$p" 2>/dev/null | cut -f1)
+                printf '| `%s` | %s |\n' "$p" "$size"
+              fi
+            done
+            echo 'SIZES_END'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Diff @poukai-inc/ui llms files against snapshots
+        id: llms
+        if: steps.check.outputs.skip != 'true'
+        # Tracks two files (DS may ship either or both):
+        #   - llms.txt        — short index (post-0.5.0)
+        #   - llms-full.txt   — full content (post-0.5.0; in 0.4.0 the
+        #                       full content lived in llms.txt itself)
+        # Each file is diffed independently against its snapshot. Missing
+        # files print a defensive notice; nothing fails the step.
+        run: |
+          mkdir -p docs/ds-snapshot
+          {
+            echo 'diff<<LLMS_END'
+            for file in llms.txt llms-full.txt; do
+              new="node_modules/@poukai-inc/ui/dist/$file"
+              snap="docs/ds-snapshot/$file"
+              echo "### \`$file\`"
+              echo ''
+              if [ ! -f "$new" ]; then
+                echo "_Not shipped in @poukai-inc/ui@${DS_VERSION}._"
+                echo ''
+                continue
+              fi
+              if [ ! -f "$snap" ]; then
+                echo '_First snapshot — no prior version to diff against._ Full file ships in this PR.'
+                echo ''
+              elif diff -q "$snap" "$new" > /dev/null; then
+                echo '_No change since the prior bump._'
+                echo ''
+              else
+                echo '<details><summary>Diff vs prior snapshot</summary>'
+                echo ''
+                echo '```diff'
+                diff -u "$snap" "$new" | head -300
+                echo '```'
+                echo '</details>'
+                echo ''
+              fi
+              cp "$new" "$snap"
+            done
+            echo 'LLMS_END'
+          } >> "$GITHUB_OUTPUT"
+
+      # Mint a GitHub App installation token so the resulting PR is authored
+      # by the bot App identity rather than the workflow's default
+      # GITHUB_TOKEN. PRs/pushes created via GITHUB_TOKEN are silently exempted
+      # from triggering further workflow runs (GitHub's anti-recursion guard),
+      # which leaves bot-opened bump PRs sitting BLOCKED because ci.yml never
+      # fires against them. The App token bypasses that guard.
+      #
+      # Requires repo secrets BOT_APP_ID + BOT_APP_PRIVATE_KEY. The App needs
+      # Contents R/W + Pull requests R/W + Workflows R/W on this repo.
+      # Provision the same App that pouk.ai uses (pouk-ai-bot) or a sibling.
+      - name: Mint App installation token
+        if: steps.check.outputs.skip != 'true'
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+
+      - name: Open draft PR
+        if: steps.check.outputs.skip != 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          branch: bot/ds-bump-${{ env.DS_VERSION }}
+          delete-branch: true
+          title: "chore: bump @poukai-inc/ui to ${{ env.DS_VERSION }}"
+          commit-message: |
+            chore: bump @poukai-inc/ui to ${{ env.DS_VERSION }}
+
+            Auto-opened by .github/workflows/ds-bump.yml in response to
+            a ds-package-published dispatch from poukai-inc/poukai-ui.
+          body: |
+            **Auto-generated bump PR.** Triggered by a `ds-package-published` dispatch from `poukai-inc/poukai-ui`.
+
+            ## What changed
+            - `package.json`: `@poukai-inc/ui` → `${{ env.DS_VERSION }}`
+            - `pnpm-lock.yaml`: regenerated against `npm.pkg.github.com`
+
+            ## Local verification (already passed on this runner)
+            - `pnpm install --no-frozen-lockfile` — green
+            - `pnpm typecheck` — green
+            - `pnpm lint` — green
+            - `pnpm build` — green
+
+            ## Build artifact sizes (`.next/`)
+
+            Compare against the prior bump PR's table to spot regressions.
+
+            ${{ steps.sizes.outputs.table }}
+
+            ## DS guidance changes (`llms.txt`)
+
+            The brand's living constitution. Read it via `cat node_modules/@poukai-inc/ui/dist/llms.txt` before any DS-touching code change. Snapshot refreshed in this PR at `docs/ds-snapshot/llms.txt`.
+
+            ${{ steps.llms.outputs.diff }}
+
+            ## Before merging
+            - [ ] Confirm the version matches an expected proposal in `decisions/` (or note that it doesn't and is being accepted on the DS team's call)
+            - [ ] Skim the lockfile diff for unexpected transitive bumps
+            - [ ] Compare the build-artifact-sizes table against the prior bump PR
+
+            cc @arianzargaran
+          draft: true
+          labels: |
+            bot
+            ds-bump
