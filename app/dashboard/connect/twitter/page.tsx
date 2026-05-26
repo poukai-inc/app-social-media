@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import NextImage from 'next/image';
 import { logger } from '@/lib/logger';
+import { TwitterIcon } from '@/components/icons/platforms';
 
 const log = logger.child('dashboard:connect:twitter');
 
@@ -142,9 +143,7 @@ function ConnectTwitterPageContent() {
         <div className="bg-gray-800 rounded-lg p-8">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-12 h-12 bg-sky-500 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-              </svg>
+              <TwitterIcon className="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white">Connect X (Twitter)</h1>

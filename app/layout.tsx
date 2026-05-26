@@ -1,24 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "@poukai-inc/ui/tokens.css";
 import "@poukai-inc/ui/styles.css";
+import "./dark-tokens.css";
+import "./brand-override.css";
 import "./globals.css";
 import { Providers } from "@/components/providers";
-import { Navbar } from "@/components/navbar";
+import { AppShell } from "@/components/app-shell";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const BRAND_NAME = process.env.BRAND_NAME ?? "AutoPost";
+const BRAND_FAVICON_URL = process.env.BRAND_FAVICON_URL;
+const BRAND_PRIMARY = process.env.BRAND_PRIMARY;
 
 export const metadata: Metadata = {
-  title: "AutoPost - LinkedIn Scheduler",
-  description: "Schedule and automate your LinkedIn posts",
+  title: `${BRAND_NAME} - LinkedIn Scheduler`,
+  description: `Schedule and automate your LinkedIn posts`,
+  icons: BRAND_FAVICON_URL ? { icon: BRAND_FAVICON_URL } : undefined,
 };
 
 export default function RootLayout({
@@ -28,12 +24,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-50 dark:bg-zinc-950`}
-      >
+      <head>
+        {BRAND_PRIMARY && (
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `:root{--brand-primary:${BRAND_PRIMARY};}`,
+            }}
+          />
+        )}
+      </head>
+      <body className="antialiased">
         <Providers>
-          <Navbar />
-          <main>{children}</main>
+          <AppShell>{children}</AppShell>
         </Providers>
       </body>
     </html>

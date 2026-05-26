@@ -1,0 +1,79 @@
+/* ============================================================
+   Dark-theme token override — autopost.
+
+   Layered on top of @poukai-inc/ui/tokens.css. Applies when:
+     - <html class="dark"> (manual user toggle), OR
+     - @media (prefers-color-scheme: dark) (system default)
+
+   Per decision 0006: keep dark mode, build app-local override file.
+   App-local primitives in components/ui/ consume DS tokens, so they
+   get dark theme automatically through this override.
+
+   See decisions/0006-dark-mode.md.
+   ============================================================ */
+
+:root.dark {
+  /* ---------- Color (Apple-dark) ---------- */
+  --bg: #0a0a0a;
+  --surface: #18181b;
+  --surface-section: #1c1c1f;
+  --bg-elevated: #18181b;
+  --fg: #f4f4f5;
+  --fg-muted: #a1a1aa;
+  --hairline: #27272a;
+  --hairline-soft: #3f3f46;
+  --accent: #2997ff;
+  --accent-glow: rgba(41, 151, 255, 0.3);
+
+  /* ---------- Warm accent (editorial band) ---------- */
+  --bg-warm-accent: #8a3320;
+  --fg-on-warm: #fdf5f0;
+  --fg-on-warm-muted: #d8b8a3;
+
+  /* ---------- Status color tier ---------- */
+  --success: #4ade80;
+  --bg-success: #052e16;
+  --fg-on-success: #bbf7d0;
+
+  --danger: #f87171;
+  --bg-danger: #2c0a0a;
+  --fg-on-danger: #fecaca;
+
+  --warning: #fbbf24;
+  --bg-warning: #2a1c00;
+  --fg-on-warning: #fde68a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    /* ---------- Color (Apple-dark) ---------- */
+    --bg: #0a0a0a;
+    --surface: #18181b;
+    --surface-section: #1c1c1f;
+    --bg-elevated: #18181b;
+    --fg: #f4f4f5;
+    --fg-muted: #a1a1aa;
+    --hairline: #27272a;
+    --hairline-soft: #3f3f46;
+    --accent: #2997ff;
+    --accent-glow: rgba(41, 151, 255, 0.3);
+
+    /* ---------- Warm accent (editorial band) ---------- */
+    --bg-warm-accent: #8a3320;
+    --fg-on-warm: #fdf5f0;
+    --fg-on-warm-muted: #d8b8a3;
+
+    /* ---------- Status color tier ---------- */
+    --success: #4ade80;
+    --bg-success: #052e16;
+    --fg-on-success: #bbf7d0;
+
+    --danger: #f87171;
+    --bg-danger: #2c0a0a;
+    --fg-on-danger: #fecaca;
+
+    --warning: #fbbf24;
+    --bg-warning: #2a1c00;
+    --fg-on-warning: #fde68a;
+  }
+}

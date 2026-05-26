@@ -1,0 +1,18 @@
+/* ============================================================
+   Brand override — env-driven white-label token swap.
+
+   Self-host installs override DS tokens by setting:
+     BRAND_PRIMARY      → --accent
+     BRAND_WORDMARK_URL → consumed by AppShell (optional)
+     BRAND_NAME         → window title (handled in metadata)
+     BRAND_FAVICON_URL  → handled in metadata
+
+   When env vars are unset, these fall back to DS defaults declared
+   in @poukai-inc/ui/tokens.css.
+
+   See decisions/0005-ui-path.md §6 + MIGRATION_ANALYSIS.md §6.1.
+   ============================================================ */
+
+:root {
+  --accent: var(--brand-primary, #0071e3);
+}
