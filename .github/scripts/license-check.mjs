@@ -27,8 +27,13 @@ const ALLOWED_LICENSES = new Set([
   'Python-2.0',    // permissive, used by some tooling
 ]);
 
-// Special: first-party packages may use this opaque pointer per Poukai PIUL-1.0.
-const FIRST_PARTY_OPAQUE = 'SEE LICENSE IN LICENSE';
+// Special: first-party packages may use either of these opaque pointers per
+// Poukai PIUL-1.0. Both are accepted as the steady state — DS deliberately
+// ships license: UNLICENSED (poukai-inc/poukai-ui#363 reverted the flip to
+// SEE LICENSE IN LICENSE because pnpm licenses list classifies the latter
+// as 'Unknown' rather than 'UNLICENSED', breaking R-064 allowlist gates
+// downstream). Keep both values until DS or pnpm changes shape.
+const FIRST_PARTY_OPAQUE = new Set(['SEE LICENSE IN LICENSE', 'UNLICENSED']);
 const FIRST_PARTY_PREFIXES = ['@poukai-inc/'];
 
 // Per-package exceptions: pkg name (prefix-matched) → allowed license.
@@ -49,7 +54,7 @@ function normalizeLicense(raw) {
 }
 
 function isAllowed(license, pkgName) {
-  if (license === FIRST_PARTY_OPAQUE) {
+  if (FIRST_PARTY_OPAQUE.has(license)) {
     return FIRST_PARTY_PREFIXES.some((p) => pkgName.startsWith(p));
   }
   if (ALLOWED_LICENSES.has(license)) return true;
@@ -98,7 +103,7 @@ function main() {
 
   console.error(`License allowlist VIOLATIONS (${violations.length}):`);
   console.error('Allowed: ' + [...ALLOWED_LICENSES].sort().join(', '));
-  console.error(`Plus '${FIRST_PARTY_OPAQUE}' for first-party (${FIRST_PARTY_PREFIXES.join(', ')}).`);
+  console.error(`Plus [${[...FIRST_PARTY_OPAQUE].map((s) => `'${s}'`).join(', ')}] for first-party (${FIRST_PARTY_PREFIXES.join(', ')}).`);
   console.error('');
   for (const v of violations) {
     console.error(`  - ${v.pkg}@${v.version} → ${v.license}`);
