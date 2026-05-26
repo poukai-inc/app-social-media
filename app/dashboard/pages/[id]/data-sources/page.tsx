@@ -6,8 +6,10 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { logger } from '@/lib/logger';
 import { Button } from '@poukai-inc/ui/atoms/Button';
+import { useToast } from '@poukai-inc/ui/organisms';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   Select,
   SelectTrigger,
@@ -81,6 +83,7 @@ export default function DataSourcesPage() {
   const router = useRouter();
   const params = useParams();
   const pageId = params.id as string;
+  const toast = useToast();
 
   const [dataSources, setDataSources] = useState<DataSource[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,6 +91,8 @@ export default function DataSourcesPage() {
   const [selectedSource, setSelectedSource] = useState<DataSource | null>(null);
   const [previewResults, setPreviewResults] = useState<QueryResult | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [deleteDialogId, setDeleteDialogId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // New source form
   const [newSource, setNewSource] = useState({
@@ -217,22 +222,27 @@ export default function DataSourcesPage() {
     }
   };
 
-  const handleDeleteSource = async (sourceId: string) => {
-    if (!confirm('Are you sure you want to delete this data source?')) return;
-
+  const confirmDeleteSource = async () => {
+    const id = deleteDialogId;
+    if (!id) return;
+    setIsDeleting(true);
     try {
       const response = await fetch(
-        `/api/pages/${pageId}/data-sources?sourceId=${sourceId}`,
+        `/api/pages/${pageId}/data-sources?sourceId=${id}`,
         { method: 'DELETE' }
       );
 
       if (response.ok) {
+        toast.show({ tone: 'success', title: 'Data source deleted', body: 'The data source was removed.' });
         fetchDataSources();
       } else {
-        alert('Failed to delete data source');
+        toast.show({ tone: 'danger', title: 'Delete failed', body: 'Failed to delete data source.' });
       }
     } catch {
-      alert('Failed to delete data source');
+      toast.show({ tone: 'danger', title: 'Delete failed', body: 'Failed to delete data source.' });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogId(null);
     }
   };
 
@@ -264,6 +274,7 @@ export default function DataSourcesPage() {
   }
 
   return (
+    <>
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
@@ -396,7 +407,7 @@ export default function DataSourcesPage() {
                       )}
                     </button>
                     <button
-                      onClick={() => handleDeleteSource(source.id)}
+                      onClick={() => setDeleteDialogId(source.id)}
                       className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
                       title="Delete"
                     >
@@ -768,5 +779,16 @@ export default function DataSourcesPage() {
         )}
       </div>
     </div>
+    <ConfirmDialog
+      open={deleteDialogId !== null}
+      onOpenChange={(open) => { if (!open) setDeleteDialogId(null); }}
+      title="Delete this data source?"
+      description="This action can't be undone."
+      confirmLabel="Delete"
+      cancelLabel="Cancel"
+      onConfirm={confirmDeleteSource}
+      isConfirming={isDeleting}
+    />
+    </>
   );
 }

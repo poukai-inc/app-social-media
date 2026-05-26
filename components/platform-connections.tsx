@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import type { PlatformType } from '@/lib/platforms/types';
+import { useToast } from '@poukai-inc/ui/organisms';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface PlatformConnectionDisplay {
   platform: PlatformType;
@@ -55,66 +57,68 @@ export default function PlatformConnections({
   onConnectionChange,
 }: PlatformConnectionsProps) {
   const [isLoading, setIsLoading] = useState<PlatformType | null>(null);
+  const toast = useToast();
+  const [linkedinConnectDialogOpen, setLinkedinConnectDialogOpen] = useState(false);
+  const [disconnectDialogPlatform, setDisconnectDialogPlatform] = useState<PlatformType | null>(null);
 
-  const handleConnect = async (platform: PlatformType) => {
+  const handleConnect = (platform: PlatformType) => {
     if (platform === 'facebook') {
-      // Redirect to Facebook OAuth
       window.location.assign(`/api/auth/facebook?pageId=${pageId}`);
     } else if (platform === 'twitter') {
-      // Redirect to Twitter OAuth
       window.location.assign(`/api/auth/twitter?pageId=${pageId}`);
     } else if (platform === 'linkedin') {
-      // For LinkedIn, we can use the current session's credentials
-      // This will connect the page to the user's LinkedIn profile
-      const confirmed = confirm(
-        'This will connect your LinkedIn profile to this page using your current login credentials. Continue?'
-      );
-      if (confirmed) {
-        setIsLoading('linkedin');
-        try {
-          const response = await fetch(`/api/pages/${pageId}/connections/linkedin`, {
-            method: 'POST',
-          });
-          if (response.ok) {
-            onConnectionChange?.();
-          } else {
-            const data = await response.json();
-            alert(data.error || 'Failed to connect LinkedIn');
-          }
-        } catch {
-          alert('Failed to connect LinkedIn. Please try again.');
-        } finally {
-          setIsLoading(null);
-        }
-      }
+      setLinkedinConnectDialogOpen(true);
     } else {
-      alert(`${PLATFORM_INFO[platform].name} connection coming soon!`);
+      toast.show({ tone: 'info', title: 'Coming soon', body: `${PLATFORM_INFO[platform].name} connection coming soon.` });
     }
   };
 
-  const handleDisconnect = async (platform: PlatformType) => {
-    if (!confirm(`Are you sure you want to disconnect ${PLATFORM_INFO[platform].name}?`)) {
-      return;
+  const confirmLinkedInConnect = async () => {
+    setIsLoading('linkedin');
+    try {
+      const response = await fetch(`/api/pages/${pageId}/connections/linkedin`, {
+        method: 'POST',
+      });
+      if (response.ok) {
+        toast.show({ tone: 'success', title: 'LinkedIn connected', body: 'Your LinkedIn profile is linked to this page.' });
+        onConnectionChange?.();
+      } else {
+        const data = await response.json();
+        toast.show({ tone: 'danger', title: 'Connect failed', body: data.error || 'Failed to connect LinkedIn.' });
+      }
+    } catch {
+      toast.show({ tone: 'danger', title: 'Connect failed', body: 'Failed to connect LinkedIn. Please try again.' });
+    } finally {
+      setIsLoading(null);
+      setLinkedinConnectDialogOpen(false);
     }
+  };
 
+  const handleDisconnect = (platform: PlatformType) => {
+    setDisconnectDialogPlatform(platform);
+  };
+
+  const confirmDisconnect = async () => {
+    const platform = disconnectDialogPlatform;
+    if (!platform) return;
     setIsLoading(platform);
-
     try {
       const response = await fetch(
         `/api/pages/${pageId}/connections?platform=${platform}`,
         { method: 'DELETE' }
       );
-
       if (response.ok) {
+        toast.show({ tone: 'success', title: 'Disconnected', body: `${PLATFORM_INFO[platform].name} disconnected.` });
         onConnectionChange?.();
       } else {
         const data = await response.json();
-        alert(data.error || 'Failed to disconnect');
+        toast.show({ tone: 'danger', title: 'Disconnect failed', body: data.error || 'Failed to disconnect.' });
       }
     } catch {
-      alert('Failed to disconnect. Please try again.');
+      toast.show({ tone: 'danger', title: 'Disconnect failed', body: 'Failed to disconnect. Please try again.' });
     } finally {
       setIsLoading(null);
+      setDisconnectDialogPlatform(null);
     }
   };
 
@@ -135,10 +139,10 @@ export default function PlatformConnections({
         onConnectionChange?.();
       } else {
         const data = await response.json();
-        alert(data.error || 'Failed to update');
+        toast.show({ tone: 'danger', title: 'Update failed', body: data.error || 'Failed to update.' });
       }
     } catch {
-      alert('Failed to update. Please try again.');
+      toast.show({ tone: 'danger', title: 'Update failed', body: 'Failed to update. Please try again.' });
     } finally {
       setIsLoading(null);
     }
@@ -160,6 +164,7 @@ export default function PlatformConnections({
   const connectedPlatforms = new Set(connections.map(c => c.platform));
 
   return (
+    <>
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-white">Platform Connections</h3>
       
@@ -275,5 +280,26 @@ export default function PlatformConnections({
         </p>
       </div>
     </div>
+    <ConfirmDialog
+      open={linkedinConnectDialogOpen}
+      onOpenChange={setLinkedinConnectDialogOpen}
+      title="Connect LinkedIn to this page?"
+      description="This will connect your LinkedIn profile to this page using your current login credentials."
+      confirmLabel="Connect"
+      cancelLabel="Cancel"
+      onConfirm={confirmLinkedInConnect}
+      isConfirming={isLoading === 'linkedin'}
+    />
+    <ConfirmDialog
+      open={disconnectDialogPlatform !== null}
+      onOpenChange={(open) => { if (!open) setDisconnectDialogPlatform(null); }}
+      title={disconnectDialogPlatform ? `Disconnect ${PLATFORM_INFO[disconnectDialogPlatform].name}?` : 'Disconnect?'}
+      description="You can reconnect at any time."
+      confirmLabel="Disconnect"
+      cancelLabel="Cancel"
+      onConfirm={confirmDisconnect}
+      isConfirming={disconnectDialogPlatform !== null && isLoading === disconnectDialogPlatform}
+    />
+    </>
   );
 }

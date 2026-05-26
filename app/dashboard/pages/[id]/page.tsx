@@ -8,6 +8,8 @@ import { logger } from '@/lib/logger';
 import { Button } from '@poukai-inc/ui/atoms/Button';
 import { Avatar } from '@poukai-inc/ui/atoms/Avatar';
 import { Tag } from '@poukai-inc/ui/atoms/Tag';
+import { useToast } from '@poukai-inc/ui/organisms';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 const log = logger.child('dashboard:pages:[id]');
 import {
@@ -119,8 +121,11 @@ export default function PageDashboard() {
   const router = useRouter();
   const params = useParams();
   const pageId = params.id as string;
+  const toast = useToast();
 
   const [page, setPage] = useState<Page | null>(null);
+  const [deleteDialogId, setDeleteDialogId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -328,30 +333,33 @@ export default function PageDashboard() {
     }
   };
 
-  const handleDeletePost = async (postId: string) => {
-    if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
-      return;
-    }
-
+  const confirmDeletePost = async () => {
+    const id = deleteDialogId;
+    if (!id) return;
+    setIsDeleting(true);
     try {
-      const response = await fetch(`/api/posts/${postId}`, {
+      const response = await fetch(`/api/posts/${id}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
+        toast.show({ tone: 'success', title: 'Post deleted', body: 'The post was removed.' });
         // Close modal if open
-        if (selectedPost?._id === postId) {
+        if (selectedPost?._id === id) {
           setSelectedPost(null);
         }
         // Refresh posts list
         await fetchPosts();
       } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to delete post');
+        const data = await response.json().catch(() => ({}));
+        toast.show({ tone: 'danger', title: 'Delete failed', body: data.error || 'Failed to delete post.' });
       }
     } catch (error) {
       log.error('Failed to delete', { error: error instanceof Error ? error.message : String(error) });
-      alert('Failed to delete post');
+      toast.show({ tone: 'danger', title: 'Delete failed', body: 'Failed to delete post.' });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogId(null);
     }
   };
 
@@ -372,6 +380,7 @@ export default function PageDashboard() {
   }
 
   return (
+    <>
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
@@ -894,7 +903,7 @@ export default function PageDashboard() {
                         <Edit3 className="h-4 w-4" />
                       </Link>
                       <button
-                        onClick={() => handleDeletePost(post._id)}
+                        onClick={() => setDeleteDialogId(post._id)}
                         className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
                         title="Delete post"
                       >
@@ -1044,5 +1053,16 @@ export default function PageDashboard() {
         </div>
       )}
     </div>
+    <ConfirmDialog
+      open={deleteDialogId !== null}
+      onOpenChange={(open) => { if (!open) setDeleteDialogId(null); }}
+      title="Delete this post?"
+      description="This action can't be undone."
+      confirmLabel="Delete"
+      cancelLabel="Cancel"
+      onConfirm={confirmDeletePost}
+      isConfirming={isDeleting}
+    />
+    </>
   );
 }

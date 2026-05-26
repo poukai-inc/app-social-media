@@ -20,6 +20,8 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Button } from '@poukai-inc/ui/atoms/Button';
+import { useToast } from '@poukai-inc/ui/organisms';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface Engagement {
   _id: string;
@@ -77,7 +79,9 @@ const engagementTypeConfig = {
 
 export function EngagementCard({ engagement }: EngagementCardProps) {
   const router = useRouter();
+  const toast = useToast();
   const [showMenu, setShowMenu] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showComment, setShowComment] = useState(false);
   const [editedComment, setEditedComment] = useState(engagement.userEditedComment || engagement.aiGeneratedComment || '');
@@ -155,21 +159,28 @@ export function EngagementCard({ engagement }: EngagementCardProps) {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Delete this engagement?')) return;
     setIsLoading(true);
     try {
-      await fetch(`/api/engagements/${engagement._id}`, { method: 'DELETE' });
-      router.refresh();
+      const res = await fetch(`/api/engagements/${engagement._id}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast.show({ tone: 'success', title: 'Engagement deleted', body: 'The engagement was removed.' });
+        router.refresh();
+      } else {
+        toast.show({ tone: 'danger', title: 'Delete failed', body: 'Could not delete the engagement. Try again.' });
+      }
     } catch (error) {
       log.error('Error deleting', { error: error instanceof Error ? error.message : String(error) });
+      toast.show({ tone: 'danger', title: 'Delete failed', body: 'Something went wrong. Try again.' });
     } finally {
       setIsLoading(false);
+      setDeleteDialogOpen(false);
     }
   };
 
   const comment = engagement.userEditedComment || engagement.aiGeneratedComment;
 
   return (
+    <>
     <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
@@ -306,7 +317,7 @@ export function EngagementCard({ engagement }: EngagementCardProps) {
                     </button>
                   )}
                   <button
-                    onClick={() => { handleDelete(); setShowMenu(false); }}
+                    onClick={() => { setShowMenu(false); setDeleteDialogOpen(true); }}
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-zinc-100 dark:hover:bg-zinc-700"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -319,5 +330,16 @@ export function EngagementCard({ engagement }: EngagementCardProps) {
         </div>
       </div>
     </div>
+    <ConfirmDialog
+      open={deleteDialogOpen}
+      onOpenChange={setDeleteDialogOpen}
+      title="Delete this engagement?"
+      description="This action can't be undone."
+      confirmLabel="Delete"
+      cancelLabel="Cancel"
+      onConfirm={handleDelete}
+      isConfirming={isLoading}
+    />
+    </>
   );
 }
