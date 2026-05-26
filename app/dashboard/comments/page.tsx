@@ -143,8 +143,8 @@ export default function CommentsPage() {
     switch (potential) {
       case 'high': return 'text-green-600 bg-green-50';
       case 'medium': return 'text-yellow-600 bg-yellow-50';
-      case 'low': return 'text-gray-600 bg-gray-50';
-      default: return 'text-gray-600 bg-gray-50';
+      case 'low': return 'text-[color:var(--fg-muted)] bg-[color:var(--surface)]';
+      default: return 'text-[color:var(--fg-muted)] bg-[color:var(--surface)]';
     }
   };
 
@@ -157,13 +157,13 @@ export default function CommentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[color:var(--bg)]">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Comment Queue</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-3xl font-bold text-[color:var(--fg)]">Comment Queue</h1>
+            <p className="text-[color:var(--fg-muted)] mt-1">
               Daily engagement: thoughtful comments on founder posts
             </p>
           </div>
@@ -173,14 +173,14 @@ export default function CommentsPage() {
         </div>
 
         {/* Daily Progress */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+        <div className="bg-[color:var(--bg-elevated)] rounded-lg shadow-sm border border-[color:var(--hairline)] p-6 mb-8">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-900">Today&apos;s Progress</h3>
+            <h3 className="font-semibold text-[color:var(--fg)]">Today&apos;s Progress</h3>
             <span className="text-2xl font-bold text-[color:var(--accent)]">
               {todayPosted} / {dailyGoal}
             </span>
           </div>
-          <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+          <div className="w-full h-3 bg-[color:var(--surface)] rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all ${
                 todayPosted >= dailyGoal ? 'bg-green-500' :
@@ -189,7 +189,7 @@ export default function CommentsPage() {
               style={{ width: `${Math.min(100, (todayPosted / dailyGoal) * 100)}%` }}
             />
           </div>
-          <p className="text-sm text-gray-500 mt-2">
+          <p className="text-sm text-[color:var(--fg-muted)] mt-2">
             {todayPosted >= dailyGoal 
               ? '🎉 Goal achieved! Keep the momentum going.'
               : `${dailyGoal - todayPosted} more comments to hit your daily goal`}
@@ -198,21 +198,21 @@ export default function CommentsPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow-sm border text-center">
+          <div className="bg-[color:var(--bg-elevated)] p-4 rounded-lg shadow-sm border border-[color:var(--hairline)] text-center">
             <div className="text-2xl font-bold text-yellow-600">{statusCounts.pending || 0}</div>
-            <div className="text-sm text-gray-600">Pending</div>
+            <div className="text-sm text-[color:var(--fg-muted)]">Pending</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border text-center">
+          <div className="bg-[color:var(--bg-elevated)] p-4 rounded-lg shadow-sm border border-[color:var(--hairline)] text-center">
             <div className="text-2xl font-bold text-[color:var(--accent)]">{statusCounts.approved || 0}</div>
-            <div className="text-sm text-gray-600">Approved</div>
+            <div className="text-sm text-[color:var(--fg-muted)]">Approved</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border text-center">
+          <div className="bg-[color:var(--bg-elevated)] p-4 rounded-lg shadow-sm border border-[color:var(--hairline)] text-center">
             <div className="text-2xl font-bold text-green-600">{statusCounts.posted || 0}</div>
-            <div className="text-sm text-gray-600">Posted</div>
+            <div className="text-sm text-[color:var(--fg-muted)]">Posted</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border text-center">
-            <div className="text-2xl font-bold text-gray-600">{statusCounts.skipped || 0}</div>
-            <div className="text-sm text-gray-600">Skipped</div>
+          <div className="bg-[color:var(--bg-elevated)] p-4 rounded-lg shadow-sm border border-[color:var(--hairline)] text-center">
+            <div className="text-2xl font-bold text-[color:var(--fg-muted)]">{statusCounts.skipped || 0}</div>
+            <div className="text-sm text-[color:var(--fg-muted)]">Skipped</div>
           </div>
         </div>
 
@@ -225,12 +225,12 @@ export default function CommentsPage() {
 
         {/* Add Form */}
         {showAddForm && (
-          <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+          <div className="bg-[color:var(--bg-elevated)] rounded-lg shadow-sm border border-[color:var(--hairline)] p-6 mb-6">
             <h3 className="font-semibold mb-4">Add a post to generate a comment for</h3>
-            
+
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[color:var(--fg-muted)] mb-1">
                   Post Author *
                 </label>
                 <input
@@ -238,12 +238,12 @@ export default function CommentsPage() {
                   value={newPostAuthor}
                   onChange={(e) => setNewPostAuthor(e.target.value)}
                   placeholder="John Doe"
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border border-[color:var(--hairline)] rounded-lg"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[color:var(--fg-muted)] mb-1">
                   LinkedIn Post URL (optional)
                 </label>
                 <input
@@ -251,12 +251,12 @@ export default function CommentsPage() {
                   value={newPostUrl}
                   onChange={(e) => setNewPostUrl(e.target.value)}
                   placeholder="https://linkedin.com/feed/update/..."
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border border-[color:var(--hairline)] rounded-lg"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[color:var(--fg-muted)] mb-1">
                   Post Content *
                 </label>
                 <textarea
@@ -264,7 +264,7 @@ export default function CommentsPage() {
                   onChange={(e) => setNewPostContent(e.target.value)}
                   placeholder="Paste the LinkedIn post content here..."
                   rows={6}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border border-[color:var(--hairline)] rounded-lg"
                 />
               </div>
 
@@ -288,7 +288,7 @@ export default function CommentsPage() {
         )}
 
         {/* Tabs */}
-        <div className="flex border-b mb-6">
+        <div className="flex border-b border-[color:var(--hairline)] mb-6">
           {(['pending', 'approved', 'posted'] as const).map((tab) => (
             <button
               key={tab}
@@ -296,7 +296,7 @@ export default function CommentsPage() {
               className={`px-4 py-2 font-medium border-b-2 -mb-px ${
                 activeTab === tab
                   ? 'border-[color:var(--accent)] text-[color:var(--accent)]'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  : 'border-transparent text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]'
               }`}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -306,12 +306,12 @@ export default function CommentsPage() {
 
         {/* Suggestions List */}
         {suggestions.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+          <div className="bg-[color:var(--bg-elevated)] rounded-lg shadow-sm border border-[color:var(--hairline)] p-12 text-center">
             <div className="text-4xl mb-4">💬</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-semibold text-[color:var(--fg)] mb-2">
               {activeTab === 'pending' ? 'No pending comments' : `No ${activeTab} comments`}
             </h3>
-            <p className="text-gray-600">
+            <p className="text-[color:var(--fg-muted)]">
               {activeTab === 'pending' 
                 ? 'Add posts from your LinkedIn feed to generate thoughtful comments'
                 : ''}
@@ -320,28 +320,28 @@ export default function CommentsPage() {
         ) : (
           <div className="space-y-4">
             {suggestions.map((suggestion) => (
-              <div key={suggestion._id} className="bg-white rounded-lg shadow-sm border overflow-hidden">
+              <div key={suggestion._id} className="bg-[color:var(--bg-elevated)] rounded-lg shadow-sm border border-[color:var(--hairline)] overflow-hidden">
                 {/* Header */}
-                <div className="px-4 py-3 bg-gray-50 border-b flex items-center justify-between">
+                <div className="px-4 py-3 bg-[color:var(--surface)] border-b border-[color:var(--hairline)] flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="font-medium text-gray-900">{suggestion.postAuthor}</span>
+                    <span className="font-medium text-[color:var(--fg)]">{suggestion.postAuthor}</span>
                     {suggestion.postAuthorHeadline && (
-                      <span className="text-sm text-gray-500">{suggestion.postAuthorHeadline}</span>
+                      <span className="text-sm text-[color:var(--fg-muted)]">{suggestion.postAuthorHeadline}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`px-2 py-1 text-xs rounded-full ${getEngagementColor(suggestion.engagementPotential)}`}>
                       {suggestion.engagementPotential} potential
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-[color:var(--fg-muted)]">
                       {Math.round(suggestion.relevanceScore * 100)}% relevant
                     </span>
                   </div>
                 </div>
 
                 {/* Original Post Snippet */}
-                <div className="px-4 py-3 border-b bg-[color:var(--accent-glow)]">
-                  <p className="text-sm text-gray-700 italic">
+                <div className="px-4 py-3 border-b border-[color:var(--hairline)] bg-[color:var(--accent-glow)]">
+                  <p className="text-sm text-[color:var(--fg-muted)] italic">
                     &ldquo;{suggestion.postContentSnippet}&rdquo;
                   </p>
                   {suggestion.linkedinPostUrl && (
@@ -360,18 +360,18 @@ export default function CommentsPage() {
                 <div className="px-4 py-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <p className="text-gray-900">
+                      <p className="text-[color:var(--fg)]">
                         {suggestion.editedComment || suggestion.suggestedComment}
                       </p>
                       {suggestion.editedComment && (
-                        <span className="text-xs text-gray-500 mt-1 inline-block">
+                        <span className="text-xs text-[color:var(--fg-muted)] mt-1 inline-block">
                           (edited)
                         </span>
                       )}
                     </div>
                     <button
                       onClick={() => copyToClipboard(suggestion.editedComment || suggestion.suggestedComment)}
-                      className="text-gray-400 hover:text-gray-600 p-2"
+                      className="text-[color:var(--fg-muted)] hover:text-[color:var(--fg)] p-2"
                       title="Copy to clipboard"
                     >
                       📋
@@ -386,11 +386,11 @@ export default function CommentsPage() {
                       </summary>
                       <div className="mt-2 space-y-2">
                         {suggestion.alternativeComments.map((alt, i) => (
-                          <div key={i} className="text-sm text-gray-600 bg-gray-50 p-2 rounded flex justify-between">
+                          <div key={i} className="text-sm text-[color:var(--fg-muted)] bg-[color:var(--surface)] p-2 rounded flex justify-between">
                             <span>{alt}</span>
                             <button
                               onClick={() => copyToClipboard(alt)}
-                              className="text-gray-400 hover:text-gray-600"
+                              className="text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"
                             >
                               📋
                             </button>
@@ -403,7 +403,7 @@ export default function CommentsPage() {
 
                 {/* Actions */}
                 {activeTab === 'pending' && (
-                  <div className="px-4 py-3 bg-gray-50 border-t flex gap-2">
+                  <div className="px-4 py-3 bg-[color:var(--surface)] border-t border-[color:var(--hairline)] flex gap-2">
                     <Button
                       variant="primary"
                       size="sm"
@@ -424,7 +424,7 @@ export default function CommentsPage() {
                     <button
                       onClick={() => handleAction(suggestion._id, 'regenerate')}
                       disabled={actionLoading === suggestion._id}
-                      className="px-3 py-1.5 text-sm border rounded hover:bg-gray-100 disabled:opacity-50"
+                      className="px-3 py-1.5 text-sm border border-[color:var(--hairline)] rounded hover:bg-[color:var(--surface)] disabled:opacity-50"
                     >
                       🔄 Regenerate
                     </button>
@@ -439,7 +439,7 @@ export default function CommentsPage() {
                 )}
 
                 {activeTab === 'approved' && (
-                  <div className="px-4 py-3 bg-gray-50 border-t flex gap-2">
+                  <div className="px-4 py-3 bg-[color:var(--surface)] border-t border-[color:var(--hairline)] flex gap-2">
                     <button
                       onClick={() => handleAction(suggestion._id, 'posted')}
                       disabled={actionLoading === suggestion._id}
@@ -449,7 +449,7 @@ export default function CommentsPage() {
                     </button>
                     <button
                       onClick={() => copyToClipboard(suggestion.editedComment || suggestion.suggestedComment)}
-                      className="px-3 py-1.5 text-sm border rounded hover:bg-gray-100"
+                      className="px-3 py-1.5 text-sm border border-[color:var(--hairline)] rounded hover:bg-[color:var(--surface)]"
                     >
                       📋 Copy
                     </button>
@@ -463,25 +463,25 @@ export default function CommentsPage() {
         {/* Edit Modal */}
         {editingSuggestion && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-lg w-full">
-              <div className="p-4 border-b">
+            <div className="bg-[color:var(--bg-elevated)] rounded-lg shadow-xl max-w-lg w-full">
+              <div className="p-4 border-b border-[color:var(--hairline)]">
                 <h3 className="font-semibold">Edit Comment</h3>
               </div>
               <div className="p-4">
-                <p className="text-sm text-gray-500 mb-2">
+                <p className="text-sm text-[color:var(--fg-muted)] mb-2">
                   Replying to {editingSuggestion.postAuthor}
                 </p>
                 <textarea
                   value={editedComment}
                   onChange={(e) => setEditedComment(e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border border-[color:var(--hairline)] rounded-lg"
                 />
-                <p className={`text-xs mt-1 ${editedComment.length > 280 ? 'text-red-600' : 'text-gray-500'}`}>
+                <p className={`text-xs mt-1 ${editedComment.length > 280 ? 'text-red-600' : 'text-[color:var(--fg-muted)]'}`}>
                   {editedComment.length} / 280 characters
                 </p>
               </div>
-              <div className="p-4 border-t flex justify-end gap-3">
+              <div className="p-4 border-t border-[color:var(--hairline)] flex justify-end gap-3">
                 <Button
                   variant="secondary"
                   onClick={() => setEditingSuggestion(null)}

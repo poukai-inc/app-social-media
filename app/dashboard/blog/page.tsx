@@ -176,11 +176,11 @@ export default function BlogRepurposePage() {
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                 step === s ? 'bg-[color:var(--accent)] text-white' :
                 ['input', 'analyze', 'generate', 'preview'].indexOf(step) > i ? 'bg-green-500 text-white' :
-                'bg-gray-200 text-gray-600'
+                'bg-[color:var(--surface)] text-[color:var(--fg-muted)]'
               }`}>
                 {i + 1}
               </div>
-              {i < 3 && <div className="w-12 h-0.5 bg-gray-200 mx-2" />}
+              {i < 3 && <div className="w-12 h-0.5 bg-[color:var(--hairline)] mx-2" />}
             </div>
           ))}
         </div>
@@ -194,11 +194,11 @@ export default function BlogRepurposePage() {
 
         {/* Step 1: Input */}
         {step === 'input' && (
-          <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="bg-[color:var(--bg-elevated)] rounded-lg shadow-sm border border-[color:var(--hairline)] p-6">
             <h2 className="text-xl font-semibold mb-4">1. Add Your Blog</h2>
-            
+
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[color:var(--fg-muted)] mb-2">
                 Blog URL
               </label>
               <input
@@ -206,21 +206,21 @@ export default function BlogRepurposePage() {
                 value={blogUrl}
                 onChange={(e) => setBlogUrl(e.target.value)}
                 placeholder="https://yourblog.com/post-title"
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[color:var(--accent-glow)] focus:border-transparent"
+                className="w-full px-4 py-2 border border-[color:var(--hairline)] rounded-lg focus:ring-2 focus:ring-[color:var(--accent-glow)] focus:border-transparent"
               />
             </div>
 
             <div className="relative mb-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
+                <div className="w-full border-t border-[color:var(--hairline)]" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">or paste content</span>
+                <span className="px-2 bg-[color:var(--bg-elevated)] text-[color:var(--fg-muted)]">or paste content</span>
               </div>
             </div>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-[color:var(--fg-muted)] mb-2">
                 Blog Content
               </label>
               <textarea
@@ -228,7 +228,7 @@ export default function BlogRepurposePage() {
                 onChange={(e) => setBlogContent(e.target.value)}
                 placeholder="Paste your blog post content here..."
                 rows={10}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[color:var(--accent-glow)] focus:border-transparent font-mono text-sm"
+                className="w-full px-4 py-2 border border-[color:var(--hairline)] rounded-lg focus:ring-2 focus:ring-[color:var(--accent-glow)] focus:border-transparent font-mono text-sm"
               />
             </div>
 
@@ -247,13 +247,13 @@ export default function BlogRepurposePage() {
         {step === 'analyze' && analysis && (
           <div className="space-y-6">
             {/* Blog Summary */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-[color:var(--bg-elevated)] rounded-lg shadow-sm border border-[color:var(--hairline)] p-6">
               <h2 className="text-xl font-semibold mb-2">{analysis.title}</h2>
-              <p className="text-gray-600 mb-4">{analysis.summary}</p>
-              
+              <p className="text-[color:var(--fg-muted)] mb-4">{analysis.summary}</p>
+
               <div className="mb-4">
-                <h3 className="font-medium text-gray-900 mb-2">Key Insights:</h3>
-                <ul className="list-disc list-inside text-gray-600 space-y-1">
+                <h3 className="font-medium text-[color:var(--fg)] mb-2">Key Insights:</h3>
+                <ul className="list-disc list-inside text-[color:var(--fg-muted)] space-y-1">
                   {analysis.keyInsights.map((insight, i) => (
                     <li key={i}>{insight}</li>
                   ))}
@@ -266,9 +266,9 @@ export default function BlogRepurposePage() {
             </div>
 
             {/* Angle Selection */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-[color:var(--bg-elevated)] rounded-lg shadow-sm border border-[color:var(--hairline)] p-6">
               <h2 className="text-xl font-semibold mb-4">2. Choose an Angle</h2>
-              
+
               <div className="grid gap-4">
                 {analysis.postAngles.map((angle, i) => (
                   <div
@@ -277,17 +277,17 @@ export default function BlogRepurposePage() {
                     className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                       selectedAngle === angle
                         ? 'border-[color:var(--accent)] bg-[color:var(--accent-glow)]'
-                        : 'border-gray-200 hover:border-[color:var(--accent)]'
+                        : 'border-[color:var(--hairline)] hover:border-[color:var(--accent)]'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">{getAngleEmoji(angle.angle)}</span>
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-[color:var(--fg)]">
                           {angle.angle.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                         </div>
                         <p className="text-sm text-[color:var(--accent)] mt-1 italic">&ldquo;{angle.hook}&rdquo;</p>
-                        <p className="text-sm text-gray-600 mt-2">{angle.outline}</p>
+                        <p className="text-sm text-[color:var(--fg-muted)] mt-2">{angle.outline}</p>
                       </div>
                     </div>
                   </div>
@@ -297,16 +297,16 @@ export default function BlogRepurposePage() {
 
             {/* Options */}
             {selectedAngle && (
-              <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="bg-[color:var(--bg-elevated)] rounded-lg shadow-sm border border-[color:var(--hairline)] p-6">
                 <h2 className="text-xl font-semibold mb-4">3. Post Options</h2>
-                
+
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Tone</label>
+                    <label className="block text-sm font-medium text-[color:var(--fg-muted)] mb-2">Tone</label>
                     <select
                       value={tone}
                       onChange={(e) => setTone(e.target.value as typeof tone)}
-                      className="w-full px-4 py-2 border rounded-lg"
+                      className="w-full px-4 py-2 border border-[color:var(--hairline)] rounded-lg"
                     >
                       <option value="professional">Professional</option>
                       <option value="casual">Casual</option>
@@ -323,7 +323,7 @@ export default function BlogRepurposePage() {
                         onChange={(e) => setIncludeLink(e.target.checked)}
                         className="rounded"
                       />
-                      <span className="text-sm font-medium text-gray-700">Include link to clarity page</span>
+                      <span className="text-sm font-medium text-[color:var(--fg-muted)]">Include link to clarity page</span>
                     </label>
                     {includeLink && (
                       <input
@@ -331,7 +331,7 @@ export default function BlogRepurposePage() {
                         value={linkUrl}
                         onChange={(e) => setLinkUrl(e.target.value)}
                         placeholder="https://..."
-                        className="mt-2 w-full px-4 py-2 border rounded-lg text-sm"
+                        className="mt-2 w-full px-4 py-2 border border-[color:var(--hairline)] rounded-lg text-sm"
                       />
                     )}
                     {includeLink && (
@@ -364,11 +364,11 @@ export default function BlogRepurposePage() {
         {step === 'preview' && generatedPost && (
           <div className="space-y-6">
             {/* Analysis Badge */}
-            <div className="bg-white rounded-lg shadow-sm border p-4">
+            <div className="bg-[color:var(--bg-elevated)] rounded-lg shadow-sm border border-[color:var(--hairline)] p-4">
               <div className="flex flex-wrap gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Confidence:</span>
-                  <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <span className="text-sm text-[color:var(--fg-muted)]">Confidence:</span>
+                  <div className="w-24 h-2 bg-[color:var(--surface)] rounded-full overflow-hidden">
                     <div
                       className={`h-full ${
                         generatedPost.analysis.confidence >= 0.7 ? 'bg-green-500' :
@@ -403,18 +403,18 @@ export default function BlogRepurposePage() {
             </div>
 
             {/* Post Preview/Edit */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-[color:var(--bg-elevated)] rounded-lg shadow-sm border border-[color:var(--hairline)] p-6">
               <h2 className="text-xl font-semibold mb-4">4. Review & Edit</h2>
-              
+
               <textarea
                 value={editedContent}
                 onChange={(e) => setEditedContent(e.target.value)}
                 rows={15}
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[color:var(--accent-glow)] focus:border-transparent font-mono text-sm"
+                className="w-full px-4 py-3 border border-[color:var(--hairline)] rounded-lg focus:ring-2 focus:ring-[color:var(--accent-glow)] focus:border-transparent font-mono text-sm"
               />
 
               <div className="flex justify-between items-center mt-2">
-                <span className={`text-sm ${editedContent.length > 3000 ? 'text-red-600' : 'text-gray-500'}`}>
+                <span className={`text-sm ${editedContent.length > 3000 ? 'text-red-600' : 'text-[color:var(--fg-muted)]'}`}>
                   {editedContent.length} / 3000 characters
                 </span>
               </div>
@@ -427,7 +427,7 @@ export default function BlogRepurposePage() {
               </Button>
               <button
                 onClick={handleSaveAsDraft}
-                className="flex-1 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium"
+                className="flex-1 py-3 bg-[color:var(--surface)] text-[color:var(--fg)] rounded-lg hover:bg-[color:var(--hairline)] font-medium"
               >
                 Save as Draft
               </button>

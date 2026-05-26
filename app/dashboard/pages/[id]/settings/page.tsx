@@ -7,6 +7,17 @@ import Link from 'next/link';
 import { logger } from '@/lib/logger';
 import { Button } from '@poukai-inc/ui/atoms/Button';
 import { Avatar } from '@poukai-inc/ui/atoms/Avatar';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 const log = logger.child('dashboard:pages:[id]:settings');
 import {
@@ -354,13 +365,12 @@ export default function PageSettings() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Persona / Voice
                 </label>
-                <textarea
+                <Textarea
                   value={contentStrategy.persona}
                   onChange={(e) =>
                     setContentStrategy({ ...contentStrategy, persona: e.target.value })
                   }
                   rows={2}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -369,13 +379,12 @@ export default function PageSettings() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Tone & Style
                 </label>
-                <input
+                <Input
                   type="text"
                   value={contentStrategy.tone}
                   onChange={(e) =>
                     setContentStrategy({ ...contentStrategy, tone: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -384,13 +393,12 @@ export default function PageSettings() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Target Audience
                 </label>
-                <input
+                <Input
                   type="text"
                   value={contentStrategy.targetAudience}
                   onChange={(e) =>
                     setContentStrategy({ ...contentStrategy, targetAudience: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -400,7 +408,7 @@ export default function PageSettings() {
                   Topics
                 </label>
                 <div className="flex gap-2 mb-2">
-                  <input
+                  <Input
                     type="text"
                     value={topicInput}
                     onChange={(e) => setTopicInput(e.target.value)}
@@ -415,7 +423,7 @@ export default function PageSettings() {
                       ))
                     }
                     placeholder="Add topic..."
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
+                    className="flex-1"
                   />
                   <Button
                     variant="primary"
@@ -502,14 +510,13 @@ export default function PageSettings() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Custom Instructions (Optional)
                 </label>
-                <textarea
+                <Textarea
                   value={contentStrategy.customInstructions}
                   onChange={(e) =>
                     setContentStrategy({ ...contentStrategy, customInstructions: e.target.value })
                   }
                   rows={3}
                   placeholder="Any additional instructions for AI content generation..."
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                 />
               </div>
             </div>
@@ -528,7 +535,7 @@ export default function PageSettings() {
                   Blog URLs (for repurposing)
                 </label>
                 <div className="flex gap-2 mb-2">
-                  <input
+                  <Input
                     type="url"
                     value={blogInput}
                     onChange={(e) => setBlogInput(e.target.value)}
@@ -543,7 +550,7 @@ export default function PageSettings() {
                       ))
                     }
                     placeholder="https://..."
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
+                    className="flex-1"
                   />
                   <Button
                     variant="primary"
@@ -590,7 +597,7 @@ export default function PageSettings() {
                   Keywords (for content inspiration)
                 </label>
                 <div className="flex gap-2 mb-2">
-                  <input
+                  <Input
                     type="text"
                     value={keywordInput}
                     onChange={(e) => setKeywordInput(e.target.value)}
@@ -605,7 +612,7 @@ export default function PageSettings() {
                       ))
                     }
                     placeholder="Add keyword..."
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
+                    className="flex-1"
                   />
                   <Button
                     variant="primary"
@@ -686,17 +693,21 @@ export default function PageSettings() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Timezone
                 </label>
-                <select
+                <Select
                   value={schedule.timezone}
-                  onChange={(e) => setSchedule({ ...schedule, timezone: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
+                  onValueChange={(v) => setSchedule({ ...schedule, timezone: v })}
                 >
-                  {TIMEZONES.map((tz) => (
-                    <option key={tz.value} value={tz.value}>
-                      {tz.label}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIMEZONES.map((tz) => (
+                      <SelectItem key={tz.value} value={tz.value}>
+                        {tz.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Days */}
@@ -727,11 +738,11 @@ export default function PageSettings() {
                   Preferred Times
                 </label>
                 <div className="flex gap-2 mb-2">
-                  <input
+                  <Input
                     type="time"
                     value={timeInput}
                     onChange={(e) => setTimeInput(e.target.value)}
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
+                    className="flex-1"
                   />
                   <Button
                     variant="primary"
@@ -773,45 +784,45 @@ export default function PageSettings() {
 
               {/* Auto-generation */}
               <div className="border-t border-gray-200 dark:border-zinc-700 pt-6">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
+                <div className="flex items-start gap-3 cursor-pointer">
+                  <Checkbox
+                    id="autoGenerate"
                     checked={schedule.autoGenerate}
-                    onChange={(e) =>
-                      setSchedule({ ...schedule, autoGenerate: e.target.checked })
+                    onCheckedChange={(checked) =>
+                      setSchedule({ ...schedule, autoGenerate: Boolean(checked) })
                     }
-                    className="w-5 h-5 rounded border-gray-300"
+                    className="mt-0.5"
                   />
-                  <div>
+                  <Label htmlFor="autoGenerate" className="cursor-pointer">
                     <div className="font-medium text-gray-900 dark:text-white">
                       Auto-generate posts
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">
                       Automatically create draft posts based on your content strategy
                     </div>
-                  </div>
-                </label>
+                  </Label>
+                </div>
 
                 {schedule.autoGenerate && (
                   <div className="mt-4 ml-8 space-y-4">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
+                    <div className="flex items-start gap-3 cursor-pointer">
+                      <Checkbox
+                        id="autoApprove"
                         checked={schedule.autoApprove}
-                        onChange={(e) =>
-                          setSchedule({ ...schedule, autoApprove: e.target.checked })
+                        onCheckedChange={(checked) =>
+                          setSchedule({ ...schedule, autoApprove: Boolean(checked) })
                         }
-                        className="w-5 h-5 rounded border-gray-300"
+                        className="mt-0.5"
                       />
-                      <div>
+                      <Label htmlFor="autoApprove" className="cursor-pointer">
                         <div className="font-medium text-gray-900 dark:text-white">
                           Auto-approve high confidence posts
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
                           Posts meeting confidence threshold will be scheduled automatically
                         </div>
-                      </div>
-                    </label>
+                      </Label>
+                    </div>
 
                     {schedule.autoApprove && (
                       <div>
@@ -846,22 +857,22 @@ export default function PageSettings() {
               Page Status
             </h2>
 
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
+            <div className="flex items-start gap-3 cursor-pointer">
+              <Checkbox
+                id="isActive"
                 checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
-                className="w-5 h-5 rounded border-gray-300"
+                onCheckedChange={(checked) => setIsActive(Boolean(checked))}
+                className="mt-0.5"
               />
-              <div>
+              <Label htmlFor="isActive" className="cursor-pointer">
                 <div className="font-medium text-gray-900 dark:text-white">
                   Page Active
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
                   Deactivating will pause all auto-generation and scheduling for this page
                 </div>
-              </div>
-            </label>
+              </Label>
+            </div>
           </section>
 
           {/* Danger Zone */}

@@ -149,9 +149,9 @@ function ConversationsContent() {
     return (
       <div className="p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-4 bg-[color:var(--surface)] rounded w-1/4"></div>
+          <div className="h-4 bg-[color:var(--surface)] rounded w-1/2"></div>
+          <div className="h-4 bg-[color:var(--surface)] rounded w-1/3"></div>
         </div>
       </div>
     );
@@ -177,32 +177,32 @@ function ConversationsContent() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Twitter Conversations</h1>
-        <p className="text-gray-600">Monitor and manage bidirectional Twitter conversations from ICP engagement</p>
+        <h1 className="text-2xl font-bold text-[color:var(--fg)]">Twitter Conversations</h1>
+        <p className="text-[color:var(--fg-muted)]">Monitor and manage bidirectional Twitter conversations from ICP engagement</p>
       </div>
 
       {/* Statistics */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-[color:var(--bg-elevated)] p-4 rounded-lg shadow">
             <div className="text-2xl font-bold text-[color:var(--accent)]">{stats.totalActiveConversations}</div>
-            <div className="text-sm text-gray-500">Active Conversations</div>
+            <div className="text-sm text-[color:var(--fg-muted)]">Active Conversations</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-[color:var(--bg-elevated)] p-4 rounded-lg shadow">
             <div className="text-2xl font-bold text-green-600">{stats.conversationsWithReplies}</div>
-            <div className="text-sm text-gray-500">Got Replies</div>
+            <div className="text-sm text-[color:var(--fg-muted)]">Got Replies</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-[color:var(--bg-elevated)] p-4 rounded-lg shadow">
             <div className="text-2xl font-bold text-purple-600">{stats.averageConversationLength.toFixed(1)}</div>
-            <div className="text-sm text-gray-500">Avg Length</div>
+            <div className="text-sm text-[color:var(--fg-muted)]">Avg Length</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-[color:var(--bg-elevated)] p-4 rounded-lg shadow">
             <div className="text-2xl font-bold text-orange-600">{stats.autoResponsesEnabled}</div>
-            <div className="text-sm text-gray-500">Auto-Response On</div>
+            <div className="text-sm text-[color:var(--fg-muted)]">Auto-Response On</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-[color:var(--bg-elevated)] p-4 rounded-lg shadow">
             <div className="text-2xl font-bold text-red-600">{stats.autoResponsesSent}</div>
-            <div className="text-sm text-gray-500">Auto Responses Sent</div>
+            <div className="text-sm text-[color:var(--fg-muted)]">Auto Responses Sent</div>
           </div>
         </div>
       )}
@@ -214,9 +214,9 @@ function ConversationsContent() {
             type="checkbox"
             checked={activeOnly}
             onChange={(e) => setActiveOnly(e.target.checked)}
-            className="rounded border-gray-300 text-[color:var(--accent)] shadow-sm focus:border-[color:var(--accent)] focus:ring focus:ring-[color:var(--accent-glow)] focus:ring-opacity-50"
+            className="rounded border-[color:var(--hairline)] text-[color:var(--accent)] shadow-sm focus:border-[color:var(--accent)] focus:ring focus:ring-[color:var(--accent-glow)] focus:ring-opacity-50"
           />
-          <span className="ml-2 text-sm text-gray-700">Show only active conversations</span>
+          <span className="ml-2 text-sm text-[color:var(--fg-muted)]">Show only active conversations</span>
         </label>
         <Button variant="primary" size="sm" onClick={fetchConversations}>
           Refresh
@@ -226,48 +226,48 @@ function ConversationsContent() {
       {/* Conversations List */}
       <div className="space-y-4">
         {conversations.length === 0 ? (
-          <div className="bg-gray-50 border border-gray-200 rounded-md p-8 text-center">
-            <p className="text-gray-500">No conversations found.</p>
-            <p className="text-sm text-gray-400 mt-1">
+          <div className="bg-[color:var(--surface)] border border-[color:var(--hairline)] rounded-md p-8 text-center">
+            <p className="text-[color:var(--fg-muted)]">No conversations found.</p>
+            <p className="text-sm text-[color:var(--fg-muted)] mt-1">
               {activeOnly ? 'Try unchecking "Show only active conversations" or engage with more Twitter posts.' : 'Start engaging with Twitter posts to see conversations here.'}
             </p>
           </div>
         ) : (
           conversations.map((conv) => (
-            <div key={conv.id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <div key={conv.id} className="bg-[color:var(--bg-elevated)] border border-[color:var(--hairline)] rounded-lg p-6 shadow-sm">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-[color:var(--fg)]">
                       @{conv.targetUser.username || conv.targetUser.name || 'Unknown'}
                     </span>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-[color:var(--fg-muted)]">
                       {conv.targetUser.followersCount?.toLocaleString()} followers
                     </span>
                     <span className={`px-2 py-1 rounded-full text-xs ${
-                      conv.conversation.autoResponseEnabled 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-gray-100 text-gray-600'
+                      conv.conversation.autoResponseEnabled
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-[color:var(--surface)] text-[color:var(--fg-muted)]'
                     }`}>
                       {conv.conversation.autoResponseEnabled ? 'Auto-response ON' : 'Auto-response OFF'}
                     </span>
                   </div>
-                  <div className="text-sm text-gray-600 mb-2">
+                  <div className="text-sm text-[color:var(--fg-muted)] mb-2">
                     <strong>Original post:</strong> {conv.targetPost.content.slice(0, 150)}...
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-[color:var(--fg-muted)]">
                     <strong>Our reply:</strong> {conv.ourReply.content}
                   </div>
                 </div>
-                
+
                 <div className="text-right space-y-1">
-                  <div className="text-sm font-medium text-gray-900">
+                  <div className="text-sm font-medium text-[color:var(--fg)]">
                     Score: {conv.icpMatch.relevanceScore}/10
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-[color:var(--fg-muted)]">
                     {conv.followUp?.conversationLength || 1} messages
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-[color:var(--fg-muted)]">
                     {conv.conversation.currentAutoResponseCount}/{conv.conversation.maxAutoResponses} auto-responses
                   </div>
                 </div>
@@ -294,9 +294,9 @@ function ConversationsContent() {
                     </a>
                   )}
                   <span className={`text-xs px-2 py-1 rounded ${
-                    conv.followUp?.theyReplied 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-gray-100 text-gray-600'
+                    conv.followUp?.theyReplied
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-[color:var(--surface)] text-[color:var(--fg-muted)]'
                   }`}>
                     {conv.followUp?.theyReplied ? 'They replied!' : 'No reply yet'}
                   </span>
@@ -317,7 +317,7 @@ function ConversationsContent() {
                   {conv.conversation.currentAutoResponseCount > 0 && (
                     <button
                       onClick={() => resetResponseCount(conv.id)}
-                      className="px-3 py-1 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded text-sm"
+                      className="px-3 py-1 bg-[color:var(--surface)] text-[color:var(--fg)] hover:bg-[color:var(--hairline)] rounded text-sm"
                       title="Reset response count to allow more auto-responses"
                     >
                       Reset Count
@@ -327,7 +327,7 @@ function ConversationsContent() {
               </div>
               
               {conv.conversation.lastCheckedAt && (
-                <div className="text-xs text-gray-400 mt-2">
+                <div className="text-xs text-[color:var(--fg-muted)] mt-2">
                   Last checked: {new Date(conv.conversation.lastCheckedAt).toLocaleString()}
                 </div>
               )}
@@ -344,9 +344,9 @@ export default function ConversationsPage() {
     <Suspense fallback={
       <div className="p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-4 bg-[color:var(--surface)] rounded w-1/4"></div>
+          <div className="h-4 bg-[color:var(--surface)] rounded w-1/2"></div>
+          <div className="h-4 bg-[color:var(--surface)] rounded w-1/3"></div>
         </div>
       </div>
     }>

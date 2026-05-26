@@ -8,6 +8,17 @@ import NextImage from 'next/image';
 import { logger } from '@/lib/logger';
 import { Button } from '@poukai-inc/ui/atoms/Button';
 import { Avatar } from '@poukai-inc/ui/atoms/Avatar';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 const log = logger.child('dashboard:pages:new');
 import {
@@ -370,24 +381,22 @@ export default function NewPagePage() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Page Name *
                     </label>
-                    <input
+                    <Input
                       type="text"
                       value={manualPageName}
                       onChange={(e) => setManualPageName(e.target.value)}
                       placeholder="e.g., My Brand, Tech Insights, Personal Blog"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[color:var(--accent-glow)] focus:border-transparent"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Description (optional)
                     </label>
-                    <textarea
+                    <Textarea
                       value={manualPageDescription}
                       onChange={(e) => setManualPageDescription(e.target.value)}
                       placeholder="What is this page about?"
                       rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[color:var(--accent-glow)] focus:border-transparent resize-none"
                     />
                   </div>
                 </div>
@@ -474,14 +483,13 @@ export default function NewPagePage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Persona / Voice *
                   </label>
-                  <textarea
+                  <Textarea
                     value={contentStrategy.persona}
                     onChange={(e) =>
                       setContentStrategy({ ...contentStrategy, persona: e.target.value })
                     }
                     placeholder="E.g., Founder building in public, sharing real lessons from growing a SaaS startup"
                     rows={2}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                   />
                 </div>
 
@@ -490,14 +498,13 @@ export default function NewPagePage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Tone & Style *
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={contentStrategy.tone}
                     onChange={(e) =>
                       setContentStrategy({ ...contentStrategy, tone: e.target.value })
                     }
                     placeholder="E.g., Authentic, direct, no marketing fluff, occasional humor"
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                   />
                 </div>
 
@@ -506,14 +513,13 @@ export default function NewPagePage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Target Audience *
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={contentStrategy.targetAudience}
                     onChange={(e) =>
                       setContentStrategy({ ...contentStrategy, targetAudience: e.target.value })
                     }
                     placeholder="E.g., Technical founders, PMs, early-stage startup people"
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                   />
                 </div>
 
@@ -523,13 +529,13 @@ export default function NewPagePage() {
                     Topics to Cover
                   </label>
                   <div className="flex gap-2 mb-2">
-                    <input
+                    <Input
                       type="text"
                       value={topicInput}
                       onChange={(e) => setTopicInput(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTopic())}
                       placeholder="Add a topic..."
-                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
+                      className="flex-1"
                     />
                     <Button variant="primary" size="sm" onClick={addTopic}>
                       Add
@@ -626,17 +632,21 @@ export default function NewPagePage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Timezone
                   </label>
-                  <select
+                  <Select
                     value={schedule.timezone}
-                    onChange={(e) => setSchedule({ ...schedule, timezone: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
+                    onValueChange={(v) => setSchedule({ ...schedule, timezone: v })}
                   >
-                    {TIMEZONES.map((tz) => (
-                      <option key={tz.value} value={tz.value}>
-                        {tz.label}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TIMEZONES.map((tz) => (
+                        <SelectItem key={tz.value} value={tz.value}>
+                          {tz.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Days */}
@@ -667,11 +677,11 @@ export default function NewPagePage() {
                     Preferred Times
                   </label>
                   <div className="flex gap-2 mb-2">
-                    <input
+                    <Input
                       type="time"
                       value={timeInput}
                       onChange={(e) => setTimeInput(e.target.value)}
-                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
+                      className="flex-1"
                     />
                     <Button variant="primary" size="sm" onClick={addTime}>
                       Add
@@ -697,44 +707,44 @@ export default function NewPagePage() {
 
                 {/* Auto-generation */}
                 <div className="border-t border-gray-200 dark:border-zinc-700 pt-6">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="newAutoGenerate"
                       checked={schedule.autoGenerate}
-                      onChange={(e) =>
-                        setSchedule({ ...schedule, autoGenerate: e.target.checked })
+                      onCheckedChange={(checked) =>
+                        setSchedule({ ...schedule, autoGenerate: Boolean(checked) })
                       }
-                      className="w-5 h-5 rounded border-gray-300"
+                      className="mt-0.5"
                     />
-                    <div>
+                    <Label htmlFor="newAutoGenerate" className="cursor-pointer">
                       <div className="font-medium text-gray-900 dark:text-white">
                         Auto-generate posts
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
                         Automatically create draft posts based on your content strategy
                       </div>
-                    </div>
-                  </label>
+                    </Label>
+                  </div>
 
                   {schedule.autoGenerate && (
-                    <label className="flex items-center gap-3 cursor-pointer mt-4 ml-8">
-                      <input
-                        type="checkbox"
+                    <div className="flex items-start gap-3 mt-4 ml-8">
+                      <Checkbox
+                        id="newAutoApprove"
                         checked={schedule.autoApprove}
-                        onChange={(e) =>
-                          setSchedule({ ...schedule, autoApprove: e.target.checked })
+                        onCheckedChange={(checked) =>
+                          setSchedule({ ...schedule, autoApprove: Boolean(checked) })
                         }
-                        className="w-5 h-5 rounded border-gray-300"
+                        className="mt-0.5"
                       />
-                      <div>
+                      <Label htmlFor="newAutoApprove" className="cursor-pointer">
                         <div className="font-medium text-gray-900 dark:text-white">
                           Auto-approve high confidence posts
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
                           Posts with {schedule.minConfidenceForAutoApprove * 100}%+ confidence will be scheduled automatically
                         </div>
-                      </div>
-                    </label>
+                      </Label>
+                    </div>
                   )}
                 </div>
               </div>

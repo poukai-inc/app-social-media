@@ -26,6 +26,8 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { Spinner } from '@poukai-inc/ui/atoms';
+import { useToast } from '@poukai-inc/ui/organisms';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 import { PLATFORM_ICONS } from '@/components/icons/platforms';
 
@@ -122,11 +124,14 @@ const modeConfig = {
 
 export function PostCard({ post }: PostCardProps) {
   const router = useRouter();
+  const toast = useToast();
   const [showMenu, setShowMenu] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
 
   const status = statusConfig[post.status];
   const StatusIcon = status.icon;
@@ -134,8 +139,6 @@ export function PostCard({ post }: PostCardProps) {
   const ModeIcon = mode.icon;
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this post?')) return;
-
     setIsDeleting(true);
     try {
       const response = await fetch(`/api/posts/${post._id}`, {
@@ -143,13 +146,18 @@ export function PostCard({ post }: PostCardProps) {
       });
 
       if (response.ok) {
+        toast.show({ tone: 'success', title: 'Post deleted', body: 'The post was removed from your queue.' });
         router.refresh();
+      } else {
+        toast.show({ tone: 'danger', title: 'Delete failed', body: 'Could not delete the post. Try again.' });
       }
     } catch (error) {
       log.error('Error deleting post', { error: error instanceof Error ? error.message : String(error) });
+      toast.show({ tone: 'danger', title: 'Delete failed', body: 'Something went wrong. Try again.' });
     } finally {
       setIsDeleting(false);
       setShowMenu(false);
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -194,8 +202,6 @@ export function PostCard({ post }: PostCardProps) {
   };
 
   const handleReject = async () => {
-    if (!confirm('Are you sure you want to reject this post?')) return;
-    
     setIsRejecting(true);
     try {
       const response = await fetch(`/api/posts/${post._id}/approve`, {
@@ -205,13 +211,18 @@ export function PostCard({ post }: PostCardProps) {
       });
 
       if (response.ok) {
+        toast.show({ tone: 'success', title: 'Post rejected', body: 'The post will not be published.' });
         router.refresh();
+      } else {
+        toast.show({ tone: 'danger', title: 'Reject failed', body: 'Could not reject the post. Try again.' });
       }
     } catch (error) {
       log.error('Error rejecting post', { error: error instanceof Error ? error.message : String(error) });
+      toast.show({ tone: 'danger', title: 'Reject failed', body: 'Something went wrong. Try again.' });
     } finally {
       setIsRejecting(false);
       setShowMenu(false);
+      setRejectDialogOpen(false);
     }
   };
 
@@ -222,6 +233,7 @@ export function PostCard({ post }: PostCardProps) {
   const videoCount = post.media?.filter(m => m.type === 'video').length || 0;
 
   return (
+    <>
     <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 space-y-3">
@@ -423,7 +435,7 @@ export function PostCard({ post }: PostCardProps) {
                 Approve
               </button>
               <button
-                onClick={handleReject}
+                onClick={() => setRejectDialogOpen(true)}
                 disabled={isRejecting}
                 className="flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
                 title="Reject post"
@@ -486,7 +498,10 @@ export function PostCard({ post }: PostCardProps) {
                     </>
                   )}
                   <button
-                    onClick={handleDelete}
+                    onClick={() => {
+                      setShowMenu(false);
+                      setDeleteDialogOpen(true);
+                    }}
                     disabled={isDeleting}
                     className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
                   >
@@ -504,5 +519,26 @@ export function PostCard({ post }: PostCardProps) {
         </div>
       </div>
     </div>
+    <ConfirmDialog
+      open={deleteDialogOpen}
+      onOpenChange={setDeleteDialogOpen}
+      title="Delete this post?"
+      description="This action can't be undone. The post will be removed from your queue."
+      confirmLabel="Delete"
+      cancelLabel="Cancel"
+      onConfirm={handleDelete}
+      isConfirming={isDeleting}
+    />
+    <ConfirmDialog
+      open={rejectDialogOpen}
+      onOpenChange={setRejectDialogOpen}
+      title="Reject this post?"
+      description="The post will not be published. You can still edit and resubmit it."
+      confirmLabel="Reject"
+      cancelLabel="Cancel"
+      onConfirm={handleReject}
+      isConfirming={isRejecting}
+    />
+    </>
   );
 }

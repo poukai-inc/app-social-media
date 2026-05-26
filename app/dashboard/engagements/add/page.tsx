@@ -5,6 +5,17 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@poukai-inc/ui/atoms/Button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 export default function AddEngagementPage() {
   const router = useRouter();
@@ -146,13 +157,13 @@ export default function AddEngagementPage() {
             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
               LinkedIn Post URL
             </label>
-            <input
+            <Input
               type="url"
               value={postUrl}
               onChange={(e) => setPostUrl(e.target.value)}
               placeholder="https://www.linkedin.com/feed/update/..."
-              className="mt-1 block w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm dark:border-zinc-700 dark:bg-zinc-800"
               required
+              className="mt-1"
             />
             <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
               Copy the URL from a LinkedIn post you want to engage with
@@ -163,12 +174,12 @@ export default function AddEngagementPage() {
             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Post Content <span className="text-zinc-400">(optional but recommended)</span>
             </label>
-            <textarea
+            <Textarea
               value={postContent}
               onChange={(e) => setPostContent(e.target.value)}
               placeholder="Copy and paste the post content here for better AI-generated comments..."
               rows={4}
-              className="mt-1 block w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm dark:border-zinc-700 dark:bg-zinc-800"
+              className="mt-1"
             />
             <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
               LinkedIn API doesn&apos;t allow reading other users&apos; posts. Paste the content for better AI comments.
@@ -179,29 +190,31 @@ export default function AddEngagementPage() {
             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Engagement Type
             </label>
-            <select
+            <Select
               value={engagementType}
-              onChange={(e) => setEngagementType(e.target.value as 'like' | 'comment' | 'both')}
-              className="mt-1 block w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm dark:border-zinc-700 dark:bg-zinc-800"
+              onValueChange={(v) => setEngagementType(v as 'like' | 'comment' | 'both')}
             >
-              <option value="both">Like + Comment</option>
-              <option value="like">Like Only</option>
-              <option value="comment">Comment Only</option>
-            </select>
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="both">Like + Comment</SelectItem>
+                <SelectItem value="like">Like Only</SelectItem>
+                <SelectItem value="comment">Comment Only</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {(engagementType === 'comment' || engagementType === 'both') && (
             <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
+              <Checkbox
                 id="generateAI"
                 checked={generateAIComment}
-                onChange={(e) => setGenerateAIComment(e.target.checked)}
-                className="h-4 w-4 rounded border-zinc-300 text-[color:var(--accent)] focus:ring-[color:var(--accent-glow)]"
+                onCheckedChange={(checked) => setGenerateAIComment(Boolean(checked))}
               />
-              <label htmlFor="generateAI" className="text-sm text-zinc-700 dark:text-zinc-300">
+              <Label htmlFor="generateAI" className="text-sm text-zinc-700 dark:text-zinc-300">
                 Generate AI comment automatically
-              </label>
+              </Label>
             </div>
           )}
 
@@ -237,13 +250,13 @@ export default function AddEngagementPage() {
             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
               LinkedIn Post URLs (one per line)
             </label>
-            <textarea
+            <Textarea
               value={bulkUrls}
               onChange={(e) => setBulkUrls(e.target.value)}
               placeholder="https://www.linkedin.com/feed/update/...&#10;https://www.linkedin.com/posts/...&#10;https://www.linkedin.com/feed/update/..."
-              className="mt-1 block w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm dark:border-zinc-700 dark:bg-zinc-800"
               rows={8}
               required
+              className="mt-1"
             />
             <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
               Paste multiple URLs, one per line (max 20 at a time)
@@ -254,15 +267,19 @@ export default function AddEngagementPage() {
             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Engagement Type
             </label>
-            <select
+            <Select
               value={engagementType}
-              onChange={(e) => setEngagementType(e.target.value as 'like' | 'comment' | 'both')}
-              className="mt-1 block w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm dark:border-zinc-700 dark:bg-zinc-800"
+              onValueChange={(v) => setEngagementType(v as 'like' | 'comment' | 'both')}
             >
-              <option value="both">Like + Comment</option>
-              <option value="like">Like Only</option>
-              <option value="comment">Comment Only</option>
-            </select>
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="both">Like + Comment</SelectItem>
+                <SelectItem value="like">Like Only</SelectItem>
+                <SelectItem value="comment">Comment Only</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {error && (

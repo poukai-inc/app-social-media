@@ -81,20 +81,20 @@ export default function PagesPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950">
+      <div className="min-h-screen flex items-center justify-center bg-[color:var(--bg)]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)]"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-[color:var(--bg)]">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Your Pages</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <h1 className="text-3xl font-bold text-[color:var(--fg)]">Your Pages</h1>
+            <p className="text-[color:var(--fg-muted)] mt-1">
               Manage your LinkedIn profiles and company pages
             </p>
           </div>
@@ -108,14 +108,14 @@ export default function PagesPage() {
 
         {/* Pages Grid */}
         {pages.length === 0 ? (
-          <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 p-12 text-center">
+          <div className="bg-[color:var(--bg-elevated)] rounded-xl shadow-sm border border-[color:var(--hairline)] p-12 text-center">
             <div className="w-16 h-16 bg-[color:var(--surface)] rounded-full flex items-center justify-center mx-auto mb-4">
               <FileText className="h-8 w-8 text-[color:var(--accent)]" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            <h3 className="text-xl font-semibold text-[color:var(--fg)] mb-2">
               No pages configured yet
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+            <p className="text-[color:var(--fg-muted)] mb-6 max-w-md mx-auto">
               Add your LinkedIn profile or company pages to start creating and scheduling content tailored to each audience.
             </p>
             <Button asChild variant="primary">
@@ -134,12 +134,12 @@ export default function PagesPage() {
             {/* Add Page Card */}
             <Link
               href="/dashboard/pages/new"
-              className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border-2 border-dashed border-gray-300 dark:border-zinc-700 p-6 flex flex-col items-center justify-center min-h-[280px] hover:border-[color:var(--accent)] dark:hover:border-[color:var(--accent)] hover:bg-[color:var(--accent-glow)] dark:hover:bg-zinc-800 transition-colors group"
+              className="bg-[color:var(--bg-elevated)] rounded-xl shadow-sm border-2 border-dashed border-[color:var(--hairline)] p-6 flex flex-col items-center justify-center min-h-[280px] hover:border-[color:var(--accent)] hover:bg-[color:var(--accent-glow)] transition-colors group"
             >
-              <div className="w-12 h-12 bg-gray-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-3 group-hover:bg-[color:var(--surface)] dark:group-hover:bg-[color:var(--accent)] transition-colors">
-                <Plus className="h-6 w-6 text-gray-400 group-hover:text-[color:var(--accent)]" />
+              <div className="w-12 h-12 bg-[color:var(--surface)] rounded-full flex items-center justify-center mb-3 group-hover:bg-[color:var(--accent-glow)] transition-colors">
+                <Plus className="h-6 w-6 text-[color:var(--fg-muted)] group-hover:text-[color:var(--accent)]" />
               </div>
-              <span className="text-gray-600 dark:text-gray-400 font-medium group-hover:text-[color:var(--accent)]">
+              <span className="text-[color:var(--fg-muted)] font-medium group-hover:text-[color:var(--accent)]">
                 Add Another Page
               </span>
             </Link>
@@ -156,9 +156,9 @@ function PageCard({ page }: { page: Page }) {
   const pendingPosts = page.postStats?.pending_approval || 0;
 
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 overflow-hidden hover:shadow-md transition-shadow">
+    <div className="bg-[color:var(--bg-elevated)] rounded-xl shadow-sm border border-[color:var(--hairline)] overflow-hidden hover:shadow-md transition-shadow">
       {/* Header */}
-      <div className="p-5 border-b border-gray-100 dark:border-zinc-800">
+      <div className="p-5 border-b border-[color:var(--hairline)]">
         <div className="flex items-start gap-4">
           {page.avatar ? (
             <Avatar mode="image" src={page.avatar} alt={page.name} size="lg" />
@@ -173,16 +173,16 @@ function PageCard({ page }: { page: Page }) {
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+              <h3 className="font-semibold text-[color:var(--fg)] truncate">
                 {page.name}
               </h3>
               {!page.isActive && (
-                <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-400 rounded">
+                <span className="px-2 py-0.5 text-xs bg-[color:var(--surface)] text-[color:var(--fg-muted)] rounded">
                   Paused
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+            <p className="text-sm text-[color:var(--fg-muted)] capitalize">
               {page.type} Profile
             </p>
           </div>
@@ -190,8 +190,8 @@ function PageCard({ page }: { page: Page }) {
       </div>
 
       {/* Strategy Preview */}
-      <div className="p-4 bg-gray-50 dark:bg-zinc-800/50">
-        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+      <div className="p-4 bg-[color:var(--surface)]">
+        <p className="text-sm text-[color:var(--fg-muted)] line-clamp-2">
           {page.contentStrategy.persona}
         </p>
         {page.contentStrategy.topics.length > 0 && (
@@ -205,7 +205,7 @@ function PageCard({ page }: { page: Page }) {
               </span>
             ))}
             {page.contentStrategy.topics.length > 3 && (
-              <span className="px-2 py-0.5 text-xs text-gray-500">
+              <span className="px-2 py-0.5 text-xs text-[color:var(--fg-muted)]">
                 +{page.contentStrategy.topics.length - 3}
               </span>
             )}
@@ -214,18 +214,18 @@ function PageCard({ page }: { page: Page }) {
       </div>
 
       {/* Stats */}
-      <div className="p-4 grid grid-cols-3 gap-4 text-center border-b border-gray-100 dark:border-zinc-800">
+      <div className="p-4 grid grid-cols-3 gap-4 text-center border-b border-[color:var(--hairline)]">
         <div>
-          <div className="text-lg font-semibold text-gray-900 dark:text-white">{publishedPosts}</div>
-          <div className="text-xs text-gray-500">Published</div>
+          <div className="text-lg font-semibold text-[color:var(--fg)]">{publishedPosts}</div>
+          <div className="text-xs text-[color:var(--fg-muted)]">Published</div>
         </div>
         <div>
           <div className="text-lg font-semibold text-[color:var(--accent)]">{scheduledPosts}</div>
-          <div className="text-xs text-gray-500">Scheduled</div>
+          <div className="text-xs text-[color:var(--fg-muted)]">Scheduled</div>
         </div>
         <div>
           <div className="text-lg font-semibold text-yellow-600">{pendingPosts}</div>
-          <div className="text-xs text-gray-500">Pending</div>
+          <div className="text-xs text-[color:var(--fg-muted)]">Pending</div>
         </div>
       </div>
 
@@ -238,7 +238,7 @@ function PageCard({ page }: { page: Page }) {
               Auto-generating
             </span>
           ) : (
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-[color:var(--fg-muted)]">
               {page.contentStrategy.postingFrequency}x/week target
             </span>
           )}
@@ -246,7 +246,7 @@ function PageCard({ page }: { page: Page }) {
         <div className="flex items-center gap-2">
           <Link
             href={`/dashboard/pages/${page._id}/settings`}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+            className="p-2 text-[color:var(--fg-muted)] hover:text-[color:var(--fg)] hover:bg-[color:var(--surface)] rounded-lg transition-colors"
           >
             <Settings className="h-4 w-4" />
           </Link>

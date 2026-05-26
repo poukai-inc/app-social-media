@@ -195,7 +195,7 @@ export default async function Home() {
             variant="serif"
             attribution={<>— Ana Whitfield, <cite>Solo founder</cite></>}
           >
-            The first scheduler I've used that doesn't make my LinkedIn posts look like they came from a scheduler.
+            The first scheduler I&apos;ve used that doesn&apos;t make my LinkedIn posts look like they came from a scheduler.
           </Pull>
         </div>
       </Section>
@@ -207,19 +207,19 @@ export default async function Home() {
         <dl className="mt-12 flex flex-col gap-10">
           <div>
             <dt><Heading as="h3" size="h4">Is it really free during beta?</Heading></dt>
-            <dd className="mt-2"><Text tone="muted">Yes. No card required. We'll give 30 days notice before pricing turns on, and you'll be grandfathered into a launch tier.</Text></dd>
+            <dd className="mt-2"><Text tone="muted">Yes. No card required. We&apos;ll give 30 days notice before pricing turns on, and you&apos;ll be grandfathered into a launch tier.</Text></dd>
           </div>
           <div>
             <dt><Heading as="h3" size="h4">Do you use unofficial LinkedIn APIs?</Heading></dt>
-            <dd className="mt-2"><Text tone="muted">No. Everything runs through LinkedIn's official OAuth and posting API. Your account stays safe — no bans, no rate-limit roulette.</Text></dd>
+            <dd className="mt-2"><Text tone="muted">No. Everything runs through LinkedIn&apos;s official OAuth and posting API. Your account stays safe — no bans, no rate-limit roulette.</Text></dd>
           </div>
           <div>
             <dt><Heading as="h3" size="h4">Can I edit a scheduled post?</Heading></dt>
-            <dd className="mt-2"><Text tone="muted">Until it ships, yes — edit text, reschedule, or cancel from the queue. After it's live, you update it on LinkedIn directly.</Text></dd>
+            <dd className="mt-2"><Text tone="muted">Until it ships, yes — edit text, reschedule, or cancel from the queue. After it&apos;s live, you update it on LinkedIn directly.</Text></dd>
           </div>
           <div>
             <dt><Heading as="h3" size="h4">What if a post fails to publish?</Heading></dt>
-            <dd className="mt-2"><Text tone="muted">We retry automatically, then surface a clear error with a one-click re-queue. You won't find out three days later that nothing went out.</Text></dd>
+            <dd className="mt-2"><Text tone="muted">We retry automatically, then surface a clear error with a one-click re-queue. You won&apos;t find out three days later that nothing went out.</Text></dd>
           </div>
         </dl>
       </Section>

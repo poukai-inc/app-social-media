@@ -6,6 +6,15 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { logger } from '@/lib/logger';
 import { Button } from '@poukai-inc/ui/atoms/Button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
 
 const log = logger.child('dashboard:pages:[id]:data-sources');
 import {
@@ -432,14 +441,13 @@ export default function DataSourcesPage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Name
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={newSource.name}
                     onChange={(e) =>
                       setNewSource({ ...newSource, name: e.target.value })
                     }
                     placeholder="e.g., Sales CRM, Product Analytics"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                   />
                 </div>
 
@@ -448,22 +456,24 @@ export default function DataSourcesPage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Database Type
                   </label>
-                  <select
+                  <Select
                     value={newSource.type}
-                    onChange={(e) =>
+                    onValueChange={(v) =>
                       setNewSource({
                         ...newSource,
-                        type: e.target.value as 'mysql' | 'postgresql' | 'mongodb',
+                        type: v as 'mysql' | 'postgresql' | 'mongodb',
                       })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                   >
-                    <option value="mysql">MySQL / MariaDB</option>
-                    <option value="postgresql">PostgreSQL</option>
-                    <option value="mongodb" disabled>
-                      MongoDB (Coming Soon)
-                    </option>
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mysql">MySQL / MariaDB</SelectItem>
+                      <SelectItem value="postgresql">PostgreSQL</SelectItem>
+                      <SelectItem value="mongodb" disabled>MongoDB (Coming Soon)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Connection String */}
@@ -471,7 +481,7 @@ export default function DataSourcesPage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Connection String
                   </label>
-                  <input
+                  <Input
                     type="password"
                     value={newSource.connectionString}
                     onChange={(e) =>
@@ -481,7 +491,7 @@ export default function DataSourcesPage() {
                       })
                     }
                     placeholder="mysql://user:password@host:port/database"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white font-mono text-sm"
+                    className="font-mono text-sm"
                   />
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     Format: mysql://username:password@hostname:port/database
@@ -526,14 +536,14 @@ export default function DataSourcesPage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     SQL Query
                   </label>
-                  <textarea
+                  <Textarea
                     value={newSource.query}
                     onChange={(e) =>
                       setNewSource({ ...newSource, query: e.target.value })
                     }
                     rows={4}
                     placeholder="SELECT title, content, created_at FROM posts WHERE status = 'published' ORDER BY created_at DESC"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white font-mono text-sm"
+                    className="font-mono text-sm"
                   />
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     Only SELECT queries are allowed. Results are automatically limited.
@@ -627,14 +637,13 @@ export default function DataSourcesPage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Description (Optional)
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={newSource.description}
                     onChange={(e) =>
                       setNewSource({ ...newSource, description: e.target.value })
                     }
                     placeholder="What data does this query return?"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                   />
                 </div>
               </div>

@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 export interface StructuredInput {
   title?: string;
@@ -55,8 +57,6 @@ export function StructuredInputForm({ value, onChange }: StructuredInputFormProp
     updateField('customFields', currentFields);
   };
 
-  const inputClasses = "mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-glow)] dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500";
-
   return (
     <div className="space-y-4">
       <p className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -68,12 +68,12 @@ export function StructuredInputForm({ value, onChange }: StructuredInputFormProp
         <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
           Project/Topic Title *
         </label>
-        <input
+        <Input
           type="text"
           value={value.title || ''}
           onChange={(e) => updateField('title', e.target.value)}
           placeholder="e.g., AI-powered onboarding generator"
-          className={inputClasses}
+          className="mt-1"
         />
       </div>
 
@@ -82,12 +82,12 @@ export function StructuredInputForm({ value, onChange }: StructuredInputFormProp
         <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
           Problem Being Solved
         </label>
-        <textarea
+        <Textarea
           rows={2}
           value={value.problem || ''}
           onChange={(e) => updateField('problem', e.target.value)}
           placeholder="e.g., Manual onboarding docs are slow & inconsistent"
-          className={inputClasses}
+          className="mt-1"
         />
       </div>
 
@@ -96,12 +96,12 @@ export function StructuredInputForm({ value, onChange }: StructuredInputFormProp
         <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
           Solution/Approach
         </label>
-        <textarea
+        <Textarea
           rows={2}
           value={value.solution || ''}
           onChange={(e) => updateField('solution', e.target.value)}
           placeholder="e.g., Generated onboarding scripts using OpenAI + video avatars"
-          className={inputClasses}
+          className="mt-1"
         />
       </div>
 
@@ -128,13 +128,13 @@ export function StructuredInputForm({ value, onChange }: StructuredInputFormProp
           ))}
         </div>
         <div className="mt-2 flex gap-2">
-          <input
+          <Input
             type="text"
             value={newTech}
             onChange={(e) => setNewTech(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTech())}
             placeholder="Add technology..."
-            className={inputClasses + ' flex-1'}
+            className="flex-1"
           />
           <button
             type="button"
@@ -151,12 +151,12 @@ export function StructuredInputForm({ value, onChange }: StructuredInputFormProp
         <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
           Outcome/Result
         </label>
-        <input
+        <Input
           type="text"
           value={value.outcome || ''}
           onChange={(e) => updateField('outcome', e.target.value)}
           placeholder="e.g., Working MVP in 3 days"
-          className={inputClasses}
+          className="mt-1"
         />
       </div>
 
@@ -165,12 +165,12 @@ export function StructuredInputForm({ value, onChange }: StructuredInputFormProp
         <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
           Call to Action
         </label>
-        <input
+        <Input
           type="text"
           value={value.cta || ''}
           onChange={(e) => updateField('cta', e.target.value)}
           placeholder="e.g., Happy to share the demo if curious"
-          className={inputClasses}
+          className="mt-1"
         />
       </div>
 
@@ -197,20 +197,20 @@ export function StructuredInputForm({ value, onChange }: StructuredInputFormProp
           </div>
         )}
         <div className="mt-2 flex gap-2">
-          <input
+          <Input
             type="text"
             value={newFieldKey}
             onChange={(e) => setNewFieldKey(e.target.value)}
             placeholder="Field name"
-            className={inputClasses + ' w-1/3'}
+            className="w-1/3"
           />
-          <input
+          <Input
             type="text"
             value={newFieldValue}
             onChange={(e) => setNewFieldValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomField())}
             placeholder="Field value"
-            className={inputClasses + ' flex-1'}
+            className="flex-1"
           />
           <button
             type="button"

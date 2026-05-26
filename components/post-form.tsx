@@ -3,6 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { logger } from '@/lib/logger';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 const log = logger.child('component:post-form');
 import { 
@@ -609,14 +620,14 @@ export function PostForm({
             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
               What would you like to post about?
             </label>
-            <textarea
+            <Textarea
               rows={4}
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
               placeholder="Describe the topic, your thoughts, or context for the post. The more detail you provide, the better the result.
 
 Example: I just finished a weekend project building a CLI tool that converts Figma designs to React components. It uses the Figma API and generates TypeScript code with Tailwind CSS. I learned a lot about AST manipulation..."
-              className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-glow)] dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500"
+              className="mt-1"
             />
           </div>
         </div>
@@ -633,48 +644,47 @@ Example: I just finished a weekend project building a CLI tool that converts Fig
               <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400">
                 Tone
               </label>
-              <select
-                value={tone}
-                onChange={(e) => setTone(e.target.value as typeof tone)}
-                className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-glow)] dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-              >
-                <option value="professional">Professional</option>
-                <option value="casual">Casual</option>
-                <option value="inspirational">Inspirational</option>
-                <option value="educational">Educational</option>
-              </select>
+              <Select value={tone} onValueChange={(v) => setTone(v as typeof tone)}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="professional">Professional</SelectItem>
+                  <SelectItem value="casual">Casual</SelectItem>
+                  <SelectItem value="inspirational">Inspirational</SelectItem>
+                  <SelectItem value="educational">Educational</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400">
                 Target Audience (optional)
               </label>
-              <input
+              <Input
                 type="text"
                 value={targetAudience}
                 onChange={(e) => setTargetAudience(e.target.value)}
                 placeholder="e.g., developers, founders"
-                className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-glow)] dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                className="mt-1"
               />
             </div>
             <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="includeEmojis"
                   checked={includeEmojis}
-                  onChange={(e) => setIncludeEmojis(e.target.checked)}
-                  className="h-4 w-4 rounded border-zinc-300 text-[color:var(--accent)] focus:ring-[color:var(--accent-glow)]"
+                  onCheckedChange={(checked) => setIncludeEmojis(Boolean(checked))}
                 />
-                <span className="text-sm text-zinc-700 dark:text-zinc-300">Include emojis</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+                <Label htmlFor="includeEmojis" className="text-sm text-zinc-700 dark:text-zinc-300">Include emojis</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="includeHashtags"
                   checked={includeHashtags}
-                  onChange={(e) => setIncludeHashtags(e.target.checked)}
-                  className="h-4 w-4 rounded border-zinc-300 text-[color:var(--accent)] focus:ring-[color:var(--accent-glow)]"
+                  onCheckedChange={(checked) => setIncludeHashtags(Boolean(checked))}
                 />
-                <span className="text-sm text-zinc-700 dark:text-zinc-300">Include hashtags</span>
-              </label>
+                <Label htmlFor="includeHashtags" className="text-sm text-zinc-700 dark:text-zinc-300">Include hashtags</Label>
+              </div>
             </div>
           </div>
           
@@ -705,20 +715,16 @@ Example: I just finished a weekend project building a CLI tool that converts Fig
           {mode === 'manual' ? 'Post Content' : 'Generated Content (you can edit)'}
         </label>
         <div className="relative mt-2">
-          <textarea
+          <Textarea
             id="content"
             rows={10}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder={mode === 'manual' 
-              ? "What would you like to share on LinkedIn?" 
+            invalid={isOverLimit}
+            placeholder={mode === 'manual'
+              ? "What would you like to share on LinkedIn?"
               : "Click 'Generate Content' above to create your post, then edit as needed..."
             }
-            className={`block w-full rounded-lg border bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500 ${
-              isOverLimit
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-zinc-300 focus:ring-[color:var(--accent-glow)] dark:border-zinc-700'
-            }`}
           />
           <div
             className={`absolute bottom-3 right-3 text-sm ${
@@ -752,13 +758,13 @@ Example: I just finished a weekend project building a CLI tool that converts Fig
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <Calendar className="h-5 w-5 text-zinc-400" />
           </div>
-          <input
+          <Input
             type="datetime-local"
             id="scheduledFor"
             value={scheduledFor}
             onChange={(e) => setScheduledFor(e.target.value)}
             min={minDateTime}
-            className="block w-full rounded-lg border border-zinc-300 bg-white py-2 pl-10 pr-4 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-glow)] dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            className="pl-10"
           />
         </div>
       </div>
