@@ -780,7 +780,7 @@ export default function NewPagePage() {
                         unoptimized
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-[color:var(--accent-glow)]0 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-[color:var(--accent)] flex items-center justify-center">
                         {selectedAccount?.type === 'personal' ? (
                           <User className="h-5 w-5 text-white" />
                         ) : (

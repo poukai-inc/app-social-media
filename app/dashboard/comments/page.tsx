@@ -183,7 +183,7 @@ export default function CommentsPage() {
             <div
               className={`h-full rounded-full transition-all ${
                 todayPosted >= dailyGoal ? 'bg-green-500' :
-                todayPosted >= dailyGoal * 0.5 ? 'bg-[color:var(--accent-glow)]0' : 'bg-yellow-500'
+                todayPosted >= dailyGoal * 0.5 ? 'bg-[color:var(--accent)]' : 'bg-yellow-500'
               }`}
               style={{ width: `${Math.min(100, (todayPosted / dailyGoal) * 100)}%` }}
             />

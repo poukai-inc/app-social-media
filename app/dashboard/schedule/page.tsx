@@ -134,7 +134,7 @@ export default function SchedulePage() {
             </p>
             <Link
               href="/dashboard"
-              className="inline-block px-6 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent-glow)]0 transition-colors"
+              className="inline-block px-6 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] transition-colors"
             >
               Go to Dashboard
             </Link>
