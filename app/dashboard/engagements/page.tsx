@@ -148,7 +148,7 @@ export default async function EngagementsPage() {
           </Link>
           <Link
             href="/dashboard/engagements/add"
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+            className="inline-flex items-center gap-2 rounded-lg bg-[color:var(--accent)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[color:var(--accent)]"
           >
             <Plus className="h-4 w-4" />
             Add Post
@@ -169,7 +169,7 @@ export default async function EngagementsPage() {
             <div>
               <p className="font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                 ICP Twitter Engagement
-                <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs dark:bg-blue-900 dark:text-blue-300">
+                <span className="px-2 py-0.5 rounded-full bg-[color:var(--surface)] text-[color:var(--accent)] text-xs">
                   NEW
                 </span>
               </p>
@@ -213,7 +213,7 @@ export default async function EngagementsPage() {
           </div>
           <Link
             href="/dashboard/engagements/settings"
-            className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            className="text-sm font-medium text-[color:var(--accent)] hover:text-[color:var(--accent)]"
           >
             Configure
           </Link>
@@ -224,8 +224,8 @@ export default async function EngagementsPage() {
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900">
-              <ThumbsUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <div className="rounded-lg bg-[color:var(--surface)] p-2">
+              <ThumbsUp className="h-5 w-5 text-[color:var(--accent)]" />
             </div>
             <div>
               <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
@@ -298,7 +298,7 @@ export default async function EngagementsPage() {
             </p>
             <Link
               href="/dashboard/engagements/add"
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[color:var(--accent)] px-4 py-2 text-sm font-medium text-white hover:bg-[color:var(--accent)]"
             >
               <Plus className="h-4 w-4" />
               Add Posts

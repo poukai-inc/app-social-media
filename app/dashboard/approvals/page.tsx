@@ -128,7 +128,7 @@ function ApprovalsContent() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)]"></div>
       </div>
     );
   }
@@ -144,7 +144,7 @@ function ApprovalsContent() {
           </div>
           <Link
             href="/dashboard"
-            className="text-blue-600 hover:text-blue-800 font-medium"
+            className="text-[color:var(--accent)] hover:text-[color:var(--accent)] font-medium"
           >
             ← Back to Dashboard
           </Link>
@@ -156,7 +156,7 @@ function ApprovalsContent() {
             className={`mb-6 p-4 rounded-lg ${
               message.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
               message.type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
-              'bg-blue-50 text-blue-800 border border-blue-200'
+              'bg-[color:var(--accent-glow)] text-[color:var(--accent)] border border-[color:var(--accent)]'
             }`}
           >
             {message.text}
@@ -176,7 +176,7 @@ function ApprovalsContent() {
             <div className="text-sm text-gray-600">Pending</div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm border">
-            <div className="text-2xl font-bold text-blue-600">{statusCounts.scheduled || 0}</div>
+            <div className="text-2xl font-bold text-[color:var(--accent)]">{statusCounts.scheduled || 0}</div>
             <div className="text-sm text-gray-600">Scheduled</div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm border">
@@ -195,11 +195,11 @@ function ApprovalsContent() {
 
         {/* Learning Patterns */}
         {patterns && patterns.totalDecisions > 0 && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200 mb-8">
-            <h3 className="font-semibold text-blue-900 mb-3">📊 Learning Insights (Last 30 Days)</h3>
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-[color:var(--accent)] mb-8">
+            <h3 className="font-semibold text-[color:var(--accent)] mb-3">📊 Learning Insights (Last 30 Days)</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
-                <span className="text-blue-700">Decisions Made:</span>
+                <span className="text-[color:var(--accent)]">Decisions Made:</span>
                 <span className="ml-2 font-semibold">{patterns.totalDecisions}</span>
               </div>
               <div>
@@ -218,7 +218,7 @@ function ApprovalsContent() {
               </div>
             </div>
             {patterns.avgApprovedConfidence > 0 && (
-              <p className="mt-3 text-sm text-blue-800">
+              <p className="mt-3 text-sm text-[color:var(--accent)]">
                 💡 Approved posts average {Math.round(patterns.avgApprovedConfidence * 100)}% confidence
                 {patterns.avgRejectedConfidence > 0 && 
                   `, rejected average ${Math.round(patterns.avgRejectedConfidence * 100)}%`}
@@ -235,7 +235,7 @@ function ApprovalsContent() {
             <p className="text-gray-600 mb-6">No posts pending approval</p>
             <Link
               href="/dashboard/create"
-              className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+              className="inline-block bg-[color:var(--accent)] text-white px-6 py-2 rounded-lg hover:bg-[color:var(--accent)]"
             >
               Create New Post
             </Link>
@@ -273,7 +273,7 @@ function ApprovalsContent() {
 
                   {/* Angle */}
                   {post.aiAnalysis?.angle && (
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-[color:var(--surface)] text-[color:var(--accent)] border border-[color:var(--accent)]">
                       {getAngleLabel(post.aiAnalysis.angle)}
                     </span>
                   )}
@@ -295,7 +295,7 @@ function ApprovalsContent() {
 
                 {/* AI Reasoning */}
                 {post.aiAnalysis?.aiReasoning && (
-                  <div className="px-6 py-3 bg-blue-50 border-b text-sm text-blue-800">
+                  <div className="px-6 py-3 bg-[color:var(--accent-glow)] border-b text-sm text-[color:var(--accent)]">
                     <strong>🤖 AI:</strong> {post.aiAnalysis.aiReasoning}
                   </div>
                 )}
@@ -334,7 +334,7 @@ function ApprovalsContent() {
                     </button>
                     <Link
                       href={`/dashboard/edit/${post._id}`}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                      className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] font-medium"
                     >
                       ✏️ Edit
                     </Link>
@@ -360,7 +360,7 @@ export default function ApprovalsPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)]"></div>
       </div>
     }>
       <ApprovalsContent />

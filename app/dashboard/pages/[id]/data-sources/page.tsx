@@ -248,7 +248,7 @@ export default function DataSourcesPage() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-[color:var(--accent)]" />
       </div>
     );
   }
@@ -283,7 +283,7 @@ export default function DataSourcesPage() {
 
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="flex items-center gap-2 px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
             >
               <Plus className="h-4 w-4" />
               Add Data Source
@@ -304,7 +304,7 @@ export default function DataSourcesPage() {
               </p>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
               >
                 <Plus className="h-4 w-4" />
                 Add Your First Data Source
@@ -327,7 +327,7 @@ export default function DataSourcesPage() {
                         source.type === 'mysql'
                           ? 'bg-orange-100 dark:bg-orange-900/30'
                           : source.type === 'postgresql'
-                          ? 'bg-blue-100 dark:bg-blue-900/30'
+                          ? 'bg-[color:var(--surface)]'
                           : 'bg-green-100 dark:bg-green-900/30'
                       }`}
                     >
@@ -336,7 +336,7 @@ export default function DataSourcesPage() {
                           source.type === 'mysql'
                             ? 'text-orange-600 dark:text-orange-400'
                             : source.type === 'postgresql'
-                            ? 'text-blue-600 dark:text-blue-400'
+                            ? 'text-[color:var(--accent)]'
                             : 'text-green-600 dark:text-green-400'
                         }`}
                       />
@@ -664,7 +664,7 @@ export default function DataSourcesPage() {
                     !newSource.query ||
                     saving
                   }
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="flex items-center gap-2 px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] disabled:opacity-50"
                 >
                   {saving ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -705,7 +705,7 @@ export default function DataSourcesPage() {
               <div className="p-6">
                 {previewLoading ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-[color:var(--accent)]" />
                   </div>
                 ) : previewResults.success && previewResults.data ? (
                   <div className="border border-gray-200 dark:border-zinc-700 rounded-lg overflow-hidden">

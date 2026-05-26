@@ -184,7 +184,7 @@ function ConversationsContent() {
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
           <div className="bg-white p-4 rounded-lg shadow">
-            <div className="text-2xl font-bold text-blue-600">{stats.totalActiveConversations}</div>
+            <div className="text-2xl font-bold text-[color:var(--accent)]">{stats.totalActiveConversations}</div>
             <div className="text-sm text-gray-500">Active Conversations</div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow">
@@ -213,13 +213,13 @@ function ConversationsContent() {
             type="checkbox"
             checked={activeOnly}
             onChange={(e) => setActiveOnly(e.target.checked)}
-            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+            className="rounded border-gray-300 text-[color:var(--accent)] shadow-sm focus:border-[color:var(--accent)] focus:ring focus:ring-[color:var(--accent-glow)] focus:ring-opacity-50"
           />
           <span className="ml-2 text-sm text-gray-700">Show only active conversations</span>
         </label>
         <button
           onClick={fetchConversations}
-          className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+          className="px-3 py-2 bg-[color:var(--accent)] text-white rounded hover:bg-[color:var(--accent)] text-sm"
         >
           Refresh
         </button>
@@ -281,7 +281,7 @@ function ConversationsContent() {
                     href={conv.targetPost.url} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 text-sm"
+                    className="text-[color:var(--accent)] hover:text-[color:var(--accent)] text-sm"
                   >
                     View Original →
                   </a>
@@ -290,7 +290,7 @@ function ConversationsContent() {
                       href={conv.ourReply.url} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm"
+                      className="text-[color:var(--accent)] hover:text-[color:var(--accent)] text-sm"
                     >
                       View Our Reply →
                     </a>

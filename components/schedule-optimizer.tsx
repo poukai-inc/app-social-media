@@ -40,8 +40,8 @@ interface ScheduleOptimizerProps {
 }
 
 const PLATFORM_COLORS: Record<PlatformType, string> = {
-  linkedin: 'bg-blue-600',
-  facebook: 'bg-blue-700',
+  linkedin: 'bg-[color:var(--accent)]',
+  facebook: 'bg-[color:var(--accent)]',
   twitter: 'bg-sky-500',
   instagram: 'bg-gradient-to-r from-purple-600 to-pink-500',
 };
@@ -149,7 +149,7 @@ export default function ScheduleOptimizer({ pageId }: ScheduleOptimizerProps) {
               type="checkbox"
               checked={quickMode}
               onChange={(e) => setQuickMode(e.target.checked)}
-              className="rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+              className="rounded border-gray-600 bg-gray-700 text-[color:var(--accent)] focus:ring-[color:var(--accent-glow)]"
             />
             Quick mode (no AI)
           </label>
@@ -157,7 +157,7 @@ export default function ScheduleOptimizer({ pageId }: ScheduleOptimizerProps) {
           <button
             onClick={analyzeSchedule}
             disabled={isLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent-glow)]0 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             {isLoading ? (
               <>
@@ -198,12 +198,12 @@ export default function ScheduleOptimizer({ pageId }: ScheduleOptimizerProps) {
         <div className="space-y-6">
           {/* Global Insights */}
           {recommendation.globalInsights.length > 0 && (
-            <div className="p-4 bg-blue-900/30 border border-blue-700/50 rounded-lg">
-              <h3 className="text-sm font-medium text-blue-300 mb-2">🧠 AI Insights</h3>
+            <div className="p-4 bg-[color:var(--accent)]/30 border border-[color:var(--accent)]/50 rounded-lg">
+              <h3 className="text-sm font-medium text-[color:var(--accent)] mb-2">🧠 AI Insights</h3>
               <ul className="space-y-1">
                 {recommendation.globalInsights.map((insight, idx) => (
                   <li key={idx} className="text-sm text-gray-300 flex items-start gap-2">
-                    <span className="text-blue-400 mt-0.5">•</span>
+                    <span className="text-[color:var(--accent)] mt-0.5">•</span>
                     {insight}
                   </li>
                 ))}

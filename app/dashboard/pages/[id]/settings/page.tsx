@@ -282,7 +282,7 @@ export default function PageSettings() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)]"></div>
       </div>
     );
   }
@@ -432,7 +432,7 @@ export default function PageSettings() {
                         setTopicInput
                       )
                     }
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
                   >
                     Add
                   </button>
@@ -441,7 +441,7 @@ export default function PageSettings() {
                   {contentStrategy.topics.map((topic) => (
                     <span
                       key={topic}
-                      className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm flex items-center gap-1"
+                      className="px-3 py-1 bg-[color:var(--surface)] text-[color:var(--accent)] rounded-full text-sm flex items-center gap-1"
                     >
                       {topic}
                       <button
@@ -472,7 +472,7 @@ export default function PageSettings() {
                       onClick={() => toggleAngle(angle.id)}
                       className={`px-3 py-1.5 rounded-lg border-2 text-sm transition-colors ${
                         contentStrategy.preferredAngles.includes(angle.id)
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
+                          ? 'border-[color:var(--accent)] bg-[color:var(--accent-glow)] text-[color:var(--accent)]'
                           : 'border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-gray-400'
                       }`}
                     >
@@ -559,7 +559,7 @@ export default function PageSettings() {
                         setBlogInput
                       )
                     }
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
                   >
                     Add
                   </button>
@@ -620,7 +620,7 @@ export default function PageSettings() {
                         setKeywordInput
                       )
                     }
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
                   >
                     Add
                   </button>
@@ -714,7 +714,7 @@ export default function PageSettings() {
                       onClick={() => toggleDay(index)}
                       className={`flex-1 py-2 rounded-lg border-2 font-medium text-sm transition-colors ${
                         schedule.preferredDays.includes(index)
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
+                          ? 'border-[color:var(--accent)] bg-[color:var(--accent-glow)] text-[color:var(--accent)]'
                           : 'border-gray-200 dark:border-zinc-700 text-gray-500'
                       }`}
                     >
@@ -746,7 +746,7 @@ export default function PageSettings() {
                         setTimeInput('');
                       }
                     }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
                   >
                     Add
                   </button>
@@ -929,7 +929,7 @@ export default function PageSettings() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] disabled:opacity-50"
             >
               {saving ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

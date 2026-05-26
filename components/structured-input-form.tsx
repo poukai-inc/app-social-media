@@ -55,7 +55,7 @@ export function StructuredInputForm({ value, onChange }: StructuredInputFormProp
     updateField('customFields', currentFields);
   };
 
-  const inputClasses = "mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500";
+  const inputClasses = "mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-glow)] dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500";
 
   return (
     <div className="space-y-4">
@@ -114,13 +114,13 @@ export function StructuredInputForm({ value, onChange }: StructuredInputFormProp
           {(value.tech || []).map((tech, index) => (
             <span
               key={index}
-              className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+              className="inline-flex items-center gap-1 rounded-full bg-[color:var(--surface)] px-3 py-1 text-sm text-[color:var(--accent)]"
             >
               {tech}
               <button
                 type="button"
                 onClick={() => removeTech(index)}
-                className="ml-1 hover:text-blue-900 dark:hover:text-blue-100"
+                className="ml-1 hover:text-[color:var(--accent)]"
               >
                 <X className="h-3 w-3" />
               </button>

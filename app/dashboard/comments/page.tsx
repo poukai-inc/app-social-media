@@ -150,7 +150,7 @@ export default function CommentsPage() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)]"></div>
       </div>
     );
   }
@@ -166,7 +166,7 @@ export default function CommentsPage() {
               Daily engagement: thoughtful comments on founder posts
             </p>
           </div>
-          <Link href="/dashboard" className="text-blue-600 hover:text-blue-800 font-medium">
+          <Link href="/dashboard" className="text-[color:var(--accent)] hover:text-[color:var(--accent)] font-medium">
             ← Back
           </Link>
         </div>
@@ -175,7 +175,7 @@ export default function CommentsPage() {
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-gray-900">Today&apos;s Progress</h3>
-            <span className="text-2xl font-bold text-blue-600">
+            <span className="text-2xl font-bold text-[color:var(--accent)]">
               {todayPosted} / {dailyGoal}
             </span>
           </div>
@@ -183,7 +183,7 @@ export default function CommentsPage() {
             <div
               className={`h-full rounded-full transition-all ${
                 todayPosted >= dailyGoal ? 'bg-green-500' :
-                todayPosted >= dailyGoal * 0.5 ? 'bg-blue-500' : 'bg-yellow-500'
+                todayPosted >= dailyGoal * 0.5 ? 'bg-[color:var(--accent-glow)]0' : 'bg-yellow-500'
               }`}
               style={{ width: `${Math.min(100, (todayPosted / dailyGoal) * 100)}%` }}
             />
@@ -202,7 +202,7 @@ export default function CommentsPage() {
             <div className="text-sm text-gray-600">Pending</div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm border text-center">
-            <div className="text-2xl font-bold text-blue-600">{statusCounts.approved || 0}</div>
+            <div className="text-2xl font-bold text-[color:var(--accent)]">{statusCounts.approved || 0}</div>
             <div className="text-sm text-gray-600">Approved</div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm border text-center">
@@ -219,7 +219,7 @@ export default function CommentsPage() {
         <div className="mb-6">
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+            className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] font-medium"
           >
             + Add Post to Comment On
           </button>
@@ -274,7 +274,7 @@ export default function CommentsPage() {
                 <button
                   onClick={handleAddSuggestion}
                   disabled={addLoading || !newPostContent || !newPostAuthor}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] disabled:opacity-50"
                 >
                   {addLoading ? 'Generating...' : 'Generate Comment'}
                 </button>
@@ -297,7 +297,7 @@ export default function CommentsPage() {
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 font-medium border-b-2 -mb-px ${
                 activeTab === tab
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-[color:var(--accent)] text-[color:var(--accent)]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -342,7 +342,7 @@ export default function CommentsPage() {
                 </div>
 
                 {/* Original Post Snippet */}
-                <div className="px-4 py-3 border-b bg-blue-50">
+                <div className="px-4 py-3 border-b bg-[color:var(--accent-glow)]">
                   <p className="text-sm text-gray-700 italic">
                     &ldquo;{suggestion.postContentSnippet}&rdquo;
                   </p>
@@ -351,7 +351,7 @@ export default function CommentsPage() {
                       href={suggestion.linkedinPostUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-blue-600 hover:underline mt-1 inline-block"
+                      className="text-xs text-[color:var(--accent)] hover:underline mt-1 inline-block"
                     >
                       View on LinkedIn →
                     </a>
@@ -383,7 +383,7 @@ export default function CommentsPage() {
                   {/* Alternative comments */}
                   {suggestion.alternativeComments && suggestion.alternativeComments.length > 0 && (
                     <details className="mt-3">
-                      <summary className="text-sm text-blue-600 cursor-pointer">
+                      <summary className="text-sm text-[color:var(--accent)] cursor-pointer">
                         {suggestion.alternativeComments.length} alternative(s)
                       </summary>
                       <div className="mt-2 space-y-2">
@@ -411,7 +411,7 @@ export default function CommentsPage() {
                         setEditingSuggestion(suggestion);
                         setEditedComment(suggestion.editedComment || suggestion.suggestedComment);
                       }}
-                      className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                      className="px-3 py-1.5 text-sm bg-[color:var(--accent)] text-white rounded hover:bg-[color:var(--accent)]"
                     >
                       ✏️ Edit & Approve
                     </button>
@@ -492,7 +492,7 @@ export default function CommentsPage() {
                 <button
                   onClick={() => handleAction(editingSuggestion._id, 'approve', { editedComment })}
                   disabled={actionLoading === editingSuggestion._id}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] disabled:opacity-50"
                 >
                   Save & Approve
                 </button>

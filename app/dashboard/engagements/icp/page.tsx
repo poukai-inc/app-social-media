@@ -146,8 +146,8 @@ export default async function ICPEngagementsPage({ searchParams }: PageProps) {
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-5">
         <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900">
-              <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <div className="rounded-lg bg-[color:var(--surface)] p-2">
+              <Target className="h-5 w-5 text-[color:var(--accent)]" />
             </div>
             <div>
               <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
@@ -243,7 +243,7 @@ export default async function ICPEngagementsPage({ searchParams }: PageProps) {
                 href={`/dashboard/engagements/icp?status=${option.value}`}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   statusFilter === option.value
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-[color:var(--accent)] text-white'
                     : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
                 }`}
               >

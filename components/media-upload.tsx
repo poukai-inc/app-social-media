@@ -98,7 +98,7 @@ export function MediaUpload({ media, onMediaChange, maxFiles = 9 }: MediaUploadP
       {/* Upload area */}
       <div
         onClick={() => fileInputRef.current?.click()}
-        className="cursor-pointer rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 p-6 text-center transition-colors hover:border-blue-400 hover:bg-blue-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-blue-600 dark:hover:bg-zinc-800"
+        className="cursor-pointer rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 p-6 text-center transition-colors hover:border-[color:var(--accent)] hover:bg-[color:var(--accent-glow)] dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-[color:var(--accent)] dark:hover:bg-zinc-800"
       >
         <input
           ref={fileInputRef}
@@ -112,7 +112,7 @@ export function MediaUpload({ media, onMediaChange, maxFiles = 9 }: MediaUploadP
         
         {isUploading ? (
           <div className="flex flex-col items-center gap-2">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            <Loader2 className="h-8 w-8 animate-spin text-[color:var(--accent)]" />
             <p className="text-sm text-zinc-600 dark:text-zinc-400">Uploading...</p>
           </div>
         ) : (

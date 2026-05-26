@@ -8,7 +8,7 @@ export default function LoginPage() {
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">
       <div className="w-full max-w-md space-y-8 text-center">
         <div>
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[color:var(--accent)]">
             <Linkedin className="h-10 w-10 text-white" />
           </div>
           <h1 className="mt-6 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
@@ -39,19 +39,19 @@ export default function LoginPage() {
           </h3>
           <ul className="mt-4 space-y-3 text-left text-sm text-zinc-600 dark:text-zinc-400">
             <li className="flex items-start gap-2">
-              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--accent-glow)]0" />
               Create and edit LinkedIn posts
             </li>
             <li className="flex items-start gap-2">
-              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--accent-glow)]0" />
               Schedule posts for future publication
             </li>
             <li className="flex items-start gap-2">
-              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--accent-glow)]0" />
               Publish posts directly to LinkedIn
             </li>
             <li className="flex items-start gap-2">
-              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--accent-glow)]0" />
               Track your post history and status
             </li>
           </ul>

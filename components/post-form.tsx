@@ -361,15 +361,15 @@ export function PostForm({
               onClick={() => setSelectedPageId('')}
               className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all ${
                 !selectedPageId
-                  ? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-950'
+                  ? 'border-[color:var(--accent)] bg-[color:var(--accent-glow)]'
                   : 'border-zinc-200 hover:border-zinc-300 dark:border-zinc-700 dark:hover:border-zinc-600'
               }`}
             >
-              <div className={`rounded-full p-2 ${!selectedPageId ? 'bg-blue-100 dark:bg-blue-900' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
-                <User className={`h-5 w-5 ${!selectedPageId ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500'}`} />
+              <div className={`rounded-full p-2 ${!selectedPageId ? 'bg-[color:var(--surface)]' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
+                <User className={`h-5 w-5 ${!selectedPageId ? 'text-[color:var(--accent)]' : 'text-zinc-500'}`} />
               </div>
               <div>
-                <span className={`font-medium ${!selectedPageId ? 'text-blue-700 dark:text-blue-300' : 'text-zinc-700 dark:text-zinc-300'}`}>
+                <span className={`font-medium ${!selectedPageId ? 'text-[color:var(--accent)]' : 'text-zinc-700 dark:text-zinc-300'}`}>
                   No Page
                 </span>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">Standalone post</p>
@@ -383,13 +383,13 @@ export function PostForm({
                 onClick={() => setSelectedPageId(page._id)}
                 className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all ${
                   selectedPageId === page._id
-                    ? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-950'
+                    ? 'border-[color:var(--accent)] bg-[color:var(--accent-glow)]'
                     : 'border-zinc-200 hover:border-zinc-300 dark:border-zinc-700 dark:hover:border-zinc-600'
                 }`}
               >
                 <div className={`rounded-full p-2 ${
                   selectedPageId === page._id 
-                    ? 'bg-blue-100 dark:bg-blue-900' 
+                    ? 'bg-[color:var(--surface)]' 
                     : 'bg-zinc-100 dark:bg-zinc-800'
                 }`}>
                   {page.avatar ? (
@@ -397,13 +397,13 @@ export function PostForm({
                   ) : page.type === 'organization' ? (
                     <Building2 className={`h-5 w-5 ${
                       selectedPageId === page._id 
-                        ? 'text-blue-600 dark:text-blue-400' 
+                        ? 'text-[color:var(--accent)]' 
                         : 'text-zinc-500'
                     }`} />
                   ) : (
                     <User className={`h-5 w-5 ${
                       selectedPageId === page._id 
-                        ? 'text-blue-600 dark:text-blue-400' 
+                        ? 'text-[color:var(--accent)]' 
                         : 'text-zinc-500'
                     }`} />
                   )}
@@ -411,7 +411,7 @@ export function PostForm({
                 <div>
                   <span className={`font-medium ${
                     selectedPageId === page._id 
-                      ? 'text-blue-700 dark:text-blue-300' 
+                      ? 'text-[color:var(--accent)]' 
                       : 'text-zinc-700 dark:text-zinc-300'
                   }`}>
                     {page.name}
@@ -440,7 +440,7 @@ export function PostForm({
               type="button"
               onClick={() => fetchOrganizations(true)}
               disabled={isLoadingOrgs}
-              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
+              className="flex items-center gap-1 text-xs text-[color:var(--accent)] hover:text-[color:var(--accent)]"
             >
               <RefreshCcw className={`h-3 w-3 ${isLoadingOrgs ? 'animate-spin' : ''}`} />
               Refresh orgs
@@ -457,15 +457,15 @@ export function PostForm({
             }}
             className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all ${
               postAs === 'person'
-                ? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-950'
+                ? 'border-[color:var(--accent)] bg-[color:var(--accent-glow)]'
                 : 'border-zinc-200 hover:border-zinc-300 dark:border-zinc-700 dark:hover:border-zinc-600'
             }`}
           >
-            <div className={`rounded-full p-2 ${postAs === 'person' ? 'bg-blue-100 dark:bg-blue-900' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
-              <User className={`h-5 w-5 ${postAs === 'person' ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500'}`} />
+            <div className={`rounded-full p-2 ${postAs === 'person' ? 'bg-[color:var(--surface)]' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
+              <User className={`h-5 w-5 ${postAs === 'person' ? 'text-[color:var(--accent)]' : 'text-zinc-500'}`} />
             </div>
             <div>
-              <span className={`font-medium ${postAs === 'person' ? 'text-blue-700 dark:text-blue-300' : 'text-zinc-700 dark:text-zinc-300'}`}>
+              <span className={`font-medium ${postAs === 'person' ? 'text-[color:var(--accent)]' : 'text-zinc-700 dark:text-zinc-300'}`}>
                 Personal Profile
               </span>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">Post as yourself</p>
@@ -489,13 +489,13 @@ export function PostForm({
                 }}
                 className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all ${
                   postAs === 'organization' && selectedOrgId === org.id
-                    ? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-950'
+                    ? 'border-[color:var(--accent)] bg-[color:var(--accent-glow)]'
                     : 'border-zinc-200 hover:border-zinc-300 dark:border-zinc-700 dark:hover:border-zinc-600'
                 }`}
               >
                 <div className={`rounded-full p-2 ${
                   postAs === 'organization' && selectedOrgId === org.id 
-                    ? 'bg-blue-100 dark:bg-blue-900' 
+                    ? 'bg-[color:var(--surface)]' 
                     : 'bg-zinc-100 dark:bg-zinc-800'
                 }`}>
                   {org.logoUrl ? (
@@ -503,7 +503,7 @@ export function PostForm({
                   ) : (
                     <Building2 className={`h-5 w-5 ${
                       postAs === 'organization' && selectedOrgId === org.id 
-                        ? 'text-blue-600 dark:text-blue-400' 
+                        ? 'text-[color:var(--accent)]' 
                         : 'text-zinc-500'
                     }`} />
                   )}
@@ -511,7 +511,7 @@ export function PostForm({
                 <div>
                   <span className={`font-medium ${
                     postAs === 'organization' && selectedOrgId === org.id 
-                      ? 'text-blue-700 dark:text-blue-300' 
+                      ? 'text-[color:var(--accent)]' 
                       : 'text-zinc-700 dark:text-zinc-300'
                   }`}>
                     {org.name}
@@ -572,14 +572,14 @@ export function PostForm({
                 onClick={() => setMode(m)}
                 className={`flex flex-col items-start rounded-xl border-2 p-4 text-left transition-all ${
                   isSelected
-                    ? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-950'
+                    ? 'border-[color:var(--accent)] bg-[color:var(--accent-glow)]'
                     : 'border-zinc-200 hover:border-zinc-300 dark:border-zinc-700 dark:hover:border-zinc-600'
                 }`}
               >
-                <div className={`rounded-lg p-2 ${isSelected ? 'bg-blue-100 dark:bg-blue-900' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
-                  <Icon className={`h-5 w-5 ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500'}`} />
+                <div className={`rounded-lg p-2 ${isSelected ? 'bg-[color:var(--surface)]' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
+                  <Icon className={`h-5 w-5 ${isSelected ? 'text-[color:var(--accent)]' : 'text-zinc-500'}`} />
                 </div>
-                <span className={`mt-3 font-medium ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-zinc-700 dark:text-zinc-300'}`}>
+                <span className={`mt-3 font-medium ${isSelected ? 'text-[color:var(--accent)]' : 'text-zinc-700 dark:text-zinc-300'}`}>
                   {config.label}
                 </span>
                 <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
@@ -615,7 +615,7 @@ export function PostForm({
               placeholder="Describe the topic, your thoughts, or context for the post. The more detail you provide, the better the result.
 
 Example: I just finished a weekend project building a CLI tool that converts Figma designs to React components. It uses the Figma API and generates TypeScript code with Tailwind CSS. I learned a lot about AST manipulation..."
-              className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500"
+              className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-glow)] dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500"
             />
           </div>
         </div>
@@ -635,7 +635,7 @@ Example: I just finished a weekend project building a CLI tool that converts Fig
               <select
                 value={tone}
                 onChange={(e) => setTone(e.target.value as typeof tone)}
-                className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-glow)] dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               >
                 <option value="professional">Professional</option>
                 <option value="casual">Casual</option>
@@ -652,7 +652,7 @@ Example: I just finished a weekend project building a CLI tool that converts Fig
                 value={targetAudience}
                 onChange={(e) => setTargetAudience(e.target.value)}
                 placeholder="e.g., developers, founders"
-                className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-glow)] dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               />
             </div>
             <div className="flex items-center gap-4">
@@ -661,7 +661,7 @@ Example: I just finished a weekend project building a CLI tool that converts Fig
                   type="checkbox"
                   checked={includeEmojis}
                   onChange={(e) => setIncludeEmojis(e.target.checked)}
-                  className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                  className="h-4 w-4 rounded border-zinc-300 text-[color:var(--accent)] focus:ring-[color:var(--accent-glow)]"
                 />
                 <span className="text-sm text-zinc-700 dark:text-zinc-300">Include emojis</span>
               </label>
@@ -670,7 +670,7 @@ Example: I just finished a weekend project building a CLI tool that converts Fig
                   type="checkbox"
                   checked={includeHashtags}
                   onChange={(e) => setIncludeHashtags(e.target.checked)}
-                  className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                  className="h-4 w-4 rounded border-zinc-300 text-[color:var(--accent)] focus:ring-[color:var(--accent-glow)]"
                 />
                 <span className="text-sm text-zinc-700 dark:text-zinc-300">Include hashtags</span>
               </label>
@@ -716,7 +716,7 @@ Example: I just finished a weekend project building a CLI tool that converts Fig
             className={`block w-full rounded-lg border bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500 ${
               isOverLimit
                 ? 'border-red-500 focus:ring-red-500'
-                : 'border-zinc-300 focus:ring-blue-500 dark:border-zinc-700'
+                : 'border-zinc-300 focus:ring-[color:var(--accent-glow)] dark:border-zinc-700'
             }`}
           />
           <div
@@ -757,7 +757,7 @@ Example: I just finished a weekend project building a CLI tool that converts Fig
             value={scheduledFor}
             onChange={(e) => setScheduledFor(e.target.value)}
             min={minDateTime}
-            className="block w-full rounded-lg border border-zinc-300 bg-white py-2 pl-10 pr-4 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            className="block w-full rounded-lg border border-zinc-300 bg-white py-2 pl-10 pr-4 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-glow)] dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
           />
         </div>
       </div>
@@ -799,7 +799,7 @@ Example: I just finished a weekend project building a CLI tool that converts Fig
           type="button"
           onClick={() => handleSubmit('publish')}
           disabled={isSubmitting}
-          className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 rounded-lg bg-[color:var(--accent)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[color:var(--accent)] disabled:opacity-50"
         >
           {isSubmitting ? (
             <Loader2 className="h-4 w-4 animate-spin" />

@@ -136,7 +136,7 @@ function ConnectFacebookPageContent() {
           <p className="text-gray-400 mb-6">{error}</p>
           <Link
             href="/dashboard"
-            className="text-blue-400 hover:text-blue-300"
+            className="text-[color:var(--accent)] hover:text-[color:var(--accent)]"
           >
             Return to Dashboard
           </Link>
@@ -167,7 +167,7 @@ function ConnectFacebookPageContent() {
 
         <div className="bg-gray-800 rounded-lg p-8">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-[color:var(--accent)] rounded-lg flex items-center justify-center">
               <FacebookIcon className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -190,7 +190,7 @@ function ConnectFacebookPageContent() {
             <select
               value={targetAppPage}
               onChange={(e) => setTargetAppPage(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-[color:var(--accent-glow)]"
             >
               <option value="">Select an app page...</option>
               {appPages.map((page) => (
@@ -215,7 +215,7 @@ function ConnectFacebookPageContent() {
                   key={page.id}
                   className={`flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition-colors ${
                     selectedPage === page.id
-                      ? 'border-blue-500 bg-blue-500/10'
+                      ? 'border-[color:var(--accent)] bg-[color:var(--accent)]/10'
                       : 'border-gray-600 hover:border-gray-500'
                   }`}
                 >
@@ -250,7 +250,7 @@ function ConnectFacebookPageContent() {
                   <div
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                       selectedPage === page.id
-                        ? 'border-blue-500 bg-blue-500'
+                        ? 'border-[color:var(--accent)] bg-[color:var(--accent-glow)]0'
                         : 'border-gray-500'
                     }`}
                   >
@@ -298,7 +298,7 @@ function ConnectFacebookPageContent() {
             <button
               onClick={handleConnect}
               disabled={!selectedPage || !targetAppPage || isConnecting}
-              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 px-6 py-3 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent-glow)]0 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isConnecting ? 'Connecting...' : 'Connect Facebook Page'}
             </button>

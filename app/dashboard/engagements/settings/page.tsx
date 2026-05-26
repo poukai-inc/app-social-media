@@ -126,7 +126,7 @@ export default function EngagementSettingsPage() {
                 onChange={(e) =>
                   setSettings({ ...settings, autoEngageEnabled: e.target.checked })
                 }
-                className="h-5 w-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                className="h-5 w-5 rounded border-zinc-300 text-[color:var(--accent)] focus:ring-[color:var(--accent-glow)]"
               />
             </label>
 
@@ -145,7 +145,7 @@ export default function EngagementSettingsPage() {
                 onChange={(e) =>
                   setSettings({ ...settings, autoReplyEnabled: e.target.checked })
                 }
-                className="h-5 w-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                className="h-5 w-5 rounded border-zinc-300 text-[color:var(--accent)] focus:ring-[color:var(--accent-glow)]"
               />
             </label>
 
@@ -164,7 +164,7 @@ export default function EngagementSettingsPage() {
                 onChange={(e) =>
                   setSettings({ ...settings, requireApproval: e.target.checked })
                 }
-                className="h-5 w-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                className="h-5 w-5 rounded border-zinc-300 text-[color:var(--accent)] focus:ring-[color:var(--accent-glow)]"
               />
             </label>
           </div>
@@ -290,7 +290,7 @@ export default function EngagementSettingsPage() {
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="ml-auto inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="ml-auto inline-flex items-center gap-2 rounded-lg bg-[color:var(--accent)] px-6 py-2.5 text-sm font-medium text-white hover:bg-[color:var(--accent)] disabled:opacity-50"
           >
             {isSaving ? (
               <>

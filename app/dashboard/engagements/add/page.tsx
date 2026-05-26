@@ -196,7 +196,7 @@ export default function AddEngagementPage() {
                 id="generateAI"
                 checked={generateAIComment}
                 onChange={(e) => setGenerateAIComment(e.target.checked)}
-                className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                className="h-4 w-4 rounded border-zinc-300 text-[color:var(--accent)] focus:ring-[color:var(--accent-glow)]"
               />
               <label htmlFor="generateAI" className="text-sm text-zinc-700 dark:text-zinc-300">
                 Generate AI comment automatically
@@ -211,7 +211,7 @@ export default function AddEngagementPage() {
           <button
             type="submit"
             disabled={isSubmitting || !postUrl.trim()}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[color:var(--accent)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[color:var(--accent)] disabled:opacity-50"
           >
             {isSubmitting ? (
               <>
@@ -270,7 +270,7 @@ export default function AddEngagementPage() {
           <button
             type="submit"
             disabled={isSubmitting || !bulkUrls.trim()}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[color:var(--accent)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[color:var(--accent)] disabled:opacity-50"
           >
             {isSubmitting ? (
               <>
@@ -314,7 +314,7 @@ export default function AddEngagementPage() {
               <div className="flex justify-end">
                 <Link
                   href="/dashboard/engagements"
-                  className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                  className="text-sm font-medium text-[color:var(--accent)] hover:text-[color:var(--accent)]"
                 >
                   View Queue →
                 </Link>

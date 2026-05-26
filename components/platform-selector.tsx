@@ -19,14 +19,14 @@ const PLATFORM_INFO: Record<PlatformType, {
   linkedin: {
     name: 'LinkedIn',
     icon: '💼',
-    color: 'bg-blue-600',
+    color: 'bg-[color:var(--accent)]',
     charLimit: 3000,
     description: 'Professional network',
   },
   facebook: {
     name: 'Facebook',
     icon: '📘',
-    color: 'bg-blue-700',
+    color: 'bg-[color:var(--accent)]',
     charLimit: 63206,
     description: 'Social network',
   },
@@ -90,7 +90,7 @@ export default function PlatformSelector({
             type="button"
             onClick={selectAll}
             disabled={disabled}
-            className="text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50"
+            className="text-xs text-[color:var(--accent)] hover:text-[color:var(--accent)] disabled:opacity-50"
           >
             Select all
           </button>
@@ -110,7 +110,7 @@ export default function PlatformSelector({
               disabled={disabled}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
                 isSelected
-                  ? 'border-blue-500 bg-blue-500/20 text-white'
+                  ? 'border-[color:var(--accent)] bg-[color:var(--accent)]/20 text-white'
                   : 'border-gray-600 bg-gray-800 text-gray-400 hover:border-gray-500'
               } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
@@ -118,7 +118,7 @@ export default function PlatformSelector({
               <span className="text-sm font-medium">{info.name}</span>
               {isSelected && (
                 <svg 
-                  className="w-4 h-4 text-blue-400" 
+                  className="w-4 h-4 text-[color:var(--accent)]" 
                   fill="currentColor" 
                   viewBox="0 0 20 20"
                 >

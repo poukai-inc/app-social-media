@@ -63,8 +63,8 @@ const statusConfig = {
   sent: { 
     label: 'Sent', 
     icon: CheckCircle, 
-    bg: 'bg-blue-100 dark:bg-blue-900', 
-    text: 'text-blue-600 dark:text-blue-400' 
+    bg: 'bg-[color:var(--surface)]', 
+    text: 'text-[color:var(--accent)]' 
   },
   got_reply: { 
     label: 'Got Reply', 
@@ -210,10 +210,10 @@ export function ICPEngagementCard({ engagement }: { engagement: ICPEngagementDat
         {/* Our Reply */}
         <div className="mt-3">
           <div className="flex items-center gap-2 mb-2">
-            <MessageCircle className="h-4 w-4 text-blue-500" />
+            <MessageCircle className="h-4 w-4 text-[color:var(--accent)]" />
             <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Our Reply:</span>
           </div>
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-900 dark:bg-blue-950/50">
+          <div className="rounded-lg border border-[color:var(--accent)] bg-[color:var(--accent-glow)] p-3">
             <p className="text-sm text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">
               {engagement.ourReply.content}
             </p>
@@ -280,7 +280,7 @@ export function ICPEngagementCard({ engagement }: { engagement: ICPEngagementDat
                     {engagement.followUp.theyFollowed ? '✓' : '○'} Followed
                   </span>
                   {engagement.followUp.conversationLength > 1 && (
-                    <span className="text-blue-600">
+                    <span className="text-[color:var(--accent)]">
                       {engagement.followUp.conversationLength} messages
                     </span>
                   )}
@@ -295,7 +295,7 @@ export function ICPEngagementCard({ engagement }: { engagement: ICPEngagementDat
                   href={engagement.targetPost.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                  className="flex items-center gap-1 text-xs text-[color:var(--accent)] hover:text-[color:var(--accent)]"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   View Original Tweet
@@ -306,7 +306,7 @@ export function ICPEngagementCard({ engagement }: { engagement: ICPEngagementDat
                   href={engagement.ourReply.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                  className="flex items-center gap-1 text-xs text-[color:var(--accent)] hover:text-[color:var(--accent)]"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   View Our Reply

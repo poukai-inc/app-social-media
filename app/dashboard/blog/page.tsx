@@ -52,7 +52,7 @@ export default function BlogRepurposePage() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)]"></div>
       </div>
     );
   }
@@ -163,7 +163,7 @@ export default function BlogRepurposePage() {
             <h1 className="text-3xl font-bold text-gray-900">Blog → LinkedIn</h1>
             <p className="text-gray-600 mt-1">Repurpose blog content into engaging posts</p>
           </div>
-          <Link href="/dashboard" className="text-blue-600 hover:text-blue-800 font-medium">
+          <Link href="/dashboard" className="text-[color:var(--accent)] hover:text-[color:var(--accent)] font-medium">
             ← Back
           </Link>
         </div>
@@ -173,7 +173,7 @@ export default function BlogRepurposePage() {
           {['input', 'analyze', 'generate', 'preview'].map((s, i) => (
             <div key={s} className="flex items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step === s ? 'bg-blue-600 text-white' :
+                step === s ? 'bg-[color:var(--accent)] text-white' :
                 ['input', 'analyze', 'generate', 'preview'].indexOf(step) > i ? 'bg-green-500 text-white' :
                 'bg-gray-200 text-gray-600'
               }`}>
@@ -205,7 +205,7 @@ export default function BlogRepurposePage() {
                 value={blogUrl}
                 onChange={(e) => setBlogUrl(e.target.value)}
                 placeholder="https://yourblog.com/post-title"
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[color:var(--accent-glow)] focus:border-transparent"
               />
             </div>
 
@@ -227,14 +227,14 @@ export default function BlogRepurposePage() {
                 onChange={(e) => setBlogContent(e.target.value)}
                 placeholder="Paste your blog post content here..."
                 rows={10}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[color:var(--accent-glow)] focus:border-transparent font-mono text-sm"
               />
             </div>
 
             <button
               onClick={handleAnalyze}
               disabled={loading || (!blogUrl && !blogContent)}
-              className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
+              className="w-full py-3 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] disabled:opacity-50 font-medium"
             >
               {loading ? 'Analyzing...' : 'Analyze Blog →'}
             </button>
@@ -258,7 +258,7 @@ export default function BlogRepurposePage() {
                 </ul>
               </div>
 
-              <p className="text-sm text-blue-600">
+              <p className="text-sm text-[color:var(--accent)]">
                 💡 Suggested: Create {analysis.suggestedPostCount} posts from this blog
               </p>
             </div>
@@ -274,8 +274,8 @@ export default function BlogRepurposePage() {
                     onClick={() => setSelectedAngle(angle)}
                     className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                       selectedAngle === angle
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-blue-300'
+                        ? 'border-[color:var(--accent)] bg-[color:var(--accent-glow)]'
+                        : 'border-gray-200 hover:border-[color:var(--accent)]'
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -284,7 +284,7 @@ export default function BlogRepurposePage() {
                         <div className="font-medium text-gray-900">
                           {angle.angle.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                         </div>
-                        <p className="text-sm text-blue-700 mt-1 italic">&ldquo;{angle.hook}&rdquo;</p>
+                        <p className="text-sm text-[color:var(--accent)] mt-1 italic">&ldquo;{angle.hook}&rdquo;</p>
                         <p className="text-sm text-gray-600 mt-2">{angle.outline}</p>
                       </div>
                     </div>
@@ -350,7 +350,7 @@ export default function BlogRepurposePage() {
                   <button
                     onClick={handleGenerate}
                     disabled={loading}
-                    className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
+                    className="flex-1 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] disabled:opacity-50 font-medium"
                   >
                     {loading ? 'Generating...' : 'Generate Post →'}
                   </button>
@@ -396,7 +396,7 @@ export default function BlogRepurposePage() {
               </div>
 
               {generatedPost.analysis.aiReasoning && (
-                <p className="mt-3 text-sm text-blue-700">
+                <p className="mt-3 text-sm text-[color:var(--accent)]">
                   🤖 {generatedPost.analysis.aiReasoning}
                 </p>
               )}
@@ -410,7 +410,7 @@ export default function BlogRepurposePage() {
                 value={editedContent}
                 onChange={(e) => setEditedContent(e.target.value)}
                 rows={15}
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[color:var(--accent-glow)] focus:border-transparent font-mono text-sm"
               />
 
               <div className="flex justify-between items-center mt-2">
@@ -436,7 +436,7 @@ export default function BlogRepurposePage() {
               </button>
               <Link
                 href="/dashboard/approvals"
-                className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-center"
+                className="flex-1 py-3 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] font-medium text-center"
               >
                 Go to Approvals
               </Link>

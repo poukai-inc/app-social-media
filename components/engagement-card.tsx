@@ -49,7 +49,7 @@ const statusConfig = {
   approved: {
     label: 'Approved',
     icon: CheckCircle,
-    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+    className: 'bg-[color:var(--surface)] text-[color:var(--accent)]',
   },
   engaged: {
     label: 'Engaged',
@@ -177,7 +177,7 @@ export function EngagementCard({ engagement }: EngagementCardProps) {
             href={engagement.postUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            className="inline-flex items-center gap-1 text-sm font-medium text-[color:var(--accent)] hover:text-[color:var(--accent)]"
           >
             <span className="truncate max-w-[300px]">{engagement.postUrl}</span>
             <ExternalLink className="h-3 w-3 flex-shrink-0" />
@@ -220,7 +220,7 @@ export function EngagementCard({ engagement }: EngagementCardProps) {
                     <button
                       onClick={handleSaveComment}
                       disabled={isLoading}
-                      className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                      className="rounded-lg bg-[color:var(--accent)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[color:var(--accent)] disabled:opacity-50"
                     >
                       Save
                     </button>

@@ -23,14 +23,14 @@ const PLATFORM_INFO: Record<PlatformType, { name: string; icon: string; color: s
   linkedin: {
     name: 'LinkedIn',
     icon: '💼',
-    color: 'text-blue-400',
-    bgColor: 'bg-blue-600',
+    color: 'text-[color:var(--accent)]',
+    bgColor: 'bg-[color:var(--accent)]',
   },
   facebook: {
     name: 'Facebook',
     icon: '📘',
-    color: 'text-blue-500',
-    bgColor: 'bg-blue-700',
+    color: 'text-[color:var(--accent)]',
+    bgColor: 'bg-[color:var(--accent)]',
   },
   twitter: {
     name: 'Twitter / X',

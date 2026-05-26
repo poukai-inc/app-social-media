@@ -243,7 +243,7 @@ export default function NewPagePage() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)]"></div>
       </div>
     );
   }
@@ -277,7 +277,7 @@ export default function NewPagePage() {
                   s < step
                     ? 'bg-green-500 text-white'
                     : s === step
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-[color:var(--accent)] text-white'
                     : 'bg-gray-200 dark:bg-zinc-700 text-gray-500 dark:text-gray-400'
                 }`}
               >
@@ -300,7 +300,7 @@ export default function NewPagePage() {
           {step === 1 && (
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <User className="h-5 w-5 text-blue-600" />
+                <User className="h-5 w-5 text-[color:var(--accent)]" />
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   Create Your Page
                 </h2>
@@ -319,13 +319,13 @@ export default function NewPagePage() {
                   }}
                   className={`flex-1 p-4 rounded-lg border-2 transition-colors ${
                     creationMode === 'select'
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
+                      ? 'border-[color:var(--accent)] bg-[color:var(--accent-glow)]'
                       : 'border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                      <User className="h-5 w-5 text-blue-600" />
+                    <div className="w-10 h-10 rounded-full bg-[color:var(--surface)] flex items-center justify-center">
+                      <User className="h-5 w-5 text-[color:var(--accent)]" />
                     </div>
                     <div className="text-left">
                       <div className="font-medium text-gray-900 dark:text-white">Connect LinkedIn</div>
@@ -340,7 +340,7 @@ export default function NewPagePage() {
                   }}
                   className={`flex-1 p-4 rounded-lg border-2 transition-colors ${
                     creationMode === 'manual'
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
+                      ? 'border-[color:var(--accent)] bg-[color:var(--accent-glow)]'
                       : 'border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600'
                   }`}
                 >
@@ -373,7 +373,7 @@ export default function NewPagePage() {
                       value={manualPageName}
                       onChange={(e) => setManualPageName(e.target.value)}
                       placeholder="e.g., My Brand, Tech Insights, Personal Blog"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[color:var(--accent-glow)] focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -385,7 +385,7 @@ export default function NewPagePage() {
                       onChange={(e) => setManualPageDescription(e.target.value)}
                       placeholder="What is this page about?"
                       rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[color:var(--accent-glow)] focus:border-transparent resize-none"
                     />
                   </div>
                 </div>
@@ -404,7 +404,7 @@ export default function NewPagePage() {
                       </p>
                       <button
                         onClick={() => setCreationMode('manual')}
-                        className="text-blue-600 hover:text-blue-700 font-medium"
+                        className="text-[color:var(--accent)] hover:text-[color:var(--accent)] font-medium"
                       >
                         Create page manually →
                       </button>
@@ -417,7 +417,7 @@ export default function NewPagePage() {
                           onClick={() => setSelectedAccount(account)}
                           className={`w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-colors text-left ${
                             selectedAccount?.id === account.id
-                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
+                              ? 'border-[color:var(--accent)] bg-[color:var(--accent-glow)]'
                               : 'border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600'
                           }`}
                         >
@@ -449,7 +449,7 @@ export default function NewPagePage() {
                             </div>
                           </div>
                           {selectedAccount?.id === account.id && (
-                            <Check className="h-5 w-5 text-blue-600" />
+                            <Check className="h-5 w-5 text-[color:var(--accent)]" />
                           )}
                         </button>
                       ))}
@@ -464,7 +464,7 @@ export default function NewPagePage() {
           {step === 2 && (
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="h-5 w-5 text-blue-600" />
+                <Sparkles className="h-5 w-5 text-[color:var(--accent)]" />
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   Content Strategy
                 </h2>
@@ -538,7 +538,7 @@ export default function NewPagePage() {
                     />
                     <button
                       onClick={addTopic}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
                     >
                       Add
                     </button>
@@ -547,12 +547,12 @@ export default function NewPagePage() {
                     {contentStrategy.topics.map((topic) => (
                       <span
                         key={topic}
-                        className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm flex items-center gap-1"
+                        className="px-3 py-1 bg-[color:var(--surface)] text-[color:var(--accent)] rounded-full text-sm flex items-center gap-1"
                       >
                         {topic}
                         <button
                           onClick={() => removeTopic(topic)}
-                          className="hover:text-blue-900 dark:hover:text-blue-100"
+                          className="hover:text-[color:var(--accent)]"
                         >
                           ×
                         </button>
@@ -573,7 +573,7 @@ export default function NewPagePage() {
                         onClick={() => toggleAngle(angle.id)}
                         className={`p-3 rounded-lg border-2 text-left transition-colors ${
                           contentStrategy.preferredAngles.includes(angle.id)
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
+                            ? 'border-[color:var(--accent)] bg-[color:var(--accent-glow)]'
                             : 'border-gray-200 dark:border-zinc-700 hover:border-gray-300'
                         }`}
                       >
@@ -619,7 +619,7 @@ export default function NewPagePage() {
           {step === 3 && (
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Calendar className="h-5 w-5 text-blue-600" />
+                <Calendar className="h-5 w-5 text-[color:var(--accent)]" />
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   Posting Schedule
                 </h2>
@@ -659,7 +659,7 @@ export default function NewPagePage() {
                         onClick={() => toggleDay(index)}
                         className={`flex-1 py-2 rounded-lg border-2 font-medium text-sm transition-colors ${
                           schedule.preferredDays.includes(index)
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
+                            ? 'border-[color:var(--accent)] bg-[color:var(--accent-glow)] text-[color:var(--accent)]'
                             : 'border-gray-200 dark:border-zinc-700 text-gray-500 hover:border-gray-300'
                         }`}
                       >
@@ -683,7 +683,7 @@ export default function NewPagePage() {
                     />
                     <button
                       onClick={addTime}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
                     >
                       Add
                     </button>
@@ -756,7 +756,7 @@ export default function NewPagePage() {
           {step === 4 && (
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Target className="h-5 w-5 text-blue-600" />
+                <Target className="h-5 w-5 text-[color:var(--accent)]" />
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   Review & Create
                 </h2>
@@ -780,7 +780,7 @@ export default function NewPagePage() {
                         unoptimized
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-[color:var(--accent-glow)]0 flex items-center justify-center">
                         {selectedAccount?.type === 'personal' ? (
                           <User className="h-5 w-5 text-white" />
                         ) : (
@@ -844,7 +844,7 @@ export default function NewPagePage() {
             <button
               onClick={() => setStep(step + 1)}
               disabled={!canProceed()}
-              className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-6 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
               <ArrowRight className="h-4 w-4" />

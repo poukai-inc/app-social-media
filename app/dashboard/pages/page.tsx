@@ -81,7 +81,7 @@ export default function PagesPage() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)]"></div>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export default function PagesPage() {
           </div>
           <Link
             href="/dashboard/pages/new"
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 bg-[color:var(--accent)] text-white px-4 py-2 rounded-lg hover:bg-[color:var(--accent)] transition-colors"
           >
             <Plus className="h-4 w-4" />
             Add Page
@@ -109,8 +109,8 @@ export default function PagesPage() {
         {/* Pages Grid */}
         {pages.length === 0 ? (
           <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 p-12 text-center">
-            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+            <div className="w-16 h-16 bg-[color:var(--surface)] rounded-full flex items-center justify-center mx-auto mb-4">
+              <FileText className="h-8 w-8 text-[color:var(--accent)]" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               No pages configured yet
@@ -120,7 +120,7 @@ export default function PagesPage() {
             </p>
             <Link
               href="/dashboard/pages/new"
-              className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center gap-2 bg-[color:var(--accent)] text-white px-6 py-3 rounded-lg hover:bg-[color:var(--accent)] transition-colors"
             >
               <Plus className="h-5 w-5" />
               Add Your First Page
@@ -135,12 +135,12 @@ export default function PagesPage() {
             {/* Add Page Card */}
             <Link
               href="/dashboard/pages/new"
-              className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border-2 border-dashed border-gray-300 dark:border-zinc-700 p-6 flex flex-col items-center justify-center min-h-[280px] hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-zinc-800 transition-colors group"
+              className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border-2 border-dashed border-gray-300 dark:border-zinc-700 p-6 flex flex-col items-center justify-center min-h-[280px] hover:border-[color:var(--accent)] dark:hover:border-[color:var(--accent)] hover:bg-[color:var(--accent-glow)] dark:hover:bg-zinc-800 transition-colors group"
             >
-              <div className="w-12 h-12 bg-gray-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-3 group-hover:bg-blue-100 dark:group-hover:bg-blue-900 transition-colors">
-                <Plus className="h-6 w-6 text-gray-400 group-hover:text-blue-600" />
+              <div className="w-12 h-12 bg-gray-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-3 group-hover:bg-[color:var(--surface)] dark:group-hover:bg-[color:var(--accent)] transition-colors">
+                <Plus className="h-6 w-6 text-gray-400 group-hover:text-[color:var(--accent)]" />
               </div>
-              <span className="text-gray-600 dark:text-gray-400 font-medium group-hover:text-blue-600">
+              <span className="text-gray-600 dark:text-gray-400 font-medium group-hover:text-[color:var(--accent)]">
                 Add Another Page
               </span>
             </Link>
@@ -207,7 +207,7 @@ function PageCard({ page }: { page: Page }) {
             {page.contentStrategy.topics.slice(0, 3).map((topic) => (
               <span
                 key={topic}
-                className="px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded"
+                className="px-2 py-0.5 text-xs bg-[color:var(--surface)] text-[color:var(--accent)] rounded"
               >
                 {topic}
               </span>
@@ -228,7 +228,7 @@ function PageCard({ page }: { page: Page }) {
           <div className="text-xs text-gray-500">Published</div>
         </div>
         <div>
-          <div className="text-lg font-semibold text-blue-600">{scheduledPosts}</div>
+          <div className="text-lg font-semibold text-[color:var(--accent)]">{scheduledPosts}</div>
           <div className="text-xs text-gray-500">Scheduled</div>
         </div>
         <div>
@@ -260,7 +260,7 @@ function PageCard({ page }: { page: Page }) {
           </Link>
           <Link
             href={`/dashboard/pages/${page._id}`}
-            className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 bg-[color:var(--accent)] text-white text-sm rounded-lg hover:bg-[color:var(--accent)] transition-colors"
           >
             View
             <ChevronRight className="h-4 w-4" />

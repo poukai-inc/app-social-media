@@ -23,14 +23,14 @@ export default async function Home() {
       {/* Hero Section */}
       <section className="flex flex-1 flex-col items-center justify-center px-4 py-16 text-center">
         <div className="mx-auto max-w-3xl">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)] bg-[color:var(--accent-glow)] px-4 py-2 text-sm font-medium text-[color:var(--accent)]">
             <Linkedin className="h-4 w-4" />
             LinkedIn Automation Made Simple
           </div>
           
           <h1 className="text-4xl font-bold tracking-tight text-zinc-900 sm:text-5xl md:text-6xl dark:text-zinc-100">
             Schedule & Automate Your{' '}
-            <span className="text-blue-600">LinkedIn Posts</span>
+            <span className="text-[color:var(--accent)]">LinkedIn Posts</span>
           </h1>
           
           <p className="mt-6 text-lg text-zinc-600 dark:text-zinc-400">
@@ -41,7 +41,7 @@ export default async function Home() {
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
               href="/login"
-              className="flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-blue-700"
+              className="flex items-center gap-2 rounded-xl bg-[color:var(--accent)] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[color:var(--accent)]"
             >
               <Linkedin className="h-5 w-5" />
               Get Started Free
@@ -63,8 +63,8 @@ export default async function Home() {
 
           <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-8 dark:border-zinc-800 dark:bg-zinc-950">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900">
-                <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[color:var(--surface)]">
+                <Calendar className="h-6 w-6 text-[color:var(--accent)]" />
               </div>
               <h3 className="mt-4 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
                 Schedule Posts
@@ -148,7 +148,7 @@ export default async function Home() {
           </p>
           <Link
             href="/login"
-            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-blue-700"
+            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[color:var(--accent)] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[color:var(--accent)]"
           >
             <Linkedin className="h-5 w-5" />
             Connect LinkedIn

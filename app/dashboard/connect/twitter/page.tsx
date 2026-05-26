@@ -111,7 +111,7 @@ function ConnectTwitterPageContent() {
           <p className="text-gray-400 mb-6">{error}</p>
           <Link
             href="/dashboard"
-            className="text-blue-400 hover:text-blue-300"
+            className="text-[color:var(--accent)] hover:text-[color:var(--accent)]"
           >
             Return to Dashboard
           </Link>

@@ -32,9 +32,9 @@ import { PLATFORM_ICONS } from '@/components/icons/platforms';
 const platformIcons = PLATFORM_ICONS;
 
 const platformColors: Record<string, string> = {
-  facebook: 'text-blue-600',
+  facebook: 'text-[color:var(--accent)]',
   twitter: 'text-zinc-900 dark:text-zinc-100',
-  linkedin: 'text-blue-700',
+  linkedin: 'text-[color:var(--accent)]',
   instagram: 'text-pink-600',
 };
 
@@ -89,7 +89,7 @@ const statusConfig = {
   scheduled: {
     label: 'Scheduled',
     icon: Clock,
-    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+    className: 'bg-[color:var(--surface)] text-[color:var(--accent)]',
   },
   published: {
     label: 'Published',

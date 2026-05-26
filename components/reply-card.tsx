@@ -46,7 +46,7 @@ const statusConfig = {
   approved: {
     label: 'Approved',
     icon: CheckCircle,
-    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+    className: 'bg-[color:var(--surface)] text-[color:var(--accent)]',
   },
   replied: {
     label: 'Replied',
@@ -213,7 +213,7 @@ export function ReplyCard({ reply }: ReplyCardProps) {
                     <button
                       onClick={handleSaveReply}
                       disabled={isLoading}
-                      className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                      className="rounded-lg bg-[color:var(--accent)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[color:var(--accent)] disabled:opacity-50"
                     >
                       Save
                     </button>

@@ -57,7 +57,7 @@ export default async function DashboardPage() {
         </div>
         <Link
           href="/dashboard/create"
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+          className="inline-flex items-center gap-2 rounded-lg bg-[color:var(--accent)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[color:var(--accent)]"
         >
           <Plus className="h-4 w-4" />
           Create Post
@@ -94,8 +94,8 @@ export default async function DashboardPage() {
         </div>
         <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900">
-              <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <div className="rounded-lg bg-[color:var(--surface)] p-2">
+              <Clock className="h-5 w-5 text-[color:var(--accent)]" />
             </div>
             <div>
               <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
@@ -149,7 +149,7 @@ export default async function DashboardPage() {
             </p>
             <Link
               href="/dashboard/create"
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[color:var(--accent)] px-4 py-2 text-sm font-medium text-white hover:bg-[color:var(--accent)]"
             >
               <Plus className="h-4 w-4" />
               Create Post

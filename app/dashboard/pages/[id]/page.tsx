@@ -356,7 +356,7 @@ export default function PageDashboard() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)]"></div>
       </div>
     );
   }
@@ -417,7 +417,7 @@ export default function PageDashboard() {
                       key={conn.platform}
                       className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                         conn.platform === 'linkedin'
-                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                          ? 'bg-[color:var(--surface)] text-[color:var(--accent)]'
                           : conn.platform === 'facebook'
                           ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'
                           : 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400'
@@ -457,7 +457,7 @@ export default function PageDashboard() {
               </button>
               <Link
                 href={`/dashboard/create?pageId=${page._id}`}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="flex items-center gap-2 px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
               >
                 <Plus className="h-4 w-4" />
                 Create Post
@@ -521,13 +521,13 @@ export default function PageDashboard() {
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   ICP Twitter Engagement
                 </h2>
-                <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs dark:bg-blue-900 dark:text-blue-300">
+                <span className="px-2 py-0.5 rounded-full bg-[color:var(--surface)] text-[color:var(--accent)] text-xs">
                   30 days
                 </span>
               </div>
               <Link
                 href="/dashboard/engagements/icp"
-                className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+                className="flex items-center gap-1 text-sm text-[color:var(--accent)] hover:text-[color:var(--accent)]"
               >
                 View All
                 <ArrowRight className="h-4 w-4" />
@@ -640,7 +640,7 @@ export default function PageDashboard() {
             </h2>
             <Link
               href={`/dashboard/pages/${page._id}/settings`}
-              className="text-sm text-blue-600 hover:text-blue-700"
+              className="text-sm text-[color:var(--accent)] hover:text-[color:var(--accent)]"
             >
               Edit
             </Link>
@@ -679,7 +679,7 @@ export default function PageDashboard() {
                   page.contentStrategy.topics.map((topic) => (
                     <span
                       key={topic}
-                      className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-sm"
+                      className="px-2 py-0.5 bg-[color:var(--surface)] text-[color:var(--accent)] rounded text-sm"
                     >
                       {topic}
                     </span>
@@ -738,7 +738,7 @@ export default function PageDashboard() {
 
           {postsLoading ? (
             <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)] mx-auto"></div>
             </div>
           ) : posts.length === 0 ? (
             <div className="p-8 text-center">
@@ -778,7 +778,7 @@ export default function PageDashboard() {
                             post.status === 'published'
                               ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
                               : post.status === 'scheduled'
-                              ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                              ? 'bg-[color:var(--surface)] text-[color:var(--accent)]'
                               : post.status === 'failed'
                               ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
                               : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300'
@@ -875,7 +875,7 @@ export default function PageDashboard() {
                       )}
                       <button
                         onClick={() => setSelectedPost(post)}
-                        className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                        className="p-2 text-gray-400 hover:text-[color:var(--accent)]"
                         title="View full post"
                       >
                         <Expand className="h-4 w-4" />
@@ -919,7 +919,7 @@ export default function PageDashboard() {
             <div className="p-4 border-t border-gray-200 dark:border-zinc-800 text-center">
               <Link
                 href={`/dashboard/scheduled?pageId=${page._id}`}
-                className="text-blue-600 hover:text-blue-700 text-sm"
+                className="text-[color:var(--accent)] hover:text-[color:var(--accent)] text-sm"
               >
                 View all posts →
               </Link>
@@ -940,7 +940,7 @@ export default function PageDashboard() {
                     selectedPost.status === 'published'
                       ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
                       : selectedPost.status === 'scheduled'
-                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                      ? 'bg-[color:var(--surface)] text-[color:var(--accent)]'
                       : selectedPost.status === 'failed'
                       ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
                       : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300'
@@ -999,7 +999,7 @@ export default function PageDashboard() {
                           href={result.postUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1"
+                          className="text-[color:var(--accent)] hover:text-[color:var(--accent)] text-sm flex items-center gap-1"
                         >
                           View <ExternalLink className="h-3 w-3" />
                         </a>
@@ -1042,7 +1042,7 @@ export default function PageDashboard() {
                 )}
                 <Link
                   href={`/dashboard/edit/${selectedPost._id}`}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
+                  className="px-4 py-2 bg-[color:var(--accent)] hover:bg-[color:var(--accent)] text-white rounded-lg flex items-center gap-2"
                 >
                   <Edit3 className="h-4 w-4" />
                   Edit Post
