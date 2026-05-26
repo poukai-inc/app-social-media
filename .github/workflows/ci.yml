@@ -6,6 +6,12 @@ on:
   push:
     branches: [main]
 
+# Auth for @poukai-inc/* packages from GitHub Packages.
+# Repo .npmrc references ${NPM_TOKEN}; this exports it to every step so
+# pnpm install can resolve the scoped registry token.
+env:
+  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
 # Cancel in-progress runs on the same branch when a new push lands
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
