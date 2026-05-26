@@ -1,0 +1,1646 @@
+# @poukai-inc/ui — design system rules for LLM consumers
+
+This file is the authoritative brand contract for `@poukai-inc/ui`. Hand-authored by `poukai-design`. Takes precedence over inline comments, story descriptions, or any generated output (including `dist/llms.txt`). Read before writing, reviewing, or modifying any component, token, or style in this repository.
+
+Consumed via: `cat node_modules/@poukai-inc/ui/dist/llms-full.txt`
+
+---
+
+## Token semantics
+
+All tokens live in `src/tokens/tokens.css` on `:root`. Owned exclusively by `poukai-design`. Engineers read tokens; they never modify the token file. If an implementation requires a value with no token, work stops until `poukai-design` adds it.
+
+### Color
+
+- `--bg: #fbfbfd` — Page background (apple.com canvas). NEVER pure `#FFFFFF`; the off-white value gives elevation headroom above the page and allows clean dark-mode inversion. The only surfaces that should be `--bg` are the literal page canvas and elements that need to feel "on the page" (not elevated above it).
+- `--bg-elevated: #ffffff` — Front-most elevation layer. Reserved exclusively for popovers, sheets, modals, and dialogs. This is the ONLY surface where pure `#FFFFFF` is permitted — it reads as "elevated above the page" precisely because the page is `#FBFBFD`. NEVER use `--bg-elevated` for page background or content sections.
+- `--surface: #f5f5f7` — Recessed elevation (one step below `--bg`). Used for code blocks, quote backgrounds, card fills (RoleCard). NEVER use as body text. NEVER use as a section divider. `--surface` recedes below the page canvas; `--bg-elevated` rises above it.
+- `--surface-section: #f8f8fa` — Page-section recessed background. Use for full-width alternating section bands on editorial pages only. Subtler than `--surface` (halfway between `--bg` and `--surface`). NEVER use for inline elements (code blocks, card fills) — use `--surface` for those. NEVER stack adjacent to `--surface` on the same page. Maximum 5 alternating bands per page.
+- `--fg: #1d1d1f` — Primary text, wordmark fill, sigil stroke, and the `primary` button background (inverts: `--fg` fill, `--bg` text). The only color allowed for body paragraph text. NEVER use decoratively as a background wash.
+- `--fg-muted: #6e6e73` — Secondary text: captions, footer copy, eyebrow labels, lede paragraphs, hiredBy lines, Stat provenance. NEVER use for primary calls to action. NEVER use as a disabled-state substitute.
+- `--hairline: #d2d2d7` — Dividers, 1px rules, borders. Always applied as a border/border-top/border-bottom, NEVER as a background. Never render thicker than `--hairline-w: 1px`.
+- `--hairline-soft: #e5e5ea` — Quieter decorative separator. Sits between `--hairline` and `--surface` in the neutral ramp. Use where a hairline would be too assertive — e.g. between adjacent tiles that already share a surface background. NEVER use for interactive borders or focus rings.
+- `--accent: #0071e3` — The brand’s single accent. Roles: status dot fill, link underline-on-hover (the accent layer grows over the resting hairline underline), focus rings. NEVER use as a surface fill, body text color, or button background. It is a signal color: interactivity and focus only. `--accent` is NEVER visible in a resting state — it appears only on hover (animated underline) and on focus-visible (ring).
+- `--accent-glow: rgba(0, 113, 227, 0.18)` — Transparent halo for the available status dot and `::selection`. NEVER use as a container fill or hover state. Never stack it.
+- `--bg-warm-accent: #c0452c` — Editorial warm-accent band background (full-bleed orange). Restraint rules in `meta/brand.md`: at most one warm band per page; never adjacent to another `--bg-warm-accent` band. NEVER use for inline elements or component fills.
+- `--fg-on-warm: #fdf5f0` — Primary text on warm bands. Warm-tinted near-white. The only text color permitted as primary copy over `--bg-warm-accent`. NEVER use over `--bg`.
+- `--fg-on-warm-muted: #f5ddd0` — Supporting text on warm bands. Use sparingly; see `meta/brand.md` for the contrast ceiling. NEVER use as primary copy.
+
+**Status color tier — product feedback only (NOT editorial brand).** Nine tokens for success/error/warning state surfaces (Banner tones, Form invalid borders, future Toast). Distinct from `--bg-warm-accent` (editorial brand orange) by hue: success is green, danger is true red, warning is amber/ochre.
+
+- `--success: #248a3d` — Apple systemGreen light. Success confirmations, positive feedback. WCAG AA on `--bg` (#FBFBFD): ~4.7:1. NEVER use as surface fill or non-confirmation indicator.
+- `--bg-success: #f0faf3` — Tinted page-tier surface (subtle green). Used by Banner success background. NEVER substitute for `--bg`.
+- `--fg-on-success: #0d3d1e` — Deep forest for text on `--bg-success` (~10.5:1). Use only on `--bg-success` surfaces.
+- `--danger: #b3261e` — True red. Used by Form invalid border (`Input`/`Textarea`/`Field` `[aria-invalid="true"]`), Banner danger left-rule, future destructive button variant. WCAG AA on `--bg` (#FBFBFD): ~7.0:1. NEVER use as surface fill, body text, or non-error indicator.
+- `--bg-danger: #fef0f0` — Tinted page-tier surface (subtle pink). Used by Banner danger background. NEVER use as primary page background; this is reserved for the danger-banner surface.
+- `--fg-on-danger: #5c1310` — Deep oxblood for text on `--bg-danger` (~9.1:1). Use only on `--bg-danger` surfaces.
+- `--warning: #b46100` — Amber/ochre. Used by Banner warning left-rule, future caution indicators. Distinct from `--bg-warm-accent` (#C0452C, brick-red editorial) — different hue family. WCAG AA on `--bg` (#FBFBFD): ~4.6:1.
+- `--bg-warning: #fff7e6` — Tinted page-tier surface (light cream). Used by Banner warning background. NEVER substitute for `--bg-warm-accent`; the warm-accent band is editorial, this is product feedback.
+- `--fg-on-warning: #4a2900` — Deep brown for text on `--bg-warning` (~10.2:1). Use only on `--bg-warning` surfaces.
+
+**Elevation rhythm.** Four steps, low to high: `--surface (#F5F5F7) < --surface-section (#F8F8FA) < --bg (#FBFBFD) < --bg-elevated (#FFFFFF)`. Use `--surface` for recessed inline elements (code blocks, quote blocks, card fills). Use `--surface-section` for full-width alternating section bands on editorial pages — this is the only tier permitted as a section divider. Use `--bg` for the page canvas and page-level content. Use `--bg-elevated` for overlays that must read as front-most. Never skip steps. Never use `--surface` as a section divider.
+
+**Never pure edges.** `--fg` is never `#000000`; `--bg` is never pure `#FFFFFF`. Both ends of the neutral ramp pull in slightly — this gives elevation headroom on the page and ensures the palette inverts cleanly to dark mode without losing its restraint. Treat any spec or hardcoded value that implies a pure edge as a brand-level escalation.
+
+### Dark mode
+
+Dark mode is implemented as a `@media (prefers-color-scheme: dark)` block appended to `src/tokens/tokens.css`. It overrides every color token on `:root`. No component CSS changes — every component that consumes `var(--token)` references gains dark mode automatically. Full rationale in `meta/design/dark-mode.md`.
+
+**Philosophy.** Dark mode is not an inversion of the light palette. It is a parallel surface stack: backgrounds darken progressively toward black (the floor); foregrounds brighten toward near-white (never pure). The elevation rhythm inverts direction — surfaces RISE through lighter grays as they elevate, rather than toward white. `html { color-scheme: light dark }` is declared so browser-native controls (scrollbars, form inputs, selection) match the token-driven scheme.
+
+**Dark-mode token table.**
+
+| Token | Dark value | Notes |
+|---|---|---|
+| `--bg` | `#000000` | Page floor. Apple canonical dark-mode canvas. |
+| `--bg-elevated` | `#1C1C1E` | Popovers, sheets, dialogs. Apple iOS `systemBackground` dark. |
+| `--surface` | `#1C1C1E` | Recessed inline blocks. Same raw value as `--bg-elevated`; semantically distinct by context. |
+| `--surface-section` | `#161618` | Section bands. Slightly lighter than `--bg`, preserving the recessed-band rhythm. |
+| `--fg` | `#F5F5F7` | Primary text. Near-white (10/255 off pure). Contrast on `--bg`: **19.58:1** (AAA). |
+| `--fg-muted` | `#86868B` | Secondary text. Apple `secondaryLabel` dark. Contrast on `--bg`: **6.10:1** (AA). |
+| `--hairline` | `#2C2C2E` | Dividers. Apple `separator` dark value. |
+| `--hairline-soft` | `#3a3a3c` | Quieter decorative separator in dark mode — sits between `--hairline` and `--surface` in the dark neutral ramp. |
+| `--accent` | `#0A84FF` | Links, focus rings. Apple `systemBlue` dark. Contrast on `--bg`: **5.86:1** (AA; ≥3:1 required for non-text). |
+| `--accent-glow` | `rgba(10,132,255,0.24)` | Halo / selection. Higher opacity compensates for dark surface absorption. |
+| `--bg-warm-accent` | `#8A2E1C` | Editorial band — dimmed to ~55% luminance of light value ("deep ember"). |
+| `--fg-on-warm` | `#FDF5F0` | Unchanged. Contrast on dark `--bg-warm-accent`: **7.75:1** (AAA). |
+| `--fg-on-warm-muted` | `#D6B9A8` | Contrast on dark `--bg-warm-accent`: **~4.8:1** (AA). |
+| `--danger` | `#FF453A` | Apple `systemRed` dark. |
+| `--bg-danger` | `#1C0A0A` | Near-black, red undertone. |
+| `--fg-on-danger` | `#FFB4B0` | Contrast on `--bg-danger`: **11.63:1** (AAA). |
+| `--success` | `#30D158` | Apple `systemGreen` dark. Contrast on `--bg`: ~10.9:1 (AAA). |
+| `--bg-success` | `#041A09` | Near-black, green undertone. |
+| `--fg-on-success` | `#A8F0BE` | Soft mint. Contrast on `--bg-success`: ~13.1:1 (AAA). |
+| `--warning` | `#FF9F0A` | Apple `systemOrange` dark. |
+| `--bg-warning` | `#1C1408` | Near-black, amber undertone. |
+| `--fg-on-warning` | `#FFD6A0` | Contrast on `--bg-warning`: **13.74:1** (AAA). |
+
+**Contrast budget (all met).**
+
+| Pair | Ratio | Threshold | Result |
+|---|---|---|---|
+| `--fg` on `--bg` | 19.58:1 | 7:1 (AAA body) | AAA |
+| `--fg-muted` on `--bg` | 6.10:1 | 4.5:1 (AA normal) | AA |
+| `--accent` on `--bg` | 5.86:1 | 3:1 (non-text) | AA normal |
+| `--fg-on-warm` on `--bg-warm-accent` | 7.75:1 | 4.5:1 | AAA |
+| `--fg-on-warm-muted` on `--bg-warm-accent` | ~4.8:1 | 4.5:1 | AA |
+| `--fg-on-success` on `--bg-success` | ~13.1:1 | 4.5:1 | AAA |
+| `--fg-on-danger` on `--bg-danger` | 11.63:1 | 4.5:1 | AAA |
+| `--fg-on-warning` on `--bg-warning` | 13.74:1 | 4.5:1 | AAA |
+
+**Component audit.** All shipped atoms, molecules, and organisms consume only `var(--token)` references and gain dark mode for free. One known exception: `Dialog.module.css` scrim (`rgb(0 0 0 / 0.4)`) is intentionally inline per its spec — acceptable in dark mode but flagged for future opacity review.
+
+### Typography
+
+- `--font-serif: "Instrument Serif", Georgia, …` — Editorial display face. Used for h1, h2, RoleCard titles, Principle titles, FailureMode titles, Stat numeral. NEVER use for UI chrome.
+- `--font-sans: "Geist", -apple-system, …` — Primary UI face. All body copy, navigation, buttons, captions, badges, eyebrows. Self-hosted in src/tokens/fonts/. NEVER substitute another sans-serif.
+- `--font-mono: "Geist Mono", ui-monospace, …` — Used for Stat source lines and RoleCard eyebrow labels. Encodes "reference" or "label" semantics.
+- `--fs-tagline: clamp(2.25rem, 1.5rem + 3.5vw, 4.25rem)` (36-68px) — The h1 display scale. Used exactly once per page for the Hero title.
+- `--fs-tagline-intimate: clamp(2rem, 1.25rem + 2.5vw, 3.25rem)` (32-52px) — Hero title at `size="intimate"`. Use only inside the Hero molecule. Never use directly on `h1` outside Hero context.
+- `--fs-statement: clamp(1.75rem, 1.25rem + 2vw, 2.75rem)` (28-44px) — Italic-serif editorial Statement block. Sits between `h2` and `--fs-tagline-intimate`. Used only by the `<Statement>` molecule; not a heading replacement and does not emit any heading element.
+- `--fs-pull: clamp(1.25rem, 1rem + 1vw, 1.625rem)` (20-26px) — Inline editorial pull-quote accent. Above `--fs-body`, below `--fs-statement`. Used only by the `<Pull>` molecule. Fills the gap between body and Statement; a distinct semantic rung with reuse potential for future inline callout components. No `size` variant — one scale carries.
+- `--fs-body: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem)` (17-19px) — Primary reading size.
+- `--fs-meta: 0.875rem` (14px) — Secondary text: captions, nav labels, badge text, hiredBy lines.
+- `--fs-micro: 0.75rem` (12px) — Uppercase labels only. Always paired with letter-spacing: 0.04em and text-transform: uppercase.
+- `--fs-stat: clamp(2.75rem, 2rem + 3vw, 4.5rem)` (44-72px) — Stat numeral at size="md".
+- `--fs-stat-large: clamp(3.5rem, 2.25rem + 5vw, 6rem)` (56-96px) — Stat numeral at size="lg". One per section at most.
+- `--tracking-stat: -0.015em` — Negative letter-spacing for display numerals in Stat only.
+- `--tracking-micro: 0.04em` — Canonical tracking for micro/uppercase labels. Used by `.micro` global class, `Stat` source line, and `Hero` eyebrow (variant="no-title"). Always paired with `text-transform: uppercase` and `--fs-micro`.
+- `--tracking-eyebrow: 0.06em` — Canonical letter-spacing for all Eyebrow labels. Used by `<Eyebrow>`, `RoleCard` eyebrow, `FieldNote` label. At `--fs-meta` (14px) = 0.84px per letter — enough to communicate uppercase structure without tipping airy.
+- `--tracking-numeric: 0.08em` — Wider tracking for sequential numeric markers. Used by `FailureMode` index (`.index`). Slightly wider than eyebrow tracking to visually separate reference labels from editorial labels.
+- `--lh-body: 1.55` — Canonical body line-height. Applied to global `body`, `RoleCard` body, `Statement` supporting, `FieldNote` body, `LinkCard` body, `FeatureCard` body, `TeamCard` bio, `Dialog` description and body. The default body reading rhythm.
+- `--lh-body-relaxed: 1.6` — Relaxed body line-height for longer-form editorial prose. Applied to `Principle` content and `FailureMode` body — intentionally looser than `--lh-body` to give the longer editorial paragraphs more air. Do not use for UI chrome or short card copy.
+- `--lh-meta: 1.2` — Line-height for meta/eyebrow-scale text. First named line-height token in the system, scoped to the meta register. Matches the value already used on `h2`, `h3`, and `.numeral` throughout the token file.
+- `--fs-card-title: clamp(1.5rem, 1.15rem + 1.2vw, 2rem)` (24-32px) — Card-title rung. Shared by `<RoleCard>`, `<Principle>`, `<FailureMode>` titles. Always rendered in `--font-serif`, `font-weight: 400`. Do NOT use as a heading-level replacement; the title element semantics still come from the consuming page.
+
+### Spacing (4px base grid)
+
+- `--space-1`: 0.25rem (4px) — Tight: icon-to-label gap
+- `--space-2`: 0.5rem (8px) — Inline gap: eyebrow-to-title
+- `--space-3`: 0.75rem (12px) — Badge dot-to-text, Stat column gap
+- `--space-4`: 1rem (16px) — Body paragraph margin, card internal rhythm
+- `--space-6`: 1.5rem (24px) — Hero status-to-title, nav gap, card padding tier
+- `--space-8`: 2rem (32px) — Hero title-to-lede, Principle padding
+- `--space-10`: 2.5rem (40px) — Editorial bump above `--space-8` (h1 desktop bottom margin, Hero CTA desktop top margin, FailureMode top padding)
+- `--space-12`: 3rem (48px) — Principle desktop padding, main content top
+- `--space-16`: 4rem (64px) — Large section gaps
+- `--space-24`: 6rem (96px) — Main content bottom padding
+- `--space-32`: 8rem (128px) — Maximum editorial breathing room
+
+Other gaps in the scale (--space-5, --space-7, --space-9, --space-11, etc.) do not exist. NEVER use raw pixel values.
+
+### Layout
+
+- `--page-pad: clamp(1.5rem, 2vw + 1rem, 3rem)` — Horizontal padding for SiteShell header/footer. The only token that governs the outer page edge.
+- `--content-max: 64rem` (1024px) — Maximum width of the main content column. NEVER exceed in the main column layout.
+- `--hero-max: 38rem` (608px) — Maximum width of the Hero text column. Applies at all widths. NEVER override with a wider value.
+- `--hero-illustration-max: 25rem` (400px) — Maximum width of the Hero illustration column when the `illustration` slot is active. Applies above the 720px breakpoint; the illustration column is hidden below that.
+
+### Motion
+
+- `--easing: cubic-bezier(0.16, 1, 0.3, 1)` — Expo-out for entrance animations.
+- `--easing-link: cubic-bezier(0.2, 0, 0, 1)` — Link underline grow animation.
+- `--dur-press: 80ms` — Tactile click/press feedback (button `:active` transform, immediate-response interactions). Deliberately shorter than `--dur-fast` so the press lands without lag.
+- `--dur-fast: 180ms` — Micro-interactions.
+- `--dur-mid: 240ms` — Standard transition.
+- `--dur-slow: 600ms` — Entrance animations.
+- `--dur-pulse: 1800ms` — `<StatusBadge status="available">` halo pulse (intentionally slow + meditative, paired with `ease-out`).
+
+All motion is gated by `prefers-reduced-motion: reduce` via a `:root !important` block. This block is the ONLY permitted use of `!important` in the codebase.
+
+### Radii and rules
+
+- `--radius-1: 2px` — Focus rings only.
+- `--radius-2: 4px` — Button corners and the icon well in RoleCard.
+- `--radius-3: 8px` — RoleCard container.
+- `--hairline-w: 1px` — Universal border width. NEVER use 2px or more for decorative borders.
+
+### Button height ladder
+
+The `<Button>` height ladder is part of the brand contract. Four named rungs, hand-tuned, not interpolated.
+
+- `--btn-h-sm: 32px` — `size="sm"` min-height. Minor inline action.
+- `--btn-h-compact: 40px` — `size="compact"` min-height. Editorial CTA — quieter than the page default. Apple's "Compact" rung.
+- `--btn-h-md: 44px` — `size="md"` min-height. Page-default CTA. The only rung that passes WCAG 2.5.5 AAA at threshold.
+- `--btn-h-lg: 52px` — `size="lg"` min-height. Loud CTA.
+
+Padding and font-size stay hand-tuned per size (no separate padding-token scale). Consumed by `src/atoms/Button/Button.module.css`; available to any future primitive (form fields, segmented controls) that needs to align to the same height ladder.
+
+### Icon size scale (4px base grid)
+
+Four named rungs. Semantically distinct from `--space-*` — icon dimensions are not rhythm values. Consumed by `<Icon>` atom via a `SIZE_MAP` lookup. NEVER use raw pixel values for icon sizing; reference these tokens.
+
+- `--icon-xs: 12px` — compact pill / dense label row (e.g. inside `<Tag>`, inside `<Eyebrow>`)
+- `--icon-sm: 16px` — default inline icon; pairs with `--fs-meta` (14px) text. The most common rung.
+- `--icon-md: 20px` — mid-weight; pairs with `--fs-body` (17–19px) text or stands alone in a row
+- `--icon-lg: 24px` — large standalone; navigation rows, feature-card icon slots, prominent markers
+
+Default `size` on `<Icon>` is `"sm"` (16px). Lucide's SVG grid is designed for 16px placement. No rung above 24px exists on the atom; display-scale icons at 32px+ are molecule-level layout decisions.
+
+---
+
+## Component recommended usages
+
+### Wordmark
+- Min height: 40px. SiteShell default is height={56}.
+- Aspect ratio locked at ~4.08:1 (viewBox 0 0 1184 290). Set only `height`; width is auto.
+- Do NOT render below height={40}. Do NOT add a second Wordmark inside SiteShell's children. Do NOT use as a watermark. Do NOT set label="" (it is the a11y name).
+- Path geometry changes require Arian's approval (ADR-0011).
+
+### StatusBadge
+- Maximum 1 instance per page. Encodes consultant/service availability — not system status.
+- status="available" triggers pulse animation automatically. Do NOT add additional CSS animation.
+- prefers-reduced-motion disables the pulse at the CSS level — do NOT force-animate via JS or inline styles.
+- Children: single short clause, 10 words or fewer.
+
+### Button
+- Maximum one variant="primary" per visual section.
+- Labels always sentence-case, never ALL CAPS.
+- Min heights: size="sm" 32px, size="compact" 40px, size="md" 44px, size="lg" 52px. Default is size="md".
+- size="compact" is the editorial CTA — quieter than md, louder than sm. WCAG 2.5.5 AAA tap target (44px) requires md or lg; sm and compact are AA tiers.
+- Use asChild with an <a> element for link-styled buttons. Do NOT nest a <button> inside Button with asChild.
+
+### IconButton
+- Square, icon-only sibling of Button. Same variant union (primary / secondary / ghost) and same size ladder (sm 32 / compact 40 / md 44 / lg 52) driven by the shared --btn-h-* tokens.
+- `aria-label` is REQUIRED at the type level — IconButton without an accessible name is a TypeScript error. The label is mirrored into a VisuallyHidden child as belt-and-suspenders for assistive-tech variants that prefer inner text.
+- Icon size resolves automatically per Button size: sm → 16px, compact / md → 20px, lg → 24px. No consumer override.
+- Composes Button + Icon + VisuallyHidden. No `asChild` in v1 — IconButton always renders a `<button>`. WCAG AAA tap-target posture same as Button: md and lg pass at 44px, sm and compact are AA only.
+- Use for icon-only affordances where the glyph is unambiguous (close, copy, prev/next). For icon+label, use Button with a child Icon, not IconButton.
+
+### Checkbox
+- Wraps `@radix-ui/react-checkbox`. Owns ONLY the control + indicator — label pairing, helper text, error messaging, and `htmlFor` wiring are the molecule layer's job.
+- Fixed 16×16px (`--icon-sm`). No `size` prop. Radius `--radius-1` (2px).
+- States: unchecked (bg `--bg`, border `--hairline`) / checked (bg `--fg`, Lucide `Check` glyph) / indeterminate (bg `--fg`, Lucide `Minus` glyph). Hover (unchecked, pointer): border → `--fg-muted`. Disabled: opacity 0.5. `aria-invalid="true"`: border → `--danger`.
+- `checked` prop is Radix's `CheckedState` (`boolean | "indeterminate"`). Supports controlled (`checked` + `onCheckedChange`) and uncontrolled (`defaultChecked`).
+- Standalone usage fails WCAG 2.5.8 (24px) and 2.5.5 (44px) hit-target rules — practical hit area is control + label, owned by the molecule. Consumers using bare Checkbox must extend the click target externally.
+- Canonical state contract for tests is Radix's `data-state` attribute (`checked` / `unchecked` / `indeterminate`), not icon DOM presence.
+
+### Switch
+- Wraps `@radix-ui/react-switch`. Use when a setting has a persistent on/off state that takes effect immediately — not for one-shot confirmations (use `<Button>`), not for single-item form selection (use `<Checkbox>`).
+- Import: `import { Switch } from "@poukai-inc/ui"` or `import { Switch } from "@poukai-inc/ui/atoms/Switch"`.
+- Track: 32×18px pill. Thumb: 14px circle. Travel: `translateX(0) → translateX(14px)` via CSS transform on `[data-state="checked"]`. No `left` animation.
+- Off: track bg `--surface`, border `--hairline`. On: track bg `--fg`, border transparent. Hover (unchecked, pointer): border → `--fg-muted`. Focus-visible: 2px `--accent` outline on track. Disabled: `opacity 0.5`. Reduced-motion: global `tokens.css` clamps transition — state preserved, animation removed.
+- Supports controlled (`checked` + `onCheckedChange`) and uncontrolled (`defaultChecked`). Forwards all native `<button>` props via `...rest`. `forwardRef` to root button.
+- Label always external — supply `<label htmlFor={id}>` or `aria-label`. Unlabelled Switch = a11y violation.
+- Canonical state contract for tests: Radix `data-state` (`"checked"` / `"unchecked"`).
+- Example:
+  ```tsx
+  // Uncontrolled with sibling label
+  <label htmlFor="notifications">Enable notifications</label>
+  <Switch id="notifications" defaultChecked />
+
+  // Controlled
+  <Switch checked={enabled} onCheckedChange={setEnabled} aria-label="Enable feature" />
+  ```
+
+### Heading
+- Canonical heading atom. Owns the H1 → H6 type ramp. Decoupled `as` (rendered HTML element, drives the document outline) and `size` (visual rank, drives type styling). `size` defaults to whatever `as` is, so `<Heading>Foo</Heading>` renders an `<h2>` styled at h2 rank with no extra props.
+- `as` (default `"h2"`) — closed union of `"h1" | "h2" | "h3" | "h4" | "h5" | "h6"`. An explicit H1 must be opt-in (the default does not auto-promote to H1; one H1 per page is the consumer's responsibility).
+- `size` (optional) — independent of `as`. Use when document outline and visual rank diverge: `<Heading as="h1" size="h2">` keeps the page H1 semantics while sizing the text at h2 rank.
+- Owns no margin. Consumer molecule owns spacing between Heading and adjacent siblings.
+- Do NOT use Heading for non-heading editorial display (statements, taglines). Use `<Statement>` for editorial italic-serif blocks; use `<Hero>` for the page tagline.
+- Do NOT pass arbitrary HTML elements via `as` — the union is closed at the type level.
+
+### Text
+- Canonical paragraph atom. Resolves raw `<p>`, `.lede`, and inline muted `<p style>` patterns into one component with orthogonal `size` and `tone` axes.
+- `size` (default `"body"`): `"body"` (`--fs-body` + `--lh-body`), `"lede"` (`--fs-body` + `--lh-body-relaxed`, capped at `max-inline-size: 36rem`), `"caption"` (`--fs-meta` + `--lh-meta`), `"micro"` (`--fs-micro` + `--lh-meta`). `"micro"` is NOT uppercase — use `<Eyebrow>` for uppercase micro-labels.
+- `tone` (default `"default"`): `"default"` (`--fg`), `"muted"` (`--fg-muted`), `"on-warm"` (`--fg-on-warm`), `"on-warm-muted"` (`--fg-on-warm-muted`). The two `on-warm-*` tones are exclusively for the warm editorial band.
+- `as` (default `"p"`) — closed union of `"p" | "span" | "div" | "dt" | "dd" | "li"`. No heading elements: use `<Heading>` or a raw `<h*>` for those.
+- Owns no margin. Consumer owns spacing.
+- Do NOT use Text for headings, eyebrows, or status — those have their own atoms.
+
+### Prose
+- Typographic context wrapper for long-form HTML. Drop arbitrary `<h1>`–`<h6>`, `<p>`, `<ul>`, `<ol>`, `<blockquote>`, `<code>`, `<pre>`, `<hr>`, `<figure>`, `<table>` markup inside and the DS type contract applies via low-specificity `:where(...)` descendant rules. Consumer overrides always win.
+- `width` (default `"full"`): `"full"` inherits the column from the parent layout (no max-width). `"reading"` caps the column at `64ch` and centers horizontally — canonical editorial body for standalone article pages.
+- `asChild` (default `false`) — when `true`, renders a Radix `<Slot>` and merges all props onto the single child (e.g. `<article>`). Consumer is responsible for passing exactly one child.
+- Use Prose when content is authored as raw HTML (CMS output, MDX, markdown render) — NOT for hand-composed atom layouts. Hand-composed pages compose `<Heading>` + `<Text>` directly.
+- Do NOT nest Prose inside Prose. Do NOT use Prose to style standalone atoms — it is a long-form HTML context, not a typography utility.
+
+### Code
+- Inline code chip — communicates that the wrapped content is a literal token (variable name, CSS custom property, HTML element, shell command, config key).
+- Root is always `<code>` (non-polymorphic). Non-interactive — no hover, focus, or active states.
+- Font size is relative (`0.9em`) so the chip tracks the surrounding text register on any surface.
+- `children` is the literal content. Typically a plain string; ReactNode accepted for parity with the rest of the atomic system.
+- Do NOT use Code for multi-line code blocks — use a `<pre><code>` composition (or future `CodeBlock` primitive). Code is inline-only.
+- Do NOT use Code for keyboard keys — use `<Kbd>`. Code is for code literals; Kbd is for physical keys.
+
+### Kbd
+- Keyboard-key glyph — a compact chip that represents a physical key (`⌘`, `K`, `Enter`, `Esc`). Used inline in onboarding copy, command-menu shortcut hints, help text, and menu rows.
+- Root is always `<kbd>` (non-polymorphic). Non-interactive — no hover, focus, or active states.
+- `children` is the key content. Typically a single character (`"K"`), a symbol (`"⌘"`), or a short token (`"Enter"`, `"Esc"`).
+- For symbol keys whose glyph does not announce well in screen readers, pass a spelled-out name via `aria-label` (e.g. `<Kbd aria-label="Command">⌘</Kbd>`).
+- Multi-key combinations are composed by the consumer as side-by-side `<Kbd>` instances (e.g. `<Kbd>⌘</Kbd> <Kbd>K</Kbd>`).
+- Do NOT use Kbd for code literals — use `<Code>`.
+
+### SkipLink
+- Keyboard skip-to-content anchor. Visually hidden at rest (canonical sr-only clip pattern), becomes a fixed-position high-contrast pill when keyboard-focused. Required first focusable element in any layout shell.
+- Root is always `<a>`, non-polymorphic. No `as` prop — fragment navigation is anchor semantics, full stop. Composes neither `<Link>` nor `<VisuallyHidden>` — owns its own clip + focus CSS in one module so the `:focus-visible` un-clip rule does not fight cross-module specificity.
+- `href` (required string) — the fragment target (e.g. `#main`, `#docs-content`). Consumer supplies; the DS does not compute or default. The target element must exist in the DOM with the matching `id`.
+- `children` (optional ReactNode, default `"Skip to content"`) — override for layouts with multiple navigable regions (e.g. `<SkipLink href="#docs-content">Skip to documentation</SkipLink>`).
+- Focused pill geometry: `position: fixed`, `top: var(--space-2)`, `left: var(--space-2)`, `z-index: 9999` (above Dialog 100/101 and Toast 200 — skip link must never be occluded). `background: var(--fg)`, `color: var(--bg)` (DS-wide max-contrast inversion pair, ~16:1, AAA in light and dark mode). `padding: var(--space-2) var(--space-4)`, `border-radius: var(--radius-2)`, `font-size: var(--fs-meta)`, `font-weight: 500`, `box-shadow: 0 4px 12px rgb(0 0 0 / 0.08)` (same elevated-chip shadow as Toast), `outline: none` (the pill IS the focus indicator — documented deviation from the global `a:focus-visible` accent ring).
+- No motion. No transition. No `:hover` style (skip link is keyboard-only by design — mouse users never see it). Reduced-motion: nothing to suppress.
+- a11y: zero axe violations rest + focused. No `aria-*` required on root. Must be the first focusable element when placed at the top of a layout shell (before nav, header, logo, or any interactive chrome).
+- Usage: place as first child of the layout shell. Note: SiteShell consumer migration is a follow-up audit PR — this atom ships standalone.
+- `forwardRef<HTMLAnchorElement, SkipLinkProps>`, `displayName="SkipLink"`. Remaining `AnchorHTMLAttributes<HTMLAnchorElement>` spread onto the root.
+
+### Mark
+- Editorial highlight chip — an inline `<mark>` that flags a run of prose as the part the reader should notice. Tints the background with `--accent-glow` (the same value the system uses for `::selection`) so the highlight reads as kindred to selected prose rather than as a foreign decoration.
+- Root is always `<mark>` (non-polymorphic). Non-interactive — no hover, focus, or active states.
+- Inherits `font-family`, `font-size`, `font-weight`, `line-height`, and `color` from the surrounding context, so the chip scales with parent text on every surface (body copy, pull-quote, field note, Prose, warm editorial band).
+- `children` is the highlighted content. Typically a short prose fragment; ReactNode accepted for parity with the rest of the atomic system.
+- `box-decoration-break: clone` (plus the WebKit prefix) ensures the highlight tiles cleanly across line wraps — each line-fragment gets its own padding and rounded corners.
+- Token contract: `--accent-glow` (background) + `--space-1` (inline padding) + `--radius-1` (2px corner). No new tokens.
+- Do NOT use Mark for inline code literals — use `<Code>`. Do NOT use Mark for keyboard keys — use `<Kbd>`. Do NOT use Mark for status indication (error/warning/success) — use `<Banner>` or `<StatusBadge>`.
+- Do NOT nest interactive elements inside Mark (no `<button>`, `<a>`, `<input>` children). If the highlighted run must be clickable, the consumer wraps Mark with an anchor that owns the interaction.
+
+### Spacer
+- Explicit-gap atom for contexts where flex/grid `gap` cannot reach. NOT a general spacing utility — use `gap` or section padding tokens by default.
+- `size` (required, closed union `"1" | "2" | "3" | "4" | "6" | "8" | "10"`) maps to `--space-1` … `--space-10`. Layout-tier values (`--space-12`+) are intentionally excluded — those belong to template-level rhythm, not an inline atom.
+- `axis="block"` (default): `display: block; height: var(--space-N); width: 100%`. `axis="inline"`: `display: inline-block; width: var(--space-N); height: 1em`.
+- `as="div"` (default) or `as="span"`. Use `as="span"` with `axis="inline"` inside text flow.
+- Always renders `aria-hidden="true"` — decorative, ignored by AT. No background, no border, no content.
+- Canonical use: between two `<Prose>` siblings where the parent owns no layout; between conditionally-rendered siblings; inside legacy block containers where `gap` is unavailable.
+- Do NOT use between flex/grid siblings (use `gap`), for section-tier rhythm (use Section padding tokens), as a vertical typography hack (fix the type ramp), or as a margin replacement on components that own their margin.
+
+### RadioGroup
+- Container for a mutually-exclusive radio selection. Wraps `@radix-ui/react-radio-group` Root. Radix provides `role="radiogroup"`, keyboard navigation (roving tabindex), and ARIA propagation at zero cost.
+- `value` / `onValueChange` for controlled usage. `defaultValue` for uncontrolled. `name` for native form submission.
+- `orientation` (`"horizontal"` | `"vertical"`, default `"vertical"`) — vertical: `flex-direction: column`, gap `--space-2`; horizontal: `flex-direction: row`, gap `--space-4`.
+- **A11y:** pass either `aria-label` (when no visible heading exists) or `aria-labelledby` (when a visible heading labels the group). In development, a `console.warn` fires when both are absent. Pair with a visible error message linked via `aria-describedby` when in an error state.
+- `disabled` disables all items at the group level. `required` marks the group required for form validation.
+- `forwardRef` to the root `<div>`. `...rest` spread. `displayName = "RadioGroup"`.
+- Tokens consumed: `--space-2`, `--space-4`. No new tokens.
+- Do NOT export as `RadioGroup.Root` — the public API is a flat `<RadioGroup>` named export. No namespace object.
+- Do NOT override Radix keyboard navigation with custom `onKeyDown` handlers — arrow-key routing is Radix-native.
+
+### Radio
+- Individual radio control inside a `RadioGroup`. Wraps `@radix-ui/react-radio-group` Item. Radix provides `role="radio"`, `aria-checked`, and keyboard routing (roving tabindex) within the group.
+- `value` is required — binds this item's checked state to the group's selected value.
+- Checked indicator: a CSS `::after` pseudo on the Radix `Indicator` slot. 8×8 px circle, `background: var(--fg)`. No Lucide, no SVG, no `<Icon>` component.
+- Circle geometry: 16×16 px, `border-radius: 50%`, `border: var(--hairline-w) solid var(--hairline)`, `background: var(--bg)`.
+- States: hover (unselected, enabled) → `border-color: var(--fg-muted)`; checked → Radix mounts Indicator, `::after` dot appears; focus-visible → `outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-1)`; disabled → `opacity: 0.5; cursor: not-allowed; pointer-events: none`; `aria-invalid="true"` → `border-color: var(--danger)`.
+- Label pairing is always the consumer's responsibility — `Radio` renders no label text. Wrap with `<label>` or pair via `htmlFor`/`id`.
+- `forwardRef` to the root `<button>`. `...rest` spread. `displayName = "Radio"`.
+- Tokens consumed: `--bg`, `--fg`, `--fg-muted`, `--hairline`, `--hairline-w`, `--accent`, `--danger`, `--radius-1`, `--dur-fast`, `--easing`. No new tokens.
+- Do NOT export as `RadioGroup.Item` — the public API is a flat `<Radio>` named export.
+- Do NOT add a custom dot SVG, Lucide icon, or `<Icon>` component — the CSS `::after` pseudo is the spec-mandated approach.
+- Do NOT add `onKeyDown` handlers for arrow keys — Radix handles keyboard navigation natively.
+
+### Stat
+- Requires a caption — numeral alone is not self-explanatory.
+- value must be a numeral or numeral+unit string. source should be citation only.
+- Maximum 4 Stats per section. Maximum 1 size="lg" per section.
+
+### NumberFormat
+- Pure presentational formatter backed by native `Intl.NumberFormat`. Renders a `number` as a locale-correct string and nothing else. NEVER use as a layout or visual primitive — it owns no CSS.
+- Required `value: number`. Optional `notation`: `"standard"` (default — grouped digits), `"compact"` (`1.2M`), `"currency"` (requires `currency`), `"percent"` (pass the decimal fraction, e.g. `0.42` → `42%`).
+- `currency` is an ISO 4217 code (`"USD"`, `"EUR"`, `"JPY"`). REQUIRED whenever `notation="currency"` — Intl throws a `RangeError` otherwise. Ignored for all other notations.
+- `locale` is BCP-47 (`"en-US"`, `"de-DE"`). Omit only for app-default locale; pass explicitly in any i18n-aware surface to guarantee server/client parity. NEVER read `navigator.language` from a consumer — pass the resolved locale in.
+- `minimumFractionDigits` and `maximumFractionDigits` pass through to Intl unchanged.
+- Polymorphic `as`: `"span"` (default) | `"div"` | `"dd"`. Closed union — no heading or interactive elements. Use `as="dd"` inside a `<dl>` for definition-list pairings (`<dt>Total users</dt><NumberFormat as="dd" value={48921} />`).
+- No `children` prop. Value is the rendered content; `children` is TypeScript-disallowed.
+- Edge values: `NaN` → "NaN", `Infinity` → "∞", `-Infinity` → "-∞" (whatever the Intl runtime emits — do NOT assert against literals; assert against `Intl.NumberFormat(locale, options).format(value)` for cross-engine stability).
+- Accessibility: emits plain text. No ARIA needed. For screen-reader expansion of compact/currency output, wrap with `<VisuallyHidden>` (`<><NumberFormat value={1_200_000} notation="compact" /> <VisuallyHidden>(1.2 million)</VisuallyHidden></>`).
+- Non-goals: no date/time formatting, no signed display (no `signDisplay` prop), no scientific/engineering notation, no unit formatting, no animated counters, no copy-to-clipboard. Date formatting is a separate atom.
+- Stat migration to use NumberFormat is a follow-up PR — NOT shipped with this atom.
+
+### Time
+- Semantic `<time datetime>` atom. Non-polymorphic — root is always `<time>`. Downstream consumers: `Byline`, `ArticleHeader`, `TimelineItem`.
+- `dateTime` prop accepts `string | Date`. String values pass verbatim to the `datetime` attribute (date-only strings such as `"2026-05-21"` are NOT round-tripped through `new Date()`). `Date` objects serialize via `.toISOString()`.
+- Four format modes (native `Intl` only — no date-fns, dayjs, luxon):
+  - `absolute` (default): `Intl.DateTimeFormat` with `{ year: "numeric", month: "short", day: "numeric" }` → `May 21, 2026`.
+  - `relative`: `Intl.RelativeTimeFormat` with `{ numeric: "auto" }`. Threshold table (descending, by |diff|): `< 60s` → `"just now"` (English literal); `≥ 345d` → year; `≥ 28d` → month; `≥ 7d` → week; `≥ 1d` → day; `≥ 1h` → hour; `≥ 1min` → minute. Signed value preserves past/future direction.
+  - `long`: `Intl.DateTimeFormat` with `{ year: "numeric", month: "long" }` → `May 2026`.
+  - `time-only`: `Intl.DateTimeFormat` with `{ hour: "2-digit", minute: "2-digit" }` → `02:30 PM` (en-US) / `14:30` (fr-FR).
+- `children` override: when `children` is provided, it replaces the computed label entirely; `format` and `locale` are ignored. The `datetime` attribute still emits the ISO string.
+- SSR locale resolution: `locale` prop → `navigator.language` (browser) → `"en-US"` (server). `format="relative"` is NOT guaranteed stable across SSR/hydration — use `children` or `format="absolute"` for consistent SSR output.
+- Guardrails: no `aria-label` injection, no motion, no color variants, no new tokens. Inherits `color: inherit`. No CSS module.
+
+### Hero
+- One per page. Do NOT nest Hero inside another Hero.
+- status slot: StatusBadge or equivalent only (default variant only; not available in no-title variant).
+- lede: 1-3 sentences at most.
+- align="center": standalone landing contexts only.
+- size="display" (default): title uses `--fs-tagline` (36-68px). Default for all product, marketing, and feature pages.
+- size="intimate": title uses `--fs-tagline-intimate` (32-52px). Opt-in for low-density doorways (homepages, principle lists) where a quieter register suits the context. All other Hero rhythm (gaps, lede, CTA, color, font family, em accent) is unchanged.
+- variant="no-title": renders eyebrow + lede only — no heading element of any level. Use only when the page's `<h1>` lives in body content. The molecule does not emit an `<h1>`; the consumer must. Eyebrow is rendered at `--fs-micro` (12px), uppercase, `letter-spacing: 0.04em`, `--fg-muted`. The `title` and `status` props are excluded from this variant's type signature. `align`, `entrance`, and `cta` remain available.
+- illustration: optional ReactNode slot (added 0.15.0). When provided, Hero switches to a two-column layout at `--bp-md` (768px) and above (text left, illustration right); the illustration column is hidden below 768px (stacked layout: illustration above the title block). Max width of the illustration column is controlled by `--hero-illustration-max` (25rem). Slot is content-agnostic — accepts SVG, `<img>`, `<Portrait>`, or any ReactNode. When `entrance="stagger"` is active, the illustration is the fifth stagger slot (index 4, 600ms delay). If decorative, the consumer must pass `aria-hidden="true"` or use `alt=""` on inner imagery. The Hero molecule does not enforce decorative-vs-meaningful semantics on the slot — the consumer owns that decision.
+
+### RoleCard
+- Eyebrow format: "Role 01", "Role 02" — Title Case "Role", zero-padded two-digit numeral.
+- hiredBy footer: names separated by " · " (middle dot with spaces).
+- Min 2 cards per use; max 6 per grid.
+
+### Principle
+- Numeral convention: lowercase Roman numerals with trailing period ("i.", "ii.", "iii.").
+- Numeral is aria-hidden. Min 2 Principles per use.
+- Distinct from `FailureMode`: `Principle.numeral` uses Roman numerals (i, ii, iii) for editorial / philosophical sequencing. The two components encode different semantic registers — do not conflate or rename either prop to match the other.
+
+### FailureMode
+- index is typed number, auto-formats as zero-padded ("01"). Do NOT pass as string.
+- Index span is aria-hidden. Titles should be declarative noun phrases.
+- Distinct from `Principle`: `FailureMode.index` + `indexLabel` use Arabic-numeral integer indices with optional formatted labels (e.g. "FM-01") for enumerated failure cases. The two components encode different semantic registers — do not conflate or rename either prop to match the other.
+
+### Statement
+- Editorial italic-serif block at `--fs-statement` (28-44px), `line-height: 1.2`, `letter-spacing: -0.005em`, `text-wrap: balance`. Not a heading element; emits no `<h1>`–`<h6>`.
+- `statement` prop is required ReactNode, rendered inside a `<p>`. `supporting` is an optional second `<p>` at `--fs-body` in `--fg-muted`.
+- `as="p"` (default) renders the root as a `<div>` wrapping the two paragraphs. `as="blockquote"` renders the root as `<blockquote>` — use this only when quoting an attributed external source.
+- `hairline={true}` adds a decorative 1px top rule plus `--space-12` padding-top. Default `false`.
+- Use sparingly: an editorial statement, not a tagline replacement. The page `<h1>` still lives in `<Hero>`.
+
+### Portrait
+- Editorial photography primitive. Renders `<picture>` with AVIF > WebP > JPEG fallback chain and srcset at 4 widths derived from the canonical `width`.
+- `alt` is required and must be non-empty. Dev-mode throws on empty alt — portraits are never decorative (WCAG 1.1.1). Do NOT pass `alt=""`.
+- `aspect` (`1:1` | `3:4` | `4:3` | `16:9` | `9:16`) drives the CSS `aspect-ratio` and the computed `height` attribute. Locked at render time to prevent CLS.
+- `width` is the canonical source-image width in px — drives the srcset divisors (1, 1.5, 2.34375, 3.75) and the `width`/`height` HTML attrs. Pass the full source resolution, not the display size.
+- `loading` defaults to `"lazy"`; use `"eager"` for above-the-fold portraits. `fetchPriority` defaults to `"auto"`; pair `loading="eager"` with `fetchPriority="high"` for the LCP image. `sizes` defaults to `"100vw"`. `objectPosition` defaults to `"center"`.
+- `src` accepts either a string URL or an object shaped like Astro's `ImageMetadata` (`.src` is extracted). Do NOT pass `import.meta` imports without unwrapping.
+
+### Image
+- Token-aware plain `<img>` atom for logos, screenshots, illustrations, and decorative photography. Non-polymorphic — root is always `<img>`. No `as` prop, no wrapper.
+- Distinct from `<Portrait>`. Image = single URL, known dimensions, static asset. Portrait = editorial photography with AVIF/WebP/JPEG srcset. Do NOT reach for Image when the asset needs srcset, `<picture>`, or format negotiation — that belongs to Portrait.
+- `src` (required string) — image URL passed directly to the `<img>` src attribute.
+- `alt` (required string) — required at the type level. Pass a descriptive string for meaningful images (`alt="Poukai logo"`); pass an empty string for decorative images (`alt=""`). NEVER omit — the type is `string`, not `string | undefined`.
+- `width` (required number) + `height` (required number) — the asset's intrinsic pixel dimensions from the source file. Both are required: they drive (1) the HTML `width`/`height` attributes for the browser's pre-CSS layout hint, and (2) the inline `aspect-ratio` style for CLS-safe slot reservation before the image bytes arrive.
+- `loading` (`"lazy"` | `"eager"`, default `"lazy"`) — controls the browser's native lazy-loading behavior. Use `"eager"` for above-the-fold / LCP images.
+- `decoding` (`"async"` | `"sync"` | `"auto"`, default `"async"`) — image decoding hint. `"async"` is correct for almost every case; allows off-main-thread decoding without blocking rendering.
+- `fit` (`"cover"` | `"contain"` | `"fill"` | `"none"` | `"scale-down"`, optional) — maps to `object-fit`. NO DS default — when omitted, no `object-fit` style is written and the browser's CSS default (`fill`) applies. Set explicitly when the image occupies a fixed-dimension slot and needs to fill or contain without distortion.
+- `radius` (`"none"` | `"sm"` | `"md"` | `"lg"`, default `"none"`) — maps to `border-radius`. `"none"` → `0`, `"sm"` → `var(--radius-1)` (2px), `"md"` → `var(--radius-2)` (4px), `"lg"` → `var(--radius-3)` (8px). No new tokens introduced.
+- Inline-style baseline (always applied): `max-width: 100%`, `height: auto`, `aspect-ratio: ${width} / ${height}`. The aspect-ratio reservation is the CLS prevention mechanism. Consumer `style` is merged on top — caller can override `maxWidth`/`height` if needed.
+- `forwardRef<HTMLImageElement, ImageProps>`, `displayName="Image"`. Remaining props spread onto the `<img>` element (`className`, `style`, `data-*`, `aria-*`, `fetchPriority`, etc.).
+- Loading state = blank reserved space (from `aspect-ratio`). No skeleton shimmer, no placeholder color. Error state = browser's native broken-image indicator. No `onError`, no fallback URL — consumers who need error handling manage it in their own wrapper.
+- Composition: wrap in `<a>` for linked images, wrap in `<figure>` + `<figcaption>` for captioned images. Image never emits the wrapper. For person attribution disks (24–40px, circular), use `<Avatar>`, not Image.
+- Do NOT add `srcset`, `sizes`, or `<picture>` — that is Portrait's domain.
+- Do NOT add motion, hover effects, or fade-in transitions — Image is a static presentational atom.
+- Do NOT make `alt` optional. Use `alt=""` for decorative images instead.
+- Do NOT use Image for editorial photography with multiple format variants — use `<Portrait>`.
+
+### Eyebrow
+- Canonical micro-label atom. Uppercase, tracked (`--tracking-eyebrow: 0.06em`), `--font-sans`, `--fs-meta` (14px), weight 500, `--lh-meta` (1.2).
+- `variant="muted"` (default) — color `--fg-muted`. Standard section/category/role label register.
+- `variant="solid"` — color `--fg`. Full contrast when the label needs more weight.
+- `variant="numbered"` — color `--fg-muted` + activates the inline numeral slot (inline-flex, baseline-aligned, `--space-2` gap). Use with `numeral` prop.
+- `numeral` prop (string, optional) — rendered in a leading `<span>` with `font-variant-numeric: tabular-nums`. e.g. `numeral="FM-03"`, `numeral="01 ·"`.
+- `as` prop — polymorphic root element, defaults to `<span>`. Valid values: `span`, `p`, `div`, `dt`, `h2`, `h3`, `h4`, `h5`, `h6`, `li`. Use `as="h2"` when heading semantics are required at eyebrow scale.
+- `margin: 0` — Eyebrow owns no margin. The consuming molecule owns spacing between Eyebrow and its sibling title.
+- Resolves the drift between `RoleCard.eyebrow` (mono, 12px, 0.06em), `FailureMode.index` (sans, 14px, 0.08em), and `.micro` utility (sans, 12px, 0.04em). Migration to consuming molecules is a follow-up PR.
+- Do NOT use `--accent` on Eyebrow — it is a label, not a link or status indicator.
+- Do NOT add truncation or overflow clipping — the DS does not manage Eyebrow overflow.
+
+### Label
+- Canonical form-label atom. Renders a `<label>` element bound to its control via `htmlFor`. Typed, token-aligned wrapper so every form surface speaks the same typographic and semantic contract.
+- Root element: `<label>`. Non-polymorphic — no `as` prop. `<label>` is the only semantically correct root for a form label; swapping it would break the `htmlFor` association contract.
+- `htmlFor` (required, string) — The `id` of the bound control. Type-level required; no default. A `<Label>` without `htmlFor` is a broken label — TypeScript enforces this at authoring time.
+- `children` (required, ReactNode) — Label text. Typically a short string; may include inline `<strong>` or similar emphasis.
+- `required` (optional, boolean, default `false`) — When `true`, renders `<span aria-hidden="true">*</span>` in `var(--danger)` after the label text. Visual only; the ARIA required contract (`aria-required="true"` / `required`) lives on the bound control, not on this element.
+- `tone` (`"default"` | `"muted"`, default `"default"`) — text color only. `"default"` → `var(--fg)`. `"muted"` → `var(--fg-muted)`. Required indicator is always `var(--danger)` regardless of tone.
+- Typography: `--font-sans`, `--fs-meta` (14px), `font-weight: 500`, `--lh-meta` (1.2), `letter-spacing: 0.01em` (raw value — neither `--tracking-eyebrow` nor `--tracking-numeric` fits mixed-case 14px; see spec §3 rationale).
+- Layout: `display: inline-block`, `margin: 0`. Consumer and molecule own all spacing.
+- Tokens consumed: `--font-sans`, `--fs-meta`, `--lh-meta`, `--fg`, `--fg-muted`, `--danger`. No new tokens introduced.
+- Standalone usage: `<Label htmlFor="email">Email address</Label>` / `<input id="email" type="email" />`. Consumer owns spacing between label and control.
+- With `<Field>` molecule: `<Field>` composes `<Label>` internally. Do not pass `<Label>` as a child of `<Field>`.
+- Contrast: `--fg` (#1D1D1F) on `--bg` (#FBFBFD) ≈ 16.1:1 (AAA). `--fg-muted` (#6E6E73) on `--bg` ≈ 4.9:1 (AA — passes WCAG 4.5:1 at 14px/500). `--danger` (#B3261E) on `--bg` ≈ 7.2:1 (AAA).
+- Do NOT default or omit `htmlFor` — it is type-level required. A label without `htmlFor` provides no programmatic association.
+- Do NOT add an `as` prop. Root is always `<label>`.
+- Do NOT add `(optional)` text marker, tooltip slot, icon slot, or inline-with-input layout — all out of scope per spec §10.
+- Do NOT add `aria-required` to the `<label>` element — it belongs on the bound control only.
+- Do NOT use floating-label animation — not brand-aligned, excluded permanently.
+
+### EmailLink
+- Canonical `mailto:` affordance atom. Not a button — it opens a mail client, it does not commit to an outcome. Choose `<EmailLink>` over `<Button asChild><a href="mailto:…">` when the contact register is "reach out" rather than "commit to action."
+- `email` (required string) — The email address. Component always computes `href="mailto:${email}"`. Consumers NEVER pass `href` directly — it is excluded from the prop interface via `Omit<AnchorHTMLAttributes, 'href'>`.
+- `label` (optional string) — Visible link text. Defaults to the `email` string when omitted. When provided, `label` is the accessible name; the email is the href target only.
+- `icon` (optional ReactNode) — Leading icon slot. When present, root shifts to `inline-flex` with `align-items: center` and `gap: --space-2`. When absent, root is a plain inline anchor. Use 14px icons in `--fs-meta` contexts, 16px in `--fs-body` contexts. Pass `aria-hidden="true"` on decorative icons.
+- `qualifier` (optional string) — Trailing role qualifier rendered as ` (qualifier)` in a muted `<span>` inside the anchor. Pass the bare name/role without parentheses. e.g. `qualifier="Arian"` renders "founder@pouk.ai (Arian)".
+- `variant="default"` (default) — `color: --fg`, hover → `--accent`. Use on `--bg` or `--surface` contexts.
+- `variant="muted"` — `color: --fg-muted`, hover → `--fg`. For footer, caption, secondary-copy contexts. Matches existing `.muted-link` treatment in `SiteShell`.
+- Underline inherits the global `a` two-layer underline rule in `tokens.css`. At rest: a 1px `--hairline` underline is always visible (resting discoverability signal). On hover: a 1px `--accent` underline grows left-to-right over the hairline layer via `background-size` transition (`--dur-mid`, `--easing-link`). `<EmailLink>` is a link — same affordance as every other navigational anchor. No underline override.
+- Focus ring: `outline: 2px solid --accent`, `outline-offset: 4px` (link convention — matches global `a:focus-visible`, NOT Button's 2px offset). `border-radius: --radius-1`.
+- `:visited` — no distinct treatment (brand decision; visited state creates false scent on contact links).
+- `:active` — no `translateY` (link, not button).
+- No margin on root — consumer owns spacing.
+- Do NOT use `<EmailLink>` for `tel:` or `sms:` protocols — those get their own atoms.
+- Do NOT compose `<EmailLink>` inside `<Button>` — they are sibling affordances with different registers.
+- Do NOT pass `href` — it is always computed from `email`. The prop is excluded at the TypeScript level.
+
+### Tag
+- Inline categorical pill atom. Communicates type, category, topic, or metadata classification of adjacent content. Answers "what kind of thing is this?" inline with content flow: inside a card, in a topic list, beside a title, or inside a sentence.
+- Root element: `<span>`. Non-polymorphic — no `as` prop. Always `<span>`. Tags are inline categorical labels; they do not need heading, list-item, or block semantics.
+- `children` (required ReactNode) — the visible label text. Typically a plain string (one to three words). ReactNode accepted for rare inline `<strong>` emphasis, but a plain string is the idiomatic usage.
+- `tone` (`"default"` | `"muted"`, default `"default"`) — visual tone. Two tones only; no colored semantic tones.
+  - `"default"` — `background-color: var(--surface)` (#F5F5F7), `color: var(--fg)` (#1D1D1F), no border. Primary categorical register. Use in cards and topic lists.
+  - `"muted"` — `background-color: transparent`, `color: var(--fg-muted)` (#6E6E73), `border: var(--hairline-w) solid var(--hairline)` (1px #D2D2D7). Secondary or receding register. Use for draft labels, optional tags, or where the tag must not compete with primary content.
+- `icon` (optional ReactNode) — optional leading icon slot. When present, root shifts from `display: inline` to `display: inline-flex` with `align-items: center` and `gap: var(--space-2)` (8px). When absent, root is plain `display: inline`. Recommended icon size: 12px (proportional inside a 14px-text pill). Pass `aria-hidden="true"` on all decorative icons — the DS does not enforce this at the type level, but it is the required consumer contract.
+- Typography: `--font-sans` (Geist), `--fs-meta` (14px fixed), `font-weight: 400`, `line-height: var(--lh-meta)` (1.2), `letter-spacing: normal` (no tracking — Tags are mixed-case; tracking is for uppercase labels like Eyebrow).
+- Geometry: `border-radius: 999px` (pill — a geometric constant, not a brand token; documented in Tag.module.css). `padding-block: var(--space-1)` (4px). `padding-inline: var(--space-2)` (8px). `box-sizing: border-box` — ensures muted tone's 1px border is absorbed inside the padding box; pill dimensions are identical across both tones.
+- `white-space: nowrap` — Tags never wrap internally. If a list of Tags wraps at narrow viewports, the parent flex container owns that.
+- No states, no motion, no transitions. Tag is a non-interactive static label. No `:hover`, `:focus`, `:active`, or `[disabled]` rules.
+- Tokens consumed: `--fs-meta`, `--font-sans`, `--fg`, `--fg-muted`, `--surface`, `--hairline`, `--hairline-w`, `--space-1`, `--space-2`, `--lh-meta`. No new tokens introduced.
+- Contrast: `"default"` tone `--fg` on `--surface` = 15.46:1 (AAA). `"muted"` tone `--fg-muted` on `--bg` = 4.91:1 (AA normal at 14px — passes WCAG 2.1 4.5:1 threshold). Muted border is decorative; no contrast requirement under §1.4.11.
+- Composition: use in any inline or flex context. Multiple Tags in a row: parent flex container with `gap: var(--space-2)` and `flex-wrap: wrap`. Inside prose `<p>`: natural inline flow. No self-margin — consumer owns spacing.
+- Tag is NOT `<Eyebrow>` (Eyebrow is block-level, uppercase, tracked, always above content). Tag is NOT `<StatusBadge>` (StatusBadge encodes liveness state with a colored dot). Tag is NOT a button (no onClick, no hover/focus states authored by the DS).
+- Do NOT add colored semantic tones (`"success"`, `"warning"`, `"danger"`, `"accent"`). Any future colored tone requires a brand-level decision-log entry and Arian's explicit sign-off.
+- Do NOT add a close button, `onRemove`, or `onClick` — that is a future `TagButton` primitive with its own spec.
+- Do NOT make Tag polymorphic. The root is always `<span>`.
+- Do NOT use Tag to signal liveness — use `<StatusBadge>`.
+- Do NOT use Tag as a heading or section label — use `<Eyebrow>`.
+- Do NOT add `text-overflow: ellipsis` or truncation. Tags are always short strings by design.
+
+### Section
+- Canonical page-section wrapper molecule. Owns the vertical rhythm around a section's header block (eyebrow + title + lede) and exposes a children slot for section body content.
+- No visual surface — no background, border, or shadow in default configuration. Structural scaffolding only.
+- `as` prop (default `"section"`) — polymorphic root element. Valid values: `"section"` | `"article"` | `"aside"` | `"div"`. `"section"` is a region landmark when titled; `"article"` for independently distributable content; `"aside"` for tangential content; `"div"` when a landmark would be noise.
+- `eyebrow` (optional `string | ReactNode`) — String values are automatically wrapped in `<Eyebrow>` with default props (`variant="muted"`). ReactNode values are rendered as-is. Never wraps a ReactNode in a second Eyebrow. Always routes through the `<Eyebrow>` atom for consistency.
+- `title` (optional `ReactNode`) — rendered as the element named by `titleAs`. When present, wires `aria-labelledby` on the root for landmark elements.
+- `titleAs` (optional `"h1" | "h2" | "h3"`, default `"h2"`) — heading level for the title element. Default is `h2` (page subdivisions below a Hero which owns the h1). Pass `"h1"` when Section is at the top of a page without a Hero; `"h3"` for nested subdivision contexts.
+- `lede` (optional `ReactNode`) — supporting copy below the title. String values are wrapped in `<p className="lede">` (applies `color: var(--fg-muted)` and `max-width: 36rem` via the existing `.lede` class in `tokens.css`). ReactNode values are rendered as-is.
+- `size` (`"default"` | `"tight"`, default `"default"`) — block padding variant. `"default"` = `--space-16` (64px) top + bottom; `"tight"` = `--space-12` (48px) top + bottom.
+- `children` — section body content. Section applies no styling to children — no max-width, no typography. The body is the consumer's space.
+- **Empty header guard**: if `eyebrow`, `title`, and `lede` are all absent, the header wrapper div is not rendered.
+- **`aria-labelledby` wiring**: when `title` is present and `as` is a landmark element (`"section"` / `"article"` / `"aside"`), the title element receives an auto-generated `id` (via `useId()`) and the root receives `aria-labelledby`. Skipped for `as="div"`.
+- Header block max-width: `var(--hero-max)` (38rem). Children slot has no max-width.
+- Header gaps: eyebrow→title `--space-2` (8px); title→lede `--space-4` (16px). Header→children gap: `--space-12` (48px).
+- Global `h2` bottom margin is zeroed in Section's CSS scope (`margin: 0` on `.title`) — Section's flex layout controls spacing instead.
+- No `bleed` prop. No `align` prop. Both excluded from spec — structural wrapper, not visual band.
+- Do NOT nest Section inside Section. Would double block padding and break vertical rhythm.
+- Do NOT use Section as a card, callout, or decorative container. It carries no visual surface.
+- Do NOT add `aria-labelledby` manually when a title is provided — Section wires it automatically for landmark elements.
+
+### Pull
+- Inline editorial pull-quote molecule. Lives inside long-form prose between paragraphs. NOT a page-level molecule (unlike Hero or Statement).
+- Root element: `<blockquote>` by default (correct HTML for quoted material). Use `as="aside"` only when Pull is an extracted editorial accent that is not a literal quotation from an external source.
+- `variant="serif"` (default) — Instrument Serif italic at `--fs-pull` (20–26px fluid). Use for editorial long-form content, article pages, customer stories.
+- `variant="sans"` — Geist roman at `--fs-pull`. Use for technical or operator-grade content where Instrument Serif feels mismatched.
+- `--fs-pull: clamp(1.25rem, 1rem + 1vw, 1.625rem)` (20–26px) — the only scale. No `size` prop. A `large` variant was explicitly rejected; the page-level editorial scale is `<Statement>`.
+- Left rule: `border-inline-start: 3px solid var(--hairline)`. 3px is a brand-locked constant (not `--hairline-w`). Decorative typographic punctuation, not a layout divider.
+- `padding-inline-start: var(--space-4)` (16px) — distance from rule to body text.
+- `margin-block: var(--space-8)` (32px) — breathing room above + below. Adjacent `<p>` margin-bottom adds 48px total gap (non-collapsing). This is correct editorial rhythm at --fs-pull scale.
+- `max-width: var(--hero-max)` (38rem) — matches the article text column. Pull never exceeds prose measure.
+- `cite` prop — URL mapped to HTML `cite` attribute on `<blockquote>`. Machine-readable only. SILENTLY IGNORED when `as="aside"` (not a valid attribute on aside).
+- `attribution` prop (optional ReactNode) — visible trailing attribution line. Renders as `<footer>` inside `<blockquote>` (per HTML5 spec; scoped, not contentinfo landmark). Renders as `<p>` inside `<aside>`. Always `--fs-meta`, `--fg-muted`, italic regardless of variant.
+- No decorative `"` quote glyph — the left rule is the typographic punctuation.
+- Do NOT place Pull inside a `<Hero>`. Do NOT stack Pull with `<Statement>` on the same surface. Do NOT use Pull for person identity attribution — use `<Quote>` (once shipped).
+- Multiple Pulls per page are permitted. More than 3 is an editorial judgment, not a DS constraint.
+- Screen reader: `<blockquote>` is announced as a quotation; `<aside>` adds a complementary landmark — avoid `as="aside"` in articles with multiple Pulls (landmark noise).
+
+### LinkCard
+- Canonical interactive card primitive. The entire card surface is a single click target (`<a>` root). Use for navigational index pages (`/work`, `/posts`, `/case-studies`) where each grid item routes to a destination.
+- Root element: `<a>` by default. When `asChild={true}`, root becomes a Radix `Slot` — pass a framework router `<Link>` as the child. Identical to the `Button` `asChild` pattern.
+- `href` is required when `asChild` is false. A runtime `console.error` fires in development if `href` is absent and `asChild` is false.
+- Do NOT pass both `href` and `asChild={true}`. When `asChild` is true the child element owns the href.
+- `variant="default"` (default) — `--surface` background, `1px solid --hairline` border, `--radius-3` (8px) corners, `--space-8` (32px) inset padding all sides. Use in grid contexts.
+- `variant="quiet"` — `--bg` background (no fill), hairline rule top only (`border-top: 1px solid --hairline`), no radius, padding-block `--space-4`, padding-inline `0`. Use in dense vertical list contexts.
+- Hover: `border-color` shifts to `--accent`. Transition: `border-color var(--dur-mid) var(--easing-link)`. For quiet variant, `border-top-color` shifts.
+- `:focus-visible`: `outline: 2px solid var(--accent); outline-offset: 4px`. Default variant adds `border-radius: --radius-3` on the outline to match card shape. Quiet variant: `border-radius: 0`.
+- `:active`: `transform: translateY(1px)` at `--dur-press` (80ms). Both variants. Tactile press response matching `<Button>`.
+- `eyebrow` (optional `string | ReactNode`) — String → auto-wrapped in `<Eyebrow variant="muted">`. ReactNode → pass-through (consumer owns configuration). Same discriminant as `<Section>`: `typeof eyebrow === 'string'`.
+- `title` (required `ReactNode`) — primary content and accessible name anchor. Renders as `titleAs` element. Typography: `--fs-card-title` (24–32px fluid), `--font-sans`, weight 500, `line-height: 1.3`, `letter-spacing: -0.005em`. Margin zeroed inside LinkCard flex scope (overrides global h3 margin).
+- `titleAs` (`"h2" | "h3" | "h4"`, default `"h3"`) — heading element. Default `h3` is correct when page has `<h1>` (Hero) and `<h2>` (Section above the grid). Pass `"h2"` when no preceding h2 exists.
+- `body` (optional `ReactNode`) — string → wrapped in `<p>`; ReactNode → pass-through. `--fs-body`, `--fg-muted`, `line-height: 1.55`.
+- `footer` (optional `ReactNode`) — pushed to card bottom via flex spacer (`flex: 1`). Defaults to `--fg-muted` color, `--fs-meta` font size. ReactNode pass-through; consumer content can override.
+- `icon` (optional `ReactNode`) — absolutely positioned at `top: --space-8; right: --space-8` within card padding box. `pointer-events: none`. Consumer-supplied. Conventional: `<ArrowUpRight size={16} />` from `lucide-react` for external links.
+- `external` — when true: adds `target="_blank"`, `rel="noopener noreferrer"`, and appends a visually-hidden `<span>(opens in new tab)</span>` for screen readers. Does NOT auto-inject an icon — pass via `icon` slot.
+- Global `<a>` underline animation (`background-image` grow) is suppressed on the card root via `background-image: none; padding-bottom: 0`. The card's sole hover signal is the border-color shift.
+- **No nested interactive elements.** A `<button>` or `<a>` inside a LinkCard is a WCAG failure (nested interactivity). Footer tags and inline labels must be non-interactive (`<span>`, plain text). This is documented as a hard constraint, not a component-level enforcement.
+- Accessible name is derived from text content — eyebrow + title + body all contribute. Body copy should be meaningful, not boilerplate ("Click to learn more" produces a poor accessible name).
+- In a CSS Grid context: set `align-items: stretch` on the grid container and `height: 100%` on the LinkCard root so all cards in a row share the same height. The footer flex spacer then aligns footers to the same baseline.
+- Do NOT mix `variant="default"` and `variant="quiet"` in the same grid — incoherent visual rhythm.
+- Do NOT put `<Button>` or any interactive element inside a LinkCard.
+- Do NOT use LinkCard for non-navigational content. Use `RoleCard` (structural, no click target) for role descriptions.
+
+### TeamCard
+- Canonical person tile molecule. Renders a single team member as a brand object: portrait + name + role + optional bio + optional contact affordance. Operator-grade register — practitioner credential, not a social media card.
+- Root element: `<article>` by default (correct HTML for a self-contained, independently distributable content item). Polymorphic via `as` prop: `"article"` | `"section"` | `"div"`.
+- `aria-labelledby` is wired automatically from the root landmark element to the name heading's `id` (via `useId()`). Skipped when `as="div"` — a `<div>` carries no landmark role.
+- `portrait` (required `ReactNode`) — pass a fully-configured `<Portrait>` instance. TeamCard does NOT accept `portraitSrc` — Portrait's API is authoritative for `src`, `alt`, `aspect`, `width`, and `sizes`. Never pass a raw `<img>`.
+- `name` (required `ReactNode`) — person's name. Rendered as the element specified by `nameAs`. Default `nameAs="h3"` is correct inside a `<Section>` (h2) on a page with a Hero (h1). Override to `"h2"` for standalone person pages; `"h4"` for deeply nested contexts.
+- `role` (required `ReactNode`) — short role/title descriptor. Rendered as `<p>` at `--fs-meta` (14px), `color: var(--fg-muted)`. No uppercase treatment — role is read at prose speed.
+- `bio` (optional `ReactNode`) — supporting prose paragraph. Rendered as `<p>` at `--fs-body`, `color: var(--fg)`, `line-height: 1.55`. When absent, no empty element is emitted.
+- `contact` (optional `ReactNode`) — any contact affordance. Standard usage: `<EmailLink email="…" variant="muted" />`. Slot is untyped — LinkedIn links, GitHub handles, etc. work without spec changes. TeamCard provides no interaction states; the inner component owns them.
+- `eyebrow` (optional `string | ReactNode`) — string values are automatically wrapped in `<Eyebrow variant="muted">`. ReactNode values are rendered as-is (escape hatch). Never double-wraps a ReactNode. In grids, prefer placing the eyebrow in the Section header rather than repeating it on every card.
+- `layout` (`"stacked"` | `"horizontal"`, default `"stacked"`) — portrait-text spatial relationship. `"stacked"`: portrait above, text below (grid-context default). `"horizontal"`: portrait left at fixed `5rem` width, text block right with `--space-6` gap; collapses to stacked below 768px.
+- **No padding, no border, no background.** TeamCard is a content tile, not a chrome tile. The consumer's grid owns the column gutter. If a surface variant is needed, use `className` override at the consumer layer — it is not a DS variant.
+- Gap stack (stacked layout): eyebrow→portrait `--space-3` (12px), portrait→name `--space-4` (16px), name→role `--space-2` (8px), role→bio `--space-4` (16px), bio→contact `--space-8` (32px), role→contact (no bio) `--space-8` (32px).
+- Contrast: name heading `--fg` on `--bg` = 16.29:1 (AAA). Role `--fg-muted` on `--bg` = 4.91:1 (AA normal at 14px). Bio `--fg` on `--bg` = 16.29:1 (AAA).
+- Do NOT pass `portraitSrc` — the prop does not exist. Portrait's API is authoritative.
+- Do NOT make TeamCard interactive (`href`, `onClick`). It is not a link. Consumer wraps in `<a>` or `<Link>` if needed and owns that interaction pattern.
+- Do NOT nest TeamCard inside Hero. Hero is the page h1 moment; heading-level conflict results.
+- Do NOT compose TeamCard with RoleCard. They are sibling molecules with distinct semantics (person vs. function).
+
+### FeatureCard
+- Canonical structural feature-grid tile. Use for capability, service, or feature grids where items are peers (not a numbered sequence) and none of the tiles are navigational destinations.
+- `as` prop (default `"article"`) — polymorphic root element. Valid values: `"article"` | `"section"` | `"div"` | `"li"`. Use `"li"` inside a `<ul>` feature list; `"section"` when region landmark semantics are required; `"div"` when landmark semantics would be noise. Consumer is responsible for wrapping `as="li"` FeatureCards in a `<ul>`.
+- `icon` (optional ReactNode) — decorative icon. FeatureCard wraps it in `<span aria-hidden="true">`. Sets `color: currentColor` on the wrapper so the icon inherits `--fg`. Recommended icon sizes: `size={24}` or `size={32}` from lucide-react. Consumer still passes `aria-hidden="true"` on the icon node for clarity, but the wrapper guarantees screen readers skip it regardless.
+- `eyebrow` (optional `string | ReactNode`) — String → auto-wrapped in `<Eyebrow variant="muted">`. ReactNode → rendered as-is (no double-wrap). Same string-convention as Section, LinkCard, and TeamCard.
+- `title` (required ReactNode) — feature name. Rendered as the element named by `titleAs`. `"h1"` is intentionally excluded — a feature tile is never a page heading.
+- `titleAs` (optional `"h2" | "h3" | "h4"`, default `"h3"`) — heading level. `"h3"` is correct for a grid of tiles under a `<Section>` (h2) on a page with a `<Hero>` (h1).
+- `body` (required ReactNode) — feature description. String → wrapped in `<p style="margin:0">` (suppresses global `p` bottom-margin double-stack inside flex column). ReactNode → rendered as-is.
+- `footer` (optional ReactNode) — rendered inside a wrapper div with default `color: var(--fg-muted)` and `font-size: var(--fs-meta)`. When absent, no element is emitted and no gap is created.
+- `variant` (`"default"` | `"bordered"`, default `"default"`) — `"default"` is transparent, no border, no radius. `"bordered"` adds `--surface` background, `1px solid --hairline` border, `--radius-3` corners.
+- Padding: `--space-6` (24px) on all four sides in both variants — single value prevents layout shift when switching variants at runtime.
+- Gap stack: icon→eyebrow/title `--space-6` (24px); eyebrow→title `--space-2` (8px); title→body `--space-3` (12px); body→footer `--space-6` (24px).
+- `aria-labelledby` wired on `article` and `section` roots to the title's auto-generated id (via `useId()`). Omitted for `div` and `li` — neither carries a landmark role.
+- No internal flex spacer. Footer alignment in a grid requires composition: `align-items: stretch` on the grid, `height: 100%` on the card root, `margin-top: auto` on the footer wrapper in consumer surface CSS.
+- No states, no hover, no interactivity. FeatureCard is structural only. For an interactive tile, use `<LinkCard>`.
+- Do NOT mix `default` and `bordered` variants in the same grid — incoherent visual rhythm.
+- Do NOT use FeatureCard for navigational tiles — use `<LinkCard>`.
+- Do NOT use FeatureCard for sequenced/numbered items — use `<Principle>` or `<FailureMode>`.
+- Do NOT pass `titleAs="h1"` — a feature tile is never a page heading. The prop type excludes it.
+- Do NOT compose FeatureCard with RoleCard in the same grid. RoleCard carries sequencing semantics that conflict with FeatureCard's peer-item register.
+
+### FieldNote
+- Inline technical-aside molecule. A short parenthetical callout — a sentence or two — that sits inline with body copy and provides a factual clarification, caveat, or data footnote without interrupting reading flow.
+- Root element: `<aside>`. Not polymorphic — there is no `as` prop. `<aside>` is the semantically correct element for tangentially related content (HTML spec). When nested inside `<article>` or `<section>`, `<aside>` degrades from a `complementary` landmark to a generic container — this is the correct behavior for multiple per-page inline asides (avoids landmark pollution).
+- `label` (optional string) — renders a single `<p>` above the body text in the Eyebrow typographic register (`--fs-meta` 14px, `--fg-muted`, `text-transform: uppercase`, `--tracking-eyebrow` 0.06em letter-spacing, `--lh-meta` 1.2 line-height). When absent, no label element is rendered. Default: `undefined`. Example values: `"Note"`, `"Caveat"`, `"Aside"`, `"Data point"`. Do NOT default to `"Note"` — the left rule is the signal; the label is for when type of aside is load-bearing information.
+- `children` (required ReactNode) — the body text. Rendered inside a `<p className="body">`. Accepts inline marks only: `<strong>`, `<em>`, `<a>`. No block-level children — no `<h2>`, `<ul>`, `<p>`, `<div>`, `<table>`. Editorial constraint; not type-enforced.
+- Left rule: `border-inline-start: var(--hairline-w) solid var(--hairline)`. Always present. 1px — quieter than Pull's 3px editorial accent. Decorative; no contrast requirement applies.
+- `padding-inline-start: var(--space-3)` (12px) — tighter than Pull's `--space-4` (16px). Reinforces FieldNote's subsidiary character.
+- `margin-block: var(--space-6)` (24px) — less than Pull's `--space-8` (32px). FieldNote is a minor inline pause; Pull is a major editorial pause.
+- `max-width: var(--hero-max)` (38rem / 608px) — matches the prose column cap used by Pull, Hero, and Section header blocks.
+- Body typography: `--fs-body` (17–19px fluid), `--font-sans` (Geist), `font-style: normal`, `line-height: 1.55` (global body value, inline — BACKLOG migration target when `--lh-body` is tokenized), `color: var(--fg)`. FieldNote body is real content, not a caption — full-weight color, not muted.
+- Inline links inside `children` inherit the global `<a>` two-layer underline rule from `tokens.css`. At rest: 1px `--hairline` underline. On hover: 1px `--accent` underline grows over it via `background-size` transition (`--dur-mid`, `--easing-link`). On `:focus-visible`: `outline: 2px solid var(--accent)`, `outline-offset: 4px`, `border-radius: var(--radius-1)`. No override in FieldNote's CSS scope — global rule is correct and must NOT be suppressed.
+- No states, no motion, no entrance animation. Static typography.
+- No color variants (`variant="warning"` etc.) — excluded at the brand level. Colored callouts are a different component. This exclusion requires explicit founder sign-off to change.
+- No icon slot. Icons imply status severity; FieldNote is plain text only.
+- No multi-paragraph body. Single-paragraph aside. For multiple paragraphs, use Section with `size="tight"`.
+- Tokens consumed: `--hairline-w`, `--hairline`, `--space-3`, `--space-1`, `--space-6`, `--fs-body`, `--fs-meta`, `--fg`, `--fg-muted`, `--font-sans`, `--tracking-eyebrow`, `--lh-meta`, `--hero-max`. No new tokens introduced.
+- Contrast: body `--fg` (#1D1D1F) on `--bg` (#FBFBFD) = 16.29:1 (AAA). Label `--fg-muted` (#6E6E73) on `--bg` (#FBFBFD) = 4.91:1 (AA normal ✓ at 14px).
+- Do NOT use FieldNote for content that has a title, an index, or more than two sentences of structured prose — use `<FailureMode>` or `<Section>`.
+- Do NOT nest FieldNote inside `<Pull>`. They operate at different typographic scales.
+- Do NOT place FieldNote inside `<Hero>`. Hero owns the page display moment.
+- Do NOT pass block-level elements as `children`. No `<h2>`, `<ul>`, `<table>`, `<div>`. Inline marks only.
+- Do NOT add an `as` prop. Root is always `<aside>`.
+- Do NOT add color variants. Tonally neutral by brand decision.
+
+```tsx
+// Plain body — no label (left rule is the signal):
+<FieldNote>
+  In 2024 we ran the same prompt across three model families and saw consistent
+  degradation after context exceeded 16k tokens.
+</FieldNote>
+
+// With label — when type of aside is load-bearing:
+<FieldNote label="Caveat">
+  These numbers reflect Q4 2023 benchmarks. The 2024 evals are in progress
+  and results may differ.
+</FieldNote>
+
+// With inline link in body:
+<FieldNote label="Note">
+  The latency figures come from our{" "}
+  <a href="/methodology">public methodology doc</a>, updated monthly.
+</FieldNote>
+```
+
+### Quote
+- Attributed customer testimonial molecule. A short prose block (1–4 sentences) from a named person, with optional role/title and optional avatar slot. Primary surface: customer story pages and social-proof sections.
+- Root element: `<figure>`. Not polymorphic — `<figure>` is the single correct semantic root for attributed quotations per HTML5. Inside: `<blockquote>` for the quoted body, `<figcaption>` for the attribution row. This structure correctly associates the attribution with the quote at the HTML semantic level — no extra ARIA needed.
+- Distinct from `<Pull>` (unattributed editorial pull-quote, Instrument Serif italic, left rule) and `<Statement>` (brand assertion, once per page, no attribution). Quote is sans-serif roman — identifiable at a glance from Pull/Statement without reading the attribution.
+- `quote` (required ReactNode) — the quoted body text. Accepts inline marks (`<em>`, `<strong>`) for emphasis within the passage. No block-level children — no headings, lists, nested paragraphs. Rendered as direct child of `<blockquote>`.
+- `name` (required string) — the attributed person's name. Plain string; `font-weight: 500`, `--fg`, `--fs-meta` (14px).
+- `role` (optional string) — the person's role or title. Plain string. Example: `"VP Engineering, Acme Corp"`. `font-weight: 400`, `--fg-muted`, `--fs-meta`. When omitted, no role element is rendered.
+- `avatar` (optional ReactNode) — avatar slot. Accepts any ReactNode: `<img>`, a third-party Avatar, a `<div>` with initials. The DS does not ship an Avatar atom. When present, rendered as the leftmost element of the attribution row; when absent, the name/role column sits flush. Convention: size to 40×40px and clip to circle (`border-radius: 50%`). DS does not enforce sizing or shape. If passing `<img>`, set `alt=""` (decorative) — the `name` is the text alternative.
+- Layout: stacked. Body above, attribution row below. No sidebar layout. Stacked degrades cleanly when avatar is absent.
+- `<blockquote>` body typography: `--fs-pull` (20–26px fluid), `--font-sans` (Geist), `font-weight: 400`, `font-style: normal`, `line-height: 1.45`, `color: var(--fg)`. `--fs-pull` reuses Pull's scale — both are quoted-content primitives at elevated size. The typographic differentiator is register (sans roman vs. serif italic), not size.
+- `<figcaption>` layout: `display: flex`, `align-items: center`, `gap: var(--space-3)` (12px avatar-to-name column). `margin-top: var(--space-4)` (16px) from blockquote. `padding-top: var(--space-4)` (16px) above content. `border-top: var(--hairline-w) solid var(--hairline)` — always present; use `className` to suppress if needed.
+- Name/role column: `display: flex`, `flex-direction: column`, `gap: var(--space-1)` (4px).
+- `max-width: var(--hero-max)` (38rem / 608px) — matches the prose column cap used by Pull, Hero, Section, and FieldNote.
+- `margin-block: var(--space-8)` (32px) — matches Pull's block margin. Remove default UA `margin` on `<figure>`.
+- `className` merges via `clsx`. `forwardRef` to the `<figure>` root. `displayName = "Quote"`. Full `ComponentPropsWithoutRef<"figure">` spread (id, data-*, aria-*, event handlers).
+- No cite prop in v1 — customer story quotes rarely have a URL source; deferred to later revision.
+- No showRule prop — hairline rule is always on. Use className override to suppress.
+- No avatar shape wrapper — DS does not enforce sizing; consumer responsibility.
+- No variant, no size, no as prop.
+- Tokens consumed: `--fs-pull`, `--fs-meta`, `--font-sans`, `--fg`, `--fg-muted`, `--hairline`, `--hairline-w`, `--space-1`, `--space-3`, `--space-4`, `--space-8`, `--lh-meta`, `--hero-max`. No new tokens introduced.
+- Contrast: body/name `--fg` (#1D1D1F) on `--bg` (#FBFBFD) = 16.29:1 (AAA). Role `--fg-muted` (#6E6E73) on `--bg` (#FBFBFD) = 4.91:1 (AA normal ✓ at 14px). Hairline is decorative.
+- Do NOT use Quote for unattributed text — use `<Pull>` if there is no named person.
+- Do NOT place Quote inside `<Hero>`. Hero owns the page display moment.
+- Do NOT use both Pull and Quote for the same person's words on the same page — pick the register.
+- Do NOT render Quote on a `--bg-warm-accent` band — palette interaction is untested.
+- Do NOT add a `cite` prop, `showRule` prop, avatar container wrapper, or `as` polymorphism without founder sign-off.
+- Do NOT pass block-level elements as `quote`. Inline marks only.
+
+```tsx
+// Full Quote — avatar, name, role:
+<Quote
+  quote="We went from weeks to hours. The tooling handled what we used to staff an entire team for."
+  name="Sarah Chen"
+  role="VP Engineering, Meridian Labs"
+  avatar={
+    <img
+      src="https://cdn.example.com/avatars/sarah-chen.jpg"
+      alt=""
+      width={40}
+      height={40}
+      style={{ borderRadius: "50%", display: "block" }}
+    />
+  }
+/>
+
+// Without avatar:
+<Quote
+  quote="The accuracy improvements were immediate and measurable."
+  name="James Okonkwo"
+  role="Head of Data, Fieldwork AI"
+/>
+
+// Name only — no role, no avatar:
+<Quote quote="Exactly what we needed. Nothing we didn't." name="Priya Mehta" />
+
+// Inline emphasis in quote body:
+<Quote
+  quote={<>We went from <em>weeks</em> to hours.</>}
+  name="Sarah Chen"
+  role="VP Engineering, Meridian Labs"
+/>
+```
+
+### Avatar
+- Atom for person/entity identity display. Three modes via discriminated union on `mode` prop.
+- `mode="image"` — renders `<img loading="lazy">` with `src` (required) and optional `alt`. `loading` is hardcoded to `"lazy"` — no escape hatch. No `onError` fallback — broken image falls back to browser default; consumers who need a fallback wrap in their own state.
+- `mode="initials"` — renders 1–2 character text label inside the avatar shape. Consumer is responsible for the initials string — Avatar does NOT derive initials from a name.
+- `mode="empty"` (default when `mode` is omitted) — blank placeholder, no inner content.
+- `size` (`"sm"` | `"md"` | `"lg"`, default `"md"`) — fixed pixel dimensions: sm=24px, md=32px, lg=40px. These are inline px values in the CSS module (no tokens). Initials font scales proportionally: sm=10px, md=12px, lg=14px.
+- `shape` (`"circle"` | `"square"`, default `"circle"`) — circle uses `border-radius: 50%`; square uses `--radius-2` (4px). Inline `border-radius: 50%` in CSS module (no token).
+- Hairline ring: `box-shadow: 0 0 0 1px var(--hairline)` — avoids layout shift versus a CSS `border`. Uses `--hairline` token.
+- Background: `--surface`. Text color: `--fg-muted`. Font: `--font-sans`, weight 500.
+- `name` (optional string) — accessible name for the avatar as a whole. Required in initials and empty modes for a11y. In image mode: required when `alt` is omitted. Produces `role="img"` + `aria-label` on the root `<span>`.
+- In image mode with `alt` provided, the `<img>` carries the label and the root span does NOT receive `role="img"` (avoids double-labelling).
+- Root is always `<span>`. Non-polymorphic. Ref forwarded to root span. `...rest` spread to root element.
+- Tokens consumed: `--surface` (background), `--fg-muted` (text + initials color), `--hairline` (ring), `--font-sans` (font family), `--radius-2` (square shape).
+- Do NOT add `onError` fallback — stateless atom. Consumers own error handling.
+- Do NOT pass `loading` — hardcoded `"lazy"` on internal `<img>`. No prop escape hatch.
+- Do NOT derive initials from a name string — pass initials explicitly via `initials` prop.
+- Do NOT add group/stack composition at this layer — consumer-side concern.
+- Do NOT make Avatar polymorphic — root is always `<span>`.
+- Do NOT use Avatar for decorative brand imagery — use `<Portrait>` for editorial photography.
+
+### Skeleton
+- Atom for async content placeholders. Single element — no children, no inner structure.
+- Root element is `<div>` by default; `as="span"` renders `<span>` with `display: inline-block` for inline contexts.
+- `as` prop is a closed union: only `"div"` and `"span"`. No arbitrary elements.
+- `width` / `height` (string | number, optional): bare numbers coerce to px (e.g. `120` → `120px`); strings pass through verbatim (`"100%"`, `"12rem"`). Applied as inline `style`. No intrinsic size — omitting both collapses the element to zero height (silent failure, easy to debug).
+- `radius` (`"sm"` | `"md"` | `"lg"` | `"circle"`, default `"md"`): sm → `--radius-1` (2px), md → `--radius-2` (4px), lg → `--radius-3` (8px), circle → `50%` (geometric instruction, not a token).
+- Animation: opacity pulse only — `poukai-skeleton-pulse` keyframe, `ease-in-out`, `var(--dur-pulse)` (1800ms), infinite. 0%/100% opacity 1 → 50% opacity 0.4. NO gradient shimmer, NO background-position animation, NO moving gradient of any kind. The banlist is explicit: "Skeleton shimmer that's prettier than the loaded state."
+- Reduced-motion: `@media (prefers-reduced-motion: reduce)` sets `animation: none; opacity: 0.6`. The global `tokens.css` block collapses duration to 0.01ms but does NOT set the correct resting opacity — the component must declare this explicitly.
+- `aria-hidden="true"` by default — decorative placeholder, communicates nothing to the a11y tree. Consumer can override via `...rest`.
+- `aria-busy` is NOT the Skeleton's concern — the consumer container owns the `aria-busy="true"` / `aria-busy="false"` lifecycle.
+- Tokens consumed: `--surface` (background fill), `--radius-1`, `--radius-2`, `--radius-3` (corner radii), `--dur-pulse` (animation duration). No new tokens introduced.
+- `display: block` on root div; `display: inline-block` when `as="span"`.
+- Do NOT add children — Skeleton has no inner structure.
+- Do NOT implement shimmer / sweep gradient / background-position animation at any point.
+- Do NOT add a `tone` prop — fill is always `--surface`. No exceptions.
+- Do NOT add default width/height — zero is the deliberate collapsed state.
+- Do NOT set `aria-busy` on the Skeleton itself.
+- Do NOT open the `as` union beyond `"div"` and `"span"`.
+
+```tsx
+// Block placeholder (text lines)
+<div aria-busy="true">
+  <Skeleton width="100%" height={24} radius="sm" />
+  <Skeleton width="60%" height={24} radius="sm" />
+</div>
+
+// Avatar placeholder
+<Skeleton width={40} height={40} radius="circle" />
+
+// Card placeholder
+<Skeleton width="100%" height={220} radius="lg" />
+
+// Inline text placeholder
+<p>Posted by <Skeleton as="span" width={80} height={14} radius="sm" /></p>
+```
+
+### Divider
+- Canonical hairline separator atom. Renders a 1px rule — horizontal (`<hr>`) or vertical (`<div role="separator">`).
+- `orientation` (`"horizontal"` | `"vertical"`, default `"horizontal"`) — horizontal is a full-width top-border rule; vertical is a 1px column rule that requires a flex/grid parent to have visible height.
+- `tone` (`"default"` | `"muted"`, default `"default"`) — `"default"` uses `--hairline`; `"muted"` uses `--hairline-soft` for quieter decorative contexts.
+- `as` (`"hr"` | `"div"`) — closed polymorphic. Horizontal defaults to `<hr>` (implicit `role="separator"`); vertical defaults to `<div>` with explicit `role="separator"` and `aria-orientation="vertical"`.
+- Zero self-margin by design. Parent layout (flex `gap`, padding) controls spacing around the rule.
+- Do NOT use as a background fill or container. Do NOT render thicker than `--hairline-w` (1px). Do NOT apply `--hairline-soft` for structural separators.
+
+### Spinner
+- Indeterminate loading indicator. Signals that an async operation is in progress when the duration is unknown.
+- Root element: `<span role="status" aria-live="polite" aria-label>`. SVG arc inside is `aria-hidden="true"`.
+- `size` (`"sm"` | `"md"` | `"lg"`, default `"md"`) — sm=16px, md=20px, lg=24px. Matches the `--icon-sm/md/lg` rung sizes.
+- `label` (string, default `"Loading"`) — accessible label announced to screen readers.
+- Uses `currentColor` for the arc and track — place inside any colored context without a separate color prop.
+- Under `prefers-reduced-motion: reduce`: rotation stops; a static ellipsis (`…`) is revealed for reduced-motion users.
+- Rotation period: `--dur-spinner` (800ms). Sub-second so the spinner reads as active, not stalled.
+- Do NOT use Spinner as a page-level loading overlay — that is a separate organism. Do NOT add a determinate progress variant here.
+
+### VisuallyHidden
+- Canonical sr-only primitive. Renders children visible to the accessibility tree but invisible to sighted users (WCAG clip pattern).
+- Root element: `<span>` by default; `as="div"` for block-level contexts where `<span>` would be invalid HTML.
+- No tokens, no variants, no motion. Invariant — one shape only.
+- Use `...rest` to forward `id` (for `aria-labelledby`/`aria-describedby` associations) or `aria-live` (for live-region announcements).
+- Do NOT add visible styles or variants. Do NOT use for layout hiding — use CSS `display: none` or `visibility: hidden` for that.
+
+### Icon
+- Thin rendering wrapper around any `lucide-react` icon component. Enforces three system-wide contracts at every call site: a token-aligned size scale (`xs`/`sm`/`md`/`lg`), `currentColor` as the only colour source, and decorative-by-default accessibility (`aria-hidden="true"` unless an explicit label is provided).
+- Root element: the Lucide icon SVG directly. No wrapper `<span>` or `<div>` — the SVG IS the root. Keeps the DOM flat and preserves inline-flex alignment inside button labels and icon-text rows.
+- `icon` (required `LucideIcon`) — the Lucide component reference. Consumer imports directly from `lucide-react` and passes the component. `<Icon>` is a frame, not a catalogue — it does NOT re-export any Lucide icon.
+- `size` (`"xs" | "sm" | "md" | "lg"`, default `"sm"`) — resolves to the `--icon-*` token via a `SIZE_MAP` lookup. xs → 12px, sm → 16px, md → 20px, lg → 24px. NEVER pass raw pixel values.
+- `decorative` (boolean, default `true`) — when `true`, `aria-hidden="true"` is set and the icon is removed from the a11y tree. When `false`, `role="img"` + `aria-label` is set. A dev-mode `console.error` fires when `decorative={false}` and no `aria-label` is provided — this is an a11y contract violation.
+- `aria-label` (optional string) — required when `decorative={false}`. Ignored when `decorative={true}`.
+- `className` — forwarded to the SVG root via `clsx`. Use sparingly; only for layout-level positioning. Never for color.
+- `...rest` — spread to the SVG element (id, data-*, event handlers).
+- `focusable="false"` — always applied (IE11/legacy-Edge SVG focus prevention). `flex-shrink: 0; pointer-events: none; color: currentColor` — always-on in CSS module.
+- No `color` prop. `currentColor` is the entire colour contract. Parent sets `color`; the icon inherits.
+- No numeric `size` prop. Four named rungs are the complete v1 surface.
+- `displayName = "Icon"`. `forwardRef` to the SVG element.
+- Tokens consumed: `--icon-xs` (12px), `--icon-sm` (16px), `--icon-md` (20px), `--icon-lg` (24px). Size classes in `Icon.module.css` set `width`/`height` via these tokens. `currentColor` cascades from parent — no token needed.
+- Composition: inside `<Button>` → `size="sm"`; inside `<Tag>` icon slot → `size="xs"`; inline with body text → `size="md"`; standalone nav/feature → `size="lg"`.
+- Do NOT add a `color` prop — `currentColor` is the contract.
+- Do NOT pass raw pixel values to `size` — the four named rungs are the complete scale.
+- Do NOT make `<Icon>` interactive — the surrounding `<button>` or `<a>` is always the focus target.
+- Do NOT nest inside `<Wordmark>` — Wordmark geometry is inline and hand-coded.
+
+### Link
+- Canonical styled anchor atom. Named, versioned component contract replacing the leaky global `a` rule and the `.muted-link` utility class for all call sites that want an explicit DS primitive.
+- Root element: `<a>` by default. When `asChild={true}`, renders a Radix `<Slot>` that merges all DS styles and event handlers onto the single child — the canonical pattern for Next.js `<Link>` or Remix `<Link>` composition.
+- `href` (required string) — destination URL. A link without an href is not a link; the prop is non-optional at the TypeScript level.
+- `variant` (`"default"` | `"quiet"` | `"muted-link"`, default `"default"`) — visual register. Three variants only; no additional tones without a spec revision.
+- `asChild` (boolean, default `false`) — Radix Slot composition. Consumer must pass exactly one child when `asChild={true}`.
+- `className` — merged via `clsx` onto the root. Consumer owns margin; Link has none.
+- `...rest` — full `AnchorHTMLAttributes<HTMLAnchorElement>` spread: `target`, `rel`, `aria-*`, `data-*`, event handlers, etc.
+- `variant="default"` — two gradient layers: accent grows 0%→100% on hover (layer 1); hairline always at 100% at rest (layer 2). `color: inherit`. `padding-bottom: 2px`. Transition: `background-size var(--dur-mid) var(--easing-link)`. Hover guarded by `@media (hover: hover)`. Direct transcription of the global `a` rule in `tokens.css`.
+- `variant="quiet"` — single gradient layer (accent only, pre-declared at 0% width). No hairline at rest. Hover grow identical to `default`. Pre-declaring a 0%-wide layer is required so the browser interpolates the grow — `none` at rest would snap instead of animate.
+- `variant="muted-link"` — `color: var(--fg-muted)`, `background-image: none`, `transition: color var(--dur-fast) ease`. On hover: `color: var(--fg)`. No underline layers. `padding-bottom: 0`. Byte-for-byte match of the global `.muted-link` class in `tokens.css` — the migration target for `SiteShell`, `Footer`, and story fixtures.
+- External-link security: when `target="_blank"` is passed and no explicit `rel` is provided, the component auto-applies `rel="noopener noreferrer"`. Consumer-supplied `rel` always wins.
+- Focus ring: inherits the global `a:focus-visible` rule (`outline: 2px solid var(--accent)`, `outline-offset: 4px`, `border-radius: var(--radius-1)`). The CSS module suppresses `a:focus` outline (double-ring prevention) and re-states `a:focus-visible` for explicitness.
+- No visited state, no active translateY, no color prop. Same rationale as `EmailLink`.
+- Tokens consumed: `--accent`, `--hairline`, `--fg-muted`, `--fg`, `--dur-mid`, `--dur-fast`, `--easing-link`, `--radius-1`. No new tokens introduced. The `1px` underline thickness and `2px` padding-bottom are literal values matching the global `a` rule (no `--text-underline-thickness` token exists yet).
+- `displayName = "Link"`. `forwardRef<HTMLAnchorElement, LinkProps>`. Named export only.
+- **Migration backlog (do NOT remove the global class in this PR).** The `.muted-link` global class in `tokens.css` is used in: `SiteShell.tsx`, `Footer.tsx`, `SiteShell.stories.tsx`, `a11y.test.tsx`, `System.stories.tsx`, `SiteShellFull.tsx`, `Hero.stories.tsx`. After `<Link variant="muted-link">` ships, each site should migrate. The global class must not be removed until an audit PR confirms all consumers (including the site repo) have migrated.
+- Use `<Link href="/path">` for all styled navigational anchors. Do NOT use a raw `<a>` inside prose copy.
+- Use `variant="muted-link"` inside `<SiteShell>` nav and `<Footer>` nav — direct replacement for the `"muted-link"` className.
+- Use `variant="quiet"` for nav lists where link nature is implicit from layout context. Do NOT use `quiet` in body paragraphs.
+- Use `variant="default"` in prose body copy where the hairline discoverability signal is required.
+- Do NOT use `<Link>` as a wrapper for `<Button>` — they are sibling atoms.
+- Do NOT add a `router` prop or bundle a framework adapter — the DS is framework-agnostic. This item is closed as Won't in the ROADMAP.
+- Do NOT add a `visited` style, `active` style, or `current` prop — out of scope per spec §10.
+- Do NOT add icon slots — inline icon composition is the consumer's responsibility at the call site.
+- Do NOT pass `href` when `asChild={true}` — the child element owns the href in that mode.
+
+```tsx
+// Default — prose body link with hairline underline at rest:
+<Link href="/work">our approach to AI adoption</Link>
+
+// Quiet — nav item, underline on hover only:
+<Link href="/why-ai" variant="quiet">Why AI</Link>
+
+// MutedLink — footer / secondary nav register:
+<Link href="mailto:hello@pouk.ai" variant="muted-link">hello@pouk.ai</Link>
+
+// External — rel auto-applied:
+<Link href="https://example.com/report" target="_blank">Industry report</Link>
+
+// asChild — Next.js router composition:
+<Link href="/about" asChild>
+  <NextLink href="/about">About</NextLink>
+</Link>
+```
+- Do NOT re-export Lucide symbols from `@poukai-inc/ui` — the consumer manages Lucide imports.
+
+```tsx
+import { Mail, AlertCircle } from "lucide-react";
+import { Icon } from "@poukai-inc/ui";
+
+// Decorative (default) — inside a button label:
+<button style={{ display: "inline-flex", alignItems: "center", gap: "var(--space-2)" }}>
+  <Icon icon={Mail} size="sm" />
+  Send email
+</button>
+
+// Semantic — icon carries meaning not expressed in adjacent text:
+<Icon icon={AlertCircle} size="md" decorative={false} aria-label="Warning: action required" />
+
+// Inheriting color from parent:
+<span style={{ color: "var(--fg-muted)" }}>
+  <Icon icon={Mail} size="sm" />
+</span>
+```
+
+### Logo
+- Partner / customer logo cell. Composes `<Image>` — the root is always a single `<img>` with no wrapper element.
+- `src` (required string) — logo image URL passed directly to `<Image>`.
+- `alt` (required string) — the organisation's name (e.g. `alt="Stripe"`). Required at the type level. Pass `alt=""` for purely decorative logos where the name is stated in adjacent text. NEVER omit.
+- `tone` (`"color"` | `"mono"` | `"muted"`, default `"mono"`) — visual treatment via CSS `filter` and `opacity`. `"color"`: no filter, full opacity. `"mono"`: `grayscale(1) brightness(0)` (true black silhouette), full opacity, static. `"muted"`: same filter + 0.55 opacity at rest; hover/focus-visible raises opacity to 1 with `transition: opacity var(--dur-fast) var(--easing)`.
+- `size` (`"sm"` | `"md"` | `"lg"`, default `"md"`) — max-height constraint: `"sm"` → 24px, `"md"` → 32px, `"lg"` → 40px. Width is always `auto` — logos scale proportionally within the height cap.
+- `width` (optional number, default 200) + `height` (optional number, default 80) — passed to `<Image>` to drive `aspect-ratio` for CLS-safe slot reservation. Override with true intrinsic pixel dimensions when known. Defaults (200 × 80, 2.5:1 ratio) are a centroid for landscape wordmark logos.
+- Inline style overrides passed to `<Image>`: `maxWidth: "none"` (removes Image's `max-width: 100%` so `width: auto` + `max-height` govern dimensions), `width: "auto"`. These combine with Image's baseline `height: auto` and `aspect-ratio`.
+- Hover/focus-visible contract applies only to `tone="muted"`. `tone="color"` and `tone="mono"` are static — no hover state.
+- Reduced-motion: global `@media (prefers-reduced-motion: reduce)` in `tokens.css` collapses the opacity transition to 0.01ms. The opacity change is preserved; only the animation collapses. No component-level reduced-motion handling needed.
+- No new tokens introduced. Reuses `--dur-fast` (180ms) and `--easing` for the muted opacity transition.
+- `forwardRef<HTMLImageElement, LogoProps>`, `displayName="Logo"`. `className` merged via `clsx` onto the root `<img>`. Remaining props (`data-*`, `aria-*`, `loading`, `decoding`) spread through `<Image>` to the `<img>`.
+- Composition: wrap in `<a>` for linked logos — use `tone="muted"` when inside a link so the hover state signals interactivity. The `<a>` is the interactive element; `<Logo>` is never a button or link itself.
+- Do NOT wrap in a `<figure>` — Logo is not captioned content. Do NOT use for person avatars/headshots — use `<Avatar>`. Do NOT use for editorial photography — use `<Image>` or `<Portrait>`. Logo is specifically for the logo-strip use case.
+- Do NOT pass conflicting inline `style` for `maxHeight`, `width`, or `filter` — those are Logo's sizing and tone contract. If you need to override, manage it in a consumer wrapper.
+- Do NOT omit `alt`. Use `alt=""` for purely decorative logos, never omit the prop.
+- Do NOT use `tone="muted"` when `<Logo>` is not inside an interactive element — the hover affordance would be misleading.
+
+### Input
+**Atomic layer: atom.** Import from `@poukai-inc/ui/atoms/Input`. Molecule path `@poukai-inc/ui/molecules/Input` is a deprecated re-export (works in 1.x, removed in 2.0).
+- Single-line text input atom. Root is always `<input>`. Non-polymorphic. Ref forwarded to `HTMLInputElement`.
+- `type` (`"text"` | `"email"` | `"url"` | `"tel"` | `"password"` | `"search"` | `"number"`, default `"text"`) — constrained to single-line text-like types.
+- `size` (`"sm"` | `"md"` | `"lg"`, default `"md"`) — visual height via shared `--btn-h-*` ladder. Pairs with `<Button size="…">` on the same row.
+- `invalid` (optional boolean) — sets `data-invalid="true"` and `aria-invalid="true"`; border → `--danger`. Prefer wiring through `<Field error="…">`.
+- `Omit<ComponentPropsWithoutRef<"input">, "size">` spread. Native HTML `size` attribute intentionally shadowed by DS `size` prop.
+- `clsx` className merge via `className` prop.
+- States: default (`--hairline` border, `--bg-elevated` bg), hover (border → `--fg-muted`, skipped on disabled/readonly), focus-visible (2px `--accent` outline + border), invalid (`--danger` border), disabled (`opacity: 0.5; cursor: not-allowed`), readonly (`cursor: default`).
+- Tokens: `--bg-elevated`, `--hairline`, `--fg-muted`, `--fg`, `--accent`, `--danger`, `--font-sans`, `--fs-body`, `--lh-body`, `--space-2`, `--space-3`, `--radius-2`, `--dur-fast`, `--easing`, `--btn-h-sm`, `--btn-h-md`, `--btn-h-lg`. No new tokens.
+- Idiomatic usage wraps Input in `<Field>`. Standalone usage is valid; consumer owns label association.
+- Do NOT use for multi-line text — use `<Textarea>`.
+- Do NOT pass `type="checkbox"`, `type="radio"`, `type="file"`, `type="range"`, `type="date"` — separate atoms.
+- Do NOT add leading/trailing icon slots — belongs to future `SearchField` molecule.
+
+```tsx
+// Inside Field (recommended):
+<Field label="Email address" id="email" helper="We'll never share your email.">
+  <Input type="email" placeholder="you@example.com" />
+</Field>
+
+// Standalone (consumer owns label):
+<label htmlFor="search">Search</label>
+<Input id="search" type="search" />
+```
+
+### Textarea
+- **Atom layer.** Multi-line textarea primitive. Root is always `<textarea>`. Non-polymorphic. Ref forwarded to `HTMLTextAreaElement`. Label/helper/error are NOT owned by Textarea — they live in `<Field>`.
+- Import from `@poukai-inc/ui` (root) or `@poukai-inc/ui/atoms/Textarea`. The legacy `@poukai-inc/ui/molecules/Textarea` path is a `@deprecated` re-export shim and will be removed in v2.0.
+- `invalid` (optional boolean) — when true, sets `data-invalid="true"` and `aria-invalid="true"`, applies `--danger` border. Prefer wiring through `<Field error="…">`.
+- `rows` — default `3`. Drives the natural rendered height.
+- `resize` — `"vertical" | "none" | "both"`, default `"vertical"`. Maps directly to the CSS `resize` property on the root. `"both"` is allowed but discouraged — horizontal drag breaks most responsive layouts.
+- Standard `ComponentPropsWithoutRef<"textarea">` spread: `value`, `onChange`, `placeholder`, `disabled`, `readOnly`, `required`, `name`, `aria-*`, `data-*`, etc.
+- `clsx` className merge via `className` prop.
+- States: default, hover, focus-visible, readonly, invalid, disabled. Visual register mirrors the `Input` atom exactly.
+- Tokens consumed: `--bg-elevated`, `--hairline`, `--fg-muted`, `--fg`, `--accent`, `--danger`, `--font-sans`, `--fs-body`, `--lh-body`, `--space-3`, `--radius-2`, `--dur-fast`, `--easing`. Strict subset of the `Input` atom's tokens. No new tokens.
+- Padding contract: **symmetric `--space-3` on all four sides** (block + inline). This is the only visual delta from `Input` (which uses `--space-2` block / `--space-3` inline). Multi-line content needs equal vertical headroom so the first and last lines do not feel cramped.
+- Do NOT add character count display — consumer responsibility.
+- Do NOT use Textarea for single-line input — use `<Input>`.
+- Do NOT add autosize / content-height tracking inside the atom. A future `useAutosizeTextarea` utility hook will compose on top; tracked separately.
+
+```tsx
+// Inside Field (recommended):
+<Field label="Message" id="message">
+  <Textarea placeholder="Tell us about your project…" rows={6} />
+</Field>
+
+// Resize locked (fixed-height note):
+<Field label="Internal note">
+  <Textarea rows={2} resize="none" placeholder="Short note…" />
+</Field>
+```
+
+### Select
+**Atomic layer: atom.** Import from `@poukai-inc/ui/atoms/Select` or `@poukai-inc/ui`.
+- Native `<select>` atom. Root is always `<select>`. Non-polymorphic. Ref forwarded to `HTMLSelectElement`. Children are `<option>` / `<optgroup>` nodes — consumer-supplied.
+- `size` (`"sm"` | `"md"` | `"lg"`, default `"md"`) — visual height via shared `--btn-h-*` ladder. Pairs with `<Input size="…">` and `<Button size="…">` on the same row.
+- `invalid` (optional boolean) — sets `data-invalid="true"` and `aria-invalid="true"`; border → `--danger`. Prefer wiring through `<Field error="…">`.
+- `Omit<ComponentPropsWithoutRef<"select">, "size">` spread. Native HTML `size` attribute intentionally shadowed by DS `size` prop.
+- `clsx` className merge via `className` prop.
+- Trailing caret: CSS `background-image` SVG data URL (chevron-down, 16×16, 1.5px round stroke). Color hardcoded per color scheme (`#1d1d1f` light, `#f5f5f7` dark) — `currentColor` is unavailable in SVG background images. Extra inline-end padding reserves room. RTL flips caret. `[multiple]` hides caret and restores native appearance.
+- States: default (`--hairline` border, `--bg-elevated` bg), hover (border → `--fg-muted`, gated `@media (hover: hover)`, skipped on disabled), focus-visible (2px `--accent` outline + border), invalid (`--danger` border), disabled (`opacity: 0.5; cursor: not-allowed`).
+- Tokens: `--bg-elevated`, `--hairline`, `--fg-muted`, `--fg`, `--accent`, `--danger`, `--font-sans`, `--fs-body`, `--lh-body`, `--space-2`, `--space-3`, `--radius-2`, `--dur-fast`, `--easing`, `--btn-h-sm`, `--btn-h-md`, `--btn-h-lg`. No new tokens.
+- Idiomatic usage wraps Select in `<Field>`. Standalone usage valid; consumer owns label association.
+- Do NOT build a custom dropdown with this — use the native platform menu. Portal listbox / combobox is a separate future atom-pair.
+- Do NOT render Icon atoms or arbitrary children inside `<select>` — the platform discards them. The caret is CSS-only.
+
+```tsx
+// Inside Field (recommended):
+<Field label="Country" id="country" helper="Used for tax calculation.">
+  <Select name="country" defaultValue="us">
+    <option value="us">United States</option>
+    <option value="ca">Canada</option>
+  </Select>
+</Field>
+
+// Standalone (consumer owns label):
+<label htmlFor="sort">Sort by</label>
+<Select id="sort" size="sm" defaultValue="recent">
+  <option value="recent">Most recent</option>
+  <option value="popular">Most popular</option>
+</Select>
+```
+
+### Field
+- Composition wrapper that connects a visible label, optional helper text, and optional error message to a single form control (`<Input>`, `<Textarea>`, `<Select>`, or any HTML form element).
+- Root element: `<div>`. Non-polymorphic. Ref forwarded to `HTMLDivElement`. `...rest` spread passes `data-*`, `aria-*`, `className`, `style`, etc.
+- `label` (required string) — visible label text. Rendered as `<label htmlFor={id}>`. Every Field must have a label.
+- `id` (optional string) — auto-generated via `useId()` when not provided. Wires `<label htmlFor>` and the child control's `id`.
+- `helper` (optional string) — helper text rendered below the control in `--fg-muted` register. Not rendered when `error` is also set.
+- `error` (optional string) — error message rendered below the control with `role="alert"`, `--fg` color, and a 2px `--accent` left-rule border. When set: replaces helper text, injects `invalid={true}` and `aria-invalid="true"` onto the child, includes error element id in `aria-describedby`.
+- `required` (optional boolean) — adds visible `*` indicator (in `<span aria-hidden="true">`) next to label, and injects `required` onto child. The `aria-hidden` hides `*` from AT; the `required` attribute conveys it semantically.
+- `children` (ReactElement) — exactly one form control. Field clones it via `React.cloneElement` to inject `id`, `aria-describedby`, `aria-invalid`, `invalid`, and `required` as needed.
+- `cloneElement` injection table:
+  - `id` — always injected (wires label)
+  - `aria-describedby` — injected when helper or error is set
+  - `aria-invalid="true"` — injected when error is set
+  - `invalid={true}` — injected when error is set (for DS Input/Textarea styling)
+  - `required={true}` — injected when required is set
+- `aria-describedby` points at error element id when error is present; helper element id when only helper is present.
+- Error `<p>` has `role="alert"` — announces error message to screen readers on mount.
+- Layout: `display: flex; flex-direction: column; gap: var(--space-1)`.
+- Label typography: `--fs-meta`, `font-weight: 500`, `--fg`, `cursor: pointer`.
+- Helper typography: `--fs-meta`, `--fg-muted`, `--lh-meta`, `margin-top: var(--space-1)`.
+- Error typography: `--fs-meta`, `--fg`, `--lh-meta`, `margin-top: var(--space-1)`, `border-inline-start: 2px solid var(--accent)`, `padding-inline-start: var(--space-2)`.
+- Tokens consumed: `--fs-meta`, `--lh-meta`, `--font-sans`, `--fg`, `--fg-muted`, `--accent`, `--space-1`, `--space-2`. No new tokens.
+- Do NOT add a Form wrapper organism here — that is a separate future organism.
+- Do NOT pass multiple children — Field supports exactly one form control.
+- Do NOT add inline vs. stacked label variants in v1 — stacked only.
+- Do NOT add floating label — not brand-aligned.
+
+```tsx
+// (a) Field + Input (email):
+<Field label="Email address" id="email" helper="We'll never share your email.">
+  <Input type="email" placeholder="you@example.com" />
+</Field>
+
+// (b) Field + Textarea (message):
+<Field label="Message" id="message">
+  <Textarea placeholder="Tell us about your project…" />
+</Field>
+
+// (c) Field with error:
+<Field label="Email address" id="email-err" error="Please enter a valid email address.">
+  <Input type="email" defaultValue="not-an-email" />
+</Field>
+
+// (d) Required field:
+<Field label="Full name" id="name" required>
+  <Input placeholder="Arian Zargaran" />
+</Field>
+```
+
+### Banner
+- Persistent inline notice molecule. Sits in document flow; not a toast, not a modal, not a status indicator.
+- Root element: `<div>`. `forwardRef<HTMLDivElement, BannerProps>`. `...rest` spread. `displayName = "Banner"`.
+- `tone` (optional `"info" | "warning" | "danger" | "success"`, default `"info"`) — controls color, ARIA role, and left rule.
+- `icon` (optional `ReactNode`) — leading icon slot. No auto-icon. Consumer passes decorative SVG with `aria-hidden="true"`.
+- `action` (optional `ReactNode`) — trailing action slot. Typically `<Button variant="ghost">`. Natural focus order after body.
+- `children` (required `ReactNode`) — body content.
+- A11y: `role="status"` (polite live region) for `info` and `success`; `role="alert"` (assertive) for `warning` and `danger`.
+- Tone color table:
+  - `info`: `--bg` background, `--fg` text, `--hairline-w` / `--hairline` border all sides.
+  - `warning`: `--bg-warm-accent` background, `--fg-on-warm` text, 2px `--fg-on-warm-muted` border-inline-start, no full border.
+  - `danger`: `--bg-warm-accent` background, `--fg-on-warm` text, 2px `--fg-on-warm-muted` border-inline-start, no full border.
+  - `success`: `--bg-elevated` background, `--fg` text, 2px `--accent` border-inline-start, `--hairline-w` / `--hairline` full border.
+- Layout: flex row, `align-items: flex-start`, `flex-wrap: wrap`. Icon and action are `flex-shrink: 0`; body is `flex: 1`.
+- Tokens consumed: `--bg`, `--bg-elevated`, `--bg-warm-accent`, `--fg`, `--fg-on-warm`, `--fg-on-warm-muted`, `--hairline`, `--hairline-w`, `--accent`, `--font-sans`, `--fs-body`, `--lh-body`, `--space-2`, `--space-3`, `--space-4`, `--radius-2`. Zero new tokens.
+- Static and persistent. No dismissal, no animation, no timing in v1. Consumer controls mount/unmount.
+- Toast (ephemeral overlay) is deferred — requires a Provider, queue, and portal.
+- Do NOT add auto-icons per tone — icon is always a consumer-controlled slot.
+- Do NOT add dismissal logic or animation in v1.
+- Do NOT introduce danger/warning/success color tokens — re-use the warm-accent tier.
+
+```tsx
+// (a) Info — quiet on-page notice:
+<Banner tone="info">Your session will expire in 15 minutes.</Banner>
+
+// (b) Warning — assertive, warm-accent surface:
+<Banner tone="warning">API key expires in 3 days. Rotate before the deadline.</Banner>
+
+// (c) Danger — assertive, same warm register as warning:
+<Banner tone="danger">Deployment failed. Check the logs and redeploy.</Banner>
+
+// (d) Success — elevated surface, accent left rule:
+<Banner tone="success">Deployment complete. Your changes are live.</Banner>
+
+// (e) With icon and action slots:
+<Banner
+  tone="warning"
+  icon={<svg aria-hidden="true">…</svg>}
+  action={<Button variant="ghost" size="sm">Rotate key</Button>}
+>
+  API key expires in 3 days.
+</Banner>
+```
+
+### SiteShell
+- Do NOT nest SiteShell inside another SiteShell. It is min-height: 100dvh.
+- Emits plain <a href> tags — framework-router consumers intercept at app level.
+- navLabel (default: "Primary") is the aria-label for the nav element.
+
+### Footer
+- Canonical site-footer content block. Composes copyright + email (via `<EmailLink variant="muted">`) + optional secondary link row.
+- Does NOT own the hairline rule or outer padding when slotted into SiteShell — SiteShell's `.footer` CSS provides those. When used standalone (`as="footer"`), Footer adds `border-top: var(--hairline-w) solid var(--hairline)` and `padding: var(--space-8) var(--page-pad)` via the `[data-standalone="true"]` selector.
+- `as` prop (`"div"` | `"footer"`, default `"div"`) — controls the root element. Default `"div"` is correct when Footer is the child of SiteShell's `footer` slot (SiteShell already wraps in `<footer>` — nesting two `<footer>` elements degrades the inner one to a generic container per ARIA spec). Pass `as="footer"` for standalone surfaces without SiteShell.
+- `copyright` (required string) — full copyright string including `©` and year. e.g. `"© Pouk AI INC 2026"`. DS never auto-inserts `new Date().getFullYear()`. A dev-mode `console.error` fires on empty string.
+- `email` (required string) — email address passed to `<EmailLink variant="muted">`. Footer owns no `mailto:` logic.
+- `emailLabel` (optional string) — visible label override for EmailLink. When omitted, defaults to the raw email address as visible text (e.g. `hello@pouk.ai`). Pass `"Contact"` for space-constrained contexts.
+- `links` (optional `FooterLink[]`) — secondary nav links. Each item: `{ href: string; label: string; external?: boolean }`. When `external: true`, link gets `target="_blank" rel="noopener noreferrer"`. When absent or empty array, no `<nav>` is emitted.
+- `linksLabel` (optional string, default `"Footer"`) — `aria-label` for the `<nav>`. Required for SR landmark disambiguation when multiple `<nav>` elements exist on the page (header nav + footer nav).
+- Layout: flex row (`justify-content: space-between`) at ≥ 768px. Below 768px: flex column, left-aligned, `--space-4` (16px) gap between rows.
+- Left group: copyright `<span>` + `·` separator (`aria-hidden="true"`) + `<EmailLink variant="muted">`. Gap between items: `--space-2` (8px).
+- Right group (optional): `<nav aria-label>` wrapping `<ul>` of `<li><a class="muted-link">` items. Gap between links: `--space-2` (8px). Link color: `--fg-muted` at rest, `--fg` on hover (via `.muted-link` global from `tokens.css`).
+- Tokens consumed: `--fg-muted`, `--fg`, `--font-sans`, `--fs-meta`, `--lh-meta`, `--space-2`, `--space-4`, `--space-8`, `--page-pad`, `--hairline-w`, `--hairline`, `--dur-fast`, `--accent`, `--radius-1`.
+- No new tokens introduced. No dark-mode per-component overrides needed — tokens flip cleanly via the global block in `tokens.css`.
+- `className` pass-through available via `React.HTMLAttributes<HTMLElement>` spread. Footer has no margin of its own.
+- Do NOT nest Footer inside another Footer.
+- Do NOT use `as="footer"` inside SiteShell — this produces nested `<footer>` landmarks, which is semantically invalid. Use the default `as="div"`.
+- Do NOT add a router abstraction. Footer emits plain `<a href>`.
+- Do NOT pass `external: true` without providing a meaningful label that communicates external destination (e.g. `"GitHub ↗"`).
+- Do NOT use Footer for multi-column layout (Products / Company / Legal grid) — that is a separate organism pattern.
+- Do NOT add the wordmark inside Footer — use a custom composition outside the DS if needed.
+- Accessible name: two `<nav>` on page (header + footer) must each have distinct `aria-label`. Default `"Footer"` satisfies this; override via `linksLabel` if convention differs.
+
+```tsx
+// Inside SiteShell (canonical):
+<SiteShell
+  routes={[{ href: "/why-ai", label: "Why AI" }]}
+  footer={
+    <Footer
+      copyright="© Pouk AI INC 2026"
+      email="hello@pouk.ai"
+      links={[
+        { href: "/privacy", label: "Privacy" },
+        { href: "/terms", label: "Terms" },
+        { href: "https://github.com/poukai-inc", label: "GitHub ↗", external: true },
+      ]}
+    />
+  }
+>
+  {children}
+</SiteShell>
+
+// Standalone:
+<Footer
+  as="footer"
+  copyright="© Pouk AI INC 2026"
+  email="hello@pouk.ai"
+  links={[{ href: "/privacy", label: "Privacy" }]}
+/>
+```
+
+### Dialog
+
+Modal overlay primitive. Always modal (`modal: true`). Wraps `@radix-ui/react-dialog` — all focus-trap, ARIA roles, and keyboard handling are delegated to Radix. The DS adds brand styling only.
+
+**Compound subcomponents**
+
+| Subcomponent        | Role                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------- |
+| `Dialog.Root`       | State controller. Props: `open`, `defaultOpen`, `onOpenChange`, `modal` (always true), `children`. |
+| `Dialog.Trigger`    | Element that opens the dialog. Use `asChild` to pass a `<Button>`.                               |
+| `Dialog.Portal`     | Renders overlay + content outside the DOM tree (into `document.body` by default). See SSR note below. |
+| `Dialog.Overlay`    | Backdrop scrim. DS-styled: `rgb(0 0 0 / 0.4)`, animates on `data-state`. Pass `forceMount` for CSS-only exit animations. |
+| `Dialog.Content`    | Modal panel. Primary styled surface. Props: `forceMount`, `onOpenAutoFocus`, `onCloseAutoFocus`, `onEscapeKeyDown`, `onPointerDownOutside`, `onInteractOutside`, `className`. |
+| `Dialog.Title`      | Required accessible title. Radix warns if absent. Styled at `1.125rem / weight 500` by default. |
+| `Dialog.Description`| Optional accessible description. Styled at `--fs-meta` / `--fg-muted`.                          |
+| `Dialog.Close`      | Button that closes the dialog. Use `asChild` to render as `<Button>` or icon button.             |
+
+**`DialogBasic` convenience wrapper**
+
+Covers the 90% case: single-panel dialog with title, optional description, body, and built-in X close button.
+
+| Prop           | Type                        | Default   | Description                                                             |
+| -------------- | --------------------------- | --------- | ----------------------------------------------------------------------- |
+| `open`         | `boolean?`                  | —         | Controlled open state. Pair with `onOpenChange`.                        |
+| `onOpenChange` | `(open: boolean) => void?`  | —         | Controlled open state handler.                                          |
+| `title`        | `string`                    | required  | Dialog title. Required. Renders as `Dialog.Title`.                      |
+| `description`  | `string?`                   | —         | Optional description. When present, adds a hairline rule below title.   |
+| `children`     | `ReactNode`                 | required  | Body content.                                                           |
+| `footer`       | `ReactNode?`                | —         | Optional right-aligned footer (typically Cancel + Confirm buttons).     |
+| `closeLabel`   | `string?`                   | `"Close"` | Accessible label for the built-in X close button. Override for locale.  |
+| `className`    | `string?`                   | —         | Forwarded to `Dialog.Content`. Standard layout-override escape hatch.   |
+
+**Tokens consumed**
+
+| Token          | Role                                               |
+| -------------- | -------------------------------------------------- |
+| `--bg-elevated`| Content panel background (front-most elevation)    |
+| `--fg`         | Title and body text                                |
+| `--fg-muted`   | Description text and close button icon             |
+| `--hairline`   | Panel border + title/body divider rule             |
+| `--hairline-w` | Hairline stroke weight (1px)                       |
+| `--accent`     | Focus ring on close button and interactive elements|
+| `--radius-3`   | Content panel corner radius (8px)                  |
+| `--radius-1`   | Focus ring border-radius (2px)                     |
+| `--space-2`    | Description margin-top                             |
+| `--space-3`    | Footer button gap                                  |
+| `--space-4`    | Body padding-top; divider margin-top               |
+| `--space-6`    | Panel horizontal padding; footer margin-top        |
+| `--space-8`    | Panel top padding                                  |
+| `--font-sans`  | All text in the dialog                             |
+| `--fs-body`    | Body content text                                  |
+| `--fs-meta`    | Description text                                   |
+| `--dur-fast`   | Open/close transition duration (180ms)             |
+| `--easing`     | Entrance easing (expo-out)                         |
+| `--page-pad`   | Panel width calculation (subtracted from 100vw)    |
+| `--surface`    | Close button hover background                      |
+
+**SSR / portal container note.** By default Radix portals content into `document.body`. Consumers using Next.js App Router or SSR strict mode who need to target a specific DOM node (e.g. `<div id="portal-root">` outside `<main>`) can pass `container` via `Dialog.Portal` props: `<Dialog.Portal container={portalRootRef.current}>`. No code-level handling is required in the DS — the prop passes through to Radix directly.
+
+**JSX usage examples**
+
+```jsx
+// (a) Controlled open state — DialogBasic
+import { useState } from "react";
+import { DialogBasic, Button } from "@poukai-inc/ui";
+
+function WaitlistSignup() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>Join waitlist</Button>
+      <DialogBasic
+        open={open}
+        onOpenChange={setOpen}
+        title="Join the waitlist"
+        description="We'll reach out as soon as your spot is ready."
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button variant="primary" type="submit" form="waitlist-form">Submit</Button>
+          </>
+        }
+      >
+        <form id="waitlist-form">
+          <label htmlFor="email">Email address</label>
+          <input id="email" type="email" name="email" autoComplete="email" />
+        </form>
+      </DialogBasic>
+    </>
+  );
+}
+
+// (b) Uncontrolled via Dialog.Trigger — compound API
+import { Dialog, Button } from "@poukai-inc/ui";
+
+function InfoOverlay() {
+  return (
+    <Dialog.Root>
+      <Dialog.Trigger asChild>
+        <Button variant="ghost">Learn more</Button>
+      </Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Overlay />
+        <Dialog.Content>
+          <Dialog.Title>About pouk.ai</Dialog.Title>
+          <Dialog.Description>
+            pouk.ai gives operators access to enterprise-grade AI tooling.
+          </Dialog.Description>
+          <p>Founded in 2025, pouk.ai builds the infrastructure layer for AI operators.</p>
+          <Dialog.Close asChild>
+            <Button variant="ghost">Close</Button>
+          </Dialog.Close>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
+
+// (c) Form inside Dialog — onOpenAutoFocus override
+import { useRef } from "react";
+import { Dialog, Button } from "@poukai-inc/ui";
+
+function SettingsDialog({ open, onOpenChange }) {
+  const firstFieldRef = useRef(null);
+  return (
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <Dialog.Portal>
+        <Dialog.Overlay />
+        <Dialog.Content
+          onOpenAutoFocus={(e) => {
+            e.preventDefault();
+            firstFieldRef.current?.focus();
+          }}
+        >
+          <Dialog.Title>Notification settings</Dialog.Title>
+          <form>
+            <input ref={firstFieldRef} id="notify-email" type="checkbox" name="notify-email" />
+          </form>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-3)", marginTop: "var(--space-6)" }}>
+            <Dialog.Close asChild><Button variant="ghost">Cancel</Button></Dialog.Close>
+            <Button variant="primary" type="submit">Save</Button>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
+
+// (d) Confirmation dialog — Cancel + Confirm pattern
+// Note: variant="primary" is used for the destructive action until variant="danger" ships.
+import { DialogBasic, Button } from "@poukai-inc/ui";
+
+function DeleteConfirmation({ open, onOpenChange, onConfirm }) {
+  return (
+    <DialogBasic
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Delete this project?"
+      description="This action cannot be undone. All data will be permanently removed."
+      footer={
+        <>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="primary" onClick={() => { onConfirm(); onOpenChange(false); }}>
+            Delete project
+          </Button>
+        </>
+      }
+    >
+      {null}
+    </DialogBasic>
+  );
+}
+```
+
+- Dialog is always modal. Non-blocking overlays → future `Popover` primitive.
+- `Dialog.Title` is required — Radix warns if absent. Use `position: absolute; clip: rect(0,0,0,0)` visually-hidden styles for untitled designs; do NOT omit the element.
+- Do NOT set `modal={false}` — excluded from the DS. Use the raw Radix primitive if absolutely required.
+- Do NOT add `--scrim` or `--shadow-dialog` tokens. The scrim value (`rgb(0 0 0 / 0.4)`) is intentionally inline (not a theme variable). No drop shadow — `--bg-elevated` on `--bg` reads as elevated via background value difference.
+- Do NOT nest a Dialog inside another Dialog.
+- Do NOT add `role="alertdialog"` unless the action is truly irreversible with no non-destructive dismiss path — a future `AlertDialog` variant will handle that register.
+- `className` on `Dialog.Content` and `DialogBasic` is the sanctioned escape hatch for layout overrides (e.g. wider panels). No "wide" size variant ships in v1.
+
+### Tabs
+
+Tabbed interface primitive. Wraps `@radix-ui/react-tabs` — all ARIA roles (`tablist`, `tab`, `tabpanel`), keyboard navigation (arrow keys, Home/End), focus management, and `aria-selected` / `aria-controls` / `aria-labelledby` wiring are delegated to Radix. The DS adds brand styling only.
+
+**Compound subcomponents**
+
+| Subcomponent    | Role                                                                                                           |
+| --------------- | -------------------------------------------------------------------------------------------------------------- |
+| `Tabs.Root`     | State controller. Props: `value`, `defaultValue`, `onValueChange`, `orientation` (`"horizontal"` \| `"vertical"`, default `"horizontal"`), `className`, `children`. |
+| `Tabs.List`     | Wrapper for triggers. Sets `role="tablist"`. DS-styled: hairline border-bottom (horizontal) or border-right (vertical), flex, overflow-x scroll. |
+| `Tabs.Trigger`  | Individual tab button. Required `value` prop. DS-styled: `--fg-muted` at rest, `--fg` on hover/active, inset accent `box-shadow` on active. |
+| `Tabs.Content`  | Content panel for a given tab. Required `value` prop. `padding-top: var(--space-6)` (horizontal) or `padding-left: var(--space-6)` (vertical). |
+
+**`TabsBasic` convenience wrapper**
+
+Data-driven API for the 90% case.
+
+| Prop            | Type                              | Default              | Description                                                              |
+| --------------- | --------------------------------- | -------------------- | ------------------------------------------------------------------------ |
+| `tabs`          | `TabItem[]`                       | required             | Array of `{ value, label, content }` objects.                            |
+| `defaultValue`  | `string?`                         | `tabs[0].value`      | Uncontrolled initial active tab.                                         |
+| `value`         | `string?`                         | —                    | Controlled active tab value. Pair with `onValueChange`.                  |
+| `onValueChange` | `(v: string) => void?`            | —                    | Controlled mode handler.                                                 |
+| `orientation`   | `"horizontal" \| "vertical"`      | `"horizontal"`       | Tab layout orientation.                                                  |
+| `className`     | `string?`                         | —                    | Forwarded to `Tabs.Root`. Standard layout-override escape hatch.          |
+
+**Tokens consumed**
+
+| Token          | Role                                                                |
+| -------------- | ------------------------------------------------------------------- |
+| `--hairline`   | List border-bottom (horizontal) or border-right (vertical)          |
+| `--hairline-w` | Hairline stroke weight (1px)                                        |
+| `--space-1`    | Trigger horizontal padding                                          |
+| `--space-2`    | Trigger vertical padding                                            |
+| `--space-4`    | Gap between triggers in list                                        |
+| `--space-6`    | Content padding-top (horizontal) or padding-left (vertical)         |
+| `--fs-meta`    | Trigger font size (14px)                                            |
+| `--lh-meta`    | Trigger line-height (1.2)                                           |
+| `--font-sans`  | Trigger font family (Geist)                                         |
+| `--fg`         | Trigger color on hover and active state                             |
+| `--fg-muted`   | Trigger color at rest                                               |
+| `--accent`     | Active trigger inset box-shadow; focus ring                         |
+| `--radius-1`   | Trigger and content focus ring border-radius (2px)                  |
+| `--dur-fast`   | Trigger color and box-shadow transition duration (180ms)             |
+| `--easing`     | Trigger transition easing (expo-out)                                |
+
+**JSX usage examples**
+
+```jsx
+// (a) Controlled TabsBasic with two tabs
+import { useState } from "react";
+import { TabsBasic } from "@poukai-inc/ui";
+
+function ServiceSelector() {
+  const [tab, setTab] = useState("build");
+  return (
+    <TabsBasic
+      value={tab}
+      onValueChange={setTab}
+      tabs={[
+        { value: "build", label: "Build", content: <p>Custom AI builds — end-to-end production systems.</p> },
+        { value: "automate", label: "Automate", content: <p>Workflow automation — closed-loop inference pipelines.</p> },
+      ]}
+    />
+  );
+}
+
+// (b) Compound API with three tabs
+import { Tabs } from "@poukai-inc/ui";
+
+function WorkPage() {
+  return (
+    <Tabs.Root defaultValue="principles">
+      <Tabs.List>
+        <Tabs.Trigger value="principles">Principles</Tabs.Trigger>
+        <Tabs.Trigger value="failure-modes">Failure Modes</Tabs.Trigger>
+        <Tabs.Trigger value="team">Team</Tabs.Trigger>
+      </Tabs.List>
+      <Tabs.Content value="principles">
+        <h3>Ship the smallest real thing.</h3>
+        <p>The only metric that matters is a production feedback loop closing.</p>
+      </Tabs.Content>
+      <Tabs.Content value="failure-modes">
+        <h3>The chatbot-on-top-of-RAG plateau.</h3>
+        <p>Most teams stop here. The demo dazzles; the production loop never closes.</p>
+      </Tabs.Content>
+      <Tabs.Content value="team">
+        <h3>Senior-only.</h3>
+        <p>No juniors, no coordinators. Every person ships to production.</p>
+      </Tabs.Content>
+    </Tabs.Root>
+  );
+}
+
+// (c) Vertical orientation via compound API
+import { Tabs } from "@poukai-inc/ui";
+
+function SettingsPanel() {
+  return (
+    <Tabs.Root defaultValue="general" orientation="vertical">
+      <Tabs.List>
+        <Tabs.Trigger value="general">General</Tabs.Trigger>
+        <Tabs.Trigger value="notifications">Notifications</Tabs.Trigger>
+        <Tabs.Trigger value="billing">Billing</Tabs.Trigger>
+      </Tabs.List>
+      <Tabs.Content value="general"><p>General settings panel.</p></Tabs.Content>
+      <Tabs.Content value="notifications"><p>Notification preferences panel.</p></Tabs.Content>
+      <Tabs.Content value="billing"><p>Billing panel.</p></Tabs.Content>
+    </Tabs.Root>
+  );
+}
+```
+
+- Do NOT roll your own keyboard navigation — Radix handles arrow keys, Home, End, and focus management. Custom `onKeyDown` on triggers will break native behavior.
+- Do NOT add a router abstraction — consumers wire `value` / `onValueChange` to URL state themselves.
+- Do NOT add lazy-load / suspense for `Tabs.Content` at the DS level — wrap content in `<Suspense>` at the consumer side if needed.
+- `Tabs.Trigger` value must exactly match its `Tabs.Content` value — Radix uses these to wire `aria-controls` and `aria-labelledby`.
+- Do NOT nest `Tabs.Root` inside another `Tabs.Root` — conflicting ARIA relationships.
+- Horizontal `Tabs.List` scrolls on overflow (`overflow-x: auto`, hidden scrollbar). No "More" overflow menu in v1.
+- Active tab indicator is an inset `box-shadow` (not a `border`) to avoid layout shift. Horizontal: `inset 0 -2px 0 var(--accent)`. Vertical: `inset -2px 0 0 var(--accent)`.
+
+### Form
+
+Structured submission container — `<form>` wrapper that composes `Field` + `Input` + `Textarea` + `Button` without owning a validation library.
+
+- Root element: `<form>`. Not polymorphic.
+- Props: `onSubmit: (data: FormData) => void | Promise<void>` (required); standard `<form>` attributes (`action`, `method`, `name`, etc.) spread via `Omit<ComponentPropsWithoutRef<"form">, "onSubmit">`.
+- Behavior: prevents default browser submit, collects `new FormData(event.currentTarget)`, passes it to consumer's `onSubmit`. Handler exceptions propagate — Form does not swallow them.
+- Layout: `display: flex; flex-direction: column; gap: var(--space-4); max-width: var(--hero-max);` (matches prose column).
+- `forwardRef<HTMLFormElement, FormProps>`, `displayName = "Form"`, `clsx` className merge.
+- A11y: native `<form>` semantics. No additional ARIA.
+- Tokens consumed: `--space-4`, `--hero-max`, `--font-sans`. No new tokens.
+- Validation: consumer responsibility — pair with Zod, React Hook Form, or hand-rolled. Use `useFieldErrors` (shipped v1.1.0) for field-keyed error state management.
+- Do NOT add a `<fieldset>`/`<legend>` slot — consumer adds those via children if needed.
+
+```tsx
+<Form onSubmit={(data) => sendEmail({ email: data.get("email"), message: data.get("message") })}>
+  <Field label="Email" id="email">
+    <Input type="email" name="email" placeholder="you@example.com" required />
+  </Field>
+  <Field label="Message" id="message">
+    <Textarea name="message" rows={4} required />
+  </Field>
+  <Button variant="primary" type="submit">Send</Button>
+</Form>
+```
+
+### useFieldErrors
+
+Validation-lib-agnostic error-state hook for Form surfaces. Shipped in v1.1.0. Co-located with `<Field>` at `src/molecules/Field/useFieldErrors.ts`.
+
+```ts
+import { useFieldErrors, type FieldErrors } from "@poukai-inc/ui";
+
+const { errors, setErrors, setFieldError, clearAll } = useFieldErrors(initial?);
+```
+
+- `errors: FieldErrors` — `Record<string, string | undefined>`. Keys are input `name` attributes; values are user-facing error strings (or `undefined` to clear).
+- `setErrors(next)` — replace the entire error map. Use after full-form validation runs.
+- `setFieldError(name, message | undefined)` — set or clear the error for a single field; preserves all other fields.
+- `clearAll()` — clear all errors. Call on successful submit or after server acknowledgement.
+- All setters are stable across re-renders (`useCallback`). Pure state — no tokens, no DOM, invisible to AT.
+- Compatible with Zod (`flatten().fieldErrors`), React Hook Form (after one transform), Yup, and hand-rolled validators.
+- Do NOT add a validation runner, schema integration, or async handling to the hook. Validation logic lives at the call site.
+
+```tsx
+// Hand-rolled validator
+function ContactForm() {
+  const { errors, setErrors, clearAll } = useFieldErrors();
+  return (
+    <Form onSubmit={(data) => {
+      const email = String(data.get("email") ?? "");
+      const next: FieldErrors = {};
+      if (!email.includes("@")) next.email = "Enter a valid email";
+      if (Object.keys(next).length === 0) { clearAll(); return submit(data); }
+      setErrors(next);
+    }}>
+      <Field label="Email" id="email" error={errors.email}>
+        <Input type="email" name="email" />
+      </Field>
+      <Button type="submit">Send</Button>
+    </Form>
+  );
+}
+```
+
+### VisuallyHidden
+- Canonical sr-only clip-pattern atom. Renders `children` in the accessibility tree while keeping the element invisible to sighted users. Root element is always `<span>`. Non-polymorphic.
+- Use for supplementary screen-reader-only text: off-screen labels, "opens in new tab" notices, icon button labels that must not be visible.
+- Implementation: `position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0`. No CSS token consumption — geometry is fixed at the clip boundary.
+- `children` (required ReactNode) — the text or node to expose to the a11y tree.
+- `forwardRef` to the root `<span>`. `...rest` spread. `displayName = "VisuallyHidden"`.
+- Do NOT use `display: none` or `visibility: hidden` — both suppress from the a11y tree entirely. `VisuallyHidden` is the only correct pattern for sr-only text in this DS.
+- Do NOT substitute with `aria-label` when both a visual and a sr-only label are needed simultaneously — use `VisuallyHidden` for the supplementary text.
+
+### Skeleton
+- Content-placeholder atom for async loading states. Renders a pulsing grey block in the shape of absent content. `currentColor`-independent — uses `--surface` fill.
+- `width` (required, `number | string`) and `height` (required, `number | string`) — dimensions of the placeholder block. Pass numbers as px values; strings for percentages or CSS units.
+- `radius` (`"none"` | `"sm"` | `"md"` | `"lg"` | `"circle"`, default `"md"`) — border-radius variant. `"circle"` produces a pill/avatar placeholder; `"none"` for sharp-edge content like images.
+- `as` (`"div"` | `"span"`, default `"div"`) — root element. Use `"span"` for inline-in-text placeholders.
+- Animation: opacity pulse at `--dur-pulse` (1800ms). Suppressed by the global `prefers-reduced-motion` block in `tokens.css` — no per-component override needed.
+- A11y: root has `aria-hidden="true"`. Wrap groups in a container with `aria-busy="true"` and `aria-label` describing what is loading.
+- Tokens consumed: `--surface`, `--radius-1`, `--radius-2`, `--radius-3`, `--dur-pulse`. No new tokens.
+- Do NOT use Skeleton for indeterminate process feedback — use `<Spinner>`. Skeleton is for known-shape content placeholders only.
+- Do NOT pass meaningful text children — Skeleton is a visual shape, not a label.
+
+### Icon
+- Token-sized Lucide icon wrapper. Renders any Lucide icon at one of four named size rungs, inheriting `currentColor`.
+- `icon` (required) — a Lucide icon component (e.g. `import { Mail } from "lucide-react"`).
+- `size` (`"xs"` | `"sm"` | `"md"` | `"lg"`, default `"md"`) — maps to `--icon-xs` (12px), `--icon-sm` (16px), `--icon-md` (20px), `--icon-lg` (24px).
+- `decorative` (boolean, default `true`) — when `true`, sets `aria-hidden="true"` on the SVG (presentational). When `false`, the consumer must pass `aria-label` for the icon's semantic meaning.
+- `forwardRef` to the root SVG. `...rest` spread. `displayName = "Icon"`.
+- Tokens consumed: `--icon-xs`, `--icon-sm`, `--icon-md`, `--icon-lg`. Color is always `currentColor`.
+- Do NOT hardcode icon pixel sizes — always use the `size` prop and the icon size token scale.
+- Do NOT pass `aria-hidden` directly when `decorative={false}` — the `decorative` prop controls it. When `decorative={false}`, pass `aria-label` instead.
+
+### Link
+- Canonical styled anchor atom. Applies the brand two-layer underline affordance (resting `--hairline` underline; hover: `--accent` underline grows over it) and focus ring. Three variants.
+- Root element: `<a>` by default. `asChild={true}` delegates rendering to a Radix `Slot` — pass a framework `<Link>` component as the child for client-side routing.
+- `variant` (`"default"` | `"quiet"` | `"muted"`, default `"default"`) — color register:
+  - `"default"` — `color: var(--fg)`. Standard in-prose link.
+  - `"quiet"` — `color: var(--fg-muted)`. Use for secondary navigational links where reduced visual weight is appropriate.
+  - `"muted"` — applies the `.muted-link` global class pattern: `color: var(--fg-muted)` at rest, `color: var(--fg)` on hover via `transition`. No underline animation. Use for footer and caption-register links.
+- `href` — standard anchor attribute. Required when `asChild` is false.
+- `forwardRef` to the root `<a>` (or Slot child). `...rest` spread. `displayName = "Link"`.
+- Focus ring: `outline: 2px solid var(--accent); outline-offset: 4px; border-radius: var(--radius-1)` — matches global `a:focus-visible` in `tokens.css`.
+- Tokens consumed: `--fg`, `--fg-muted`, `--accent`, `--hairline`, `--dur-mid`, `--easing-link`, `--radius-1`. No new tokens.
+- Do NOT use `<Link>` for `mailto:` — use `<EmailLink>`. Do NOT use `<Link>` for button actions — use `<Button>`.
+
+### Divider
+- Hairline separator rule atom. Horizontal rule (`<hr>`) or vertical rule (`<div>`) at `1px` using `--hairline` or `--hairline-soft`.
+- `orientation` (`"horizontal"` | `"vertical"`, default `"horizontal"`) — axis of the rule. Horizontal emits `<hr>`; vertical emits `<div role="separator" aria-orientation="vertical">`.
+- `tone` (`"default"` | `"muted"`, default `"default"`) — `"default"` uses `--hairline`; `"muted"` uses `--hairline-soft` (quieter decorative separator).
+- Horizontal: `border: 0; border-top: var(--hairline-w) solid <tone-token>; margin: 0`. Vertical: `width: var(--hairline-w); background: <tone-token>; align-self: stretch`.
+- `forwardRef` to the root element. `...rest` spread. `displayName = "Divider"`.
+- Tokens consumed: `--hairline`, `--hairline-soft`, `--hairline-w`. No new tokens.
+- Do NOT use `Divider` as a layout spacer — it is a visual rule only. Use margin/gap tokens on the containing element for spacing.
+- Do NOT render thicker than `--hairline-w` (1px) — brand convention.
+
+### Spinner
+- Indeterminate loading indicator atom. An inline SVG arc that rotates continuously to signal an async operation in progress. Uses `currentColor` throughout — adapts to any surface without a color prop.
+- Root element: `<span>` with `role="status"`, `aria-live="polite"`, `aria-label`. The SVG inside is presentational (`aria-hidden="true"`). A visually-hidden `<span>` sibling contains the label text for virtual browse mode.
+- `size` (`"sm"` | `"md"` | `"lg"`, default `"md"`) — SVG dimensions: `sm`=16px (`--icon-sm`), `md`=20px (`--icon-md`), `lg`=24px (`--icon-lg`).
+- `label` (optional string, default `"Loading"`) — accessible label for `aria-label` and the visually-hidden text. Override with context-specific text: `"Submitting"`, `"Loading results"`.
+- SVG geometry: `viewBox="0 0 24 24"`, `r=10`, `cx=cy=12`, `strokeWidth=2`. Track arc at `opacity: 0.2`; rotating arc at full opacity covers ~270° (`stroke-dasharray ≈ 47.12`).
+- Animation: `animation: poukai-spin var(--dur-spinner) linear infinite` on the arc. `--dur-spinner: 800ms` — sub-second so the spinner reads as actively working. Linear easing (not `--easing`) because a continuous loop must not decelerate.
+- Reduced-motion fallback: explicit `animation: none` on the arc (belt-and-suspenders over the global `tokens.css` collapse) + a `…` (U+2026) ellipsis `<span aria-hidden="true">` revealed via CSS only under `prefers-reduced-motion: reduce`. No JS branching. DOM structure is identical across motion preferences.
+- Tokens consumed: `--dur-spinner`, `--icon-sm`, `--icon-md`, `--icon-lg`. Color: `currentColor`. No color token consumed directly.
+- Do NOT add a `color` prop — `currentColor` inheritance is the contract. Control color on the parent.
+- Do NOT add a `speed` or `duration` prop — override `--dur-spinner` via a scoped CSS custom property on a parent element.
+- Do NOT show `<Spinner>` for interactions that resolve in under ~300ms — it will flash and disappear, reading as a glitch.
+- Do NOT use `<Spinner>` as ambient decoration — motion doctrine bans ambient motion without semantic meaning tied to a real operation.
+- Button loading pairing: `sm`/`compact` buttons use `size="sm"`; `md`/`lg` buttons use `size="md"`. Never `size="lg"` inside a button — 24px competes with the button label.
+
+### ProgressBar
+- Linear progress indicator atom. Determinate mode (known progress percentage) or indeterminate mode (unknown duration). Pairs with `<Spinner>` — use `<Spinner>` when no percentage is available; use `<ProgressBar>` when a percentage or step-count can be derived.
+- Root element: `<div role="progressbar">` with `aria-valuemin="0"`, `aria-valuemax="100"`. Determinate: `aria-valuenow={clamped value}`. Indeterminate: `aria-valuenow` is absent from the DOM entirely (not `undefined`, not empty — the attribute is not rendered at all).
+- Labeling: exactly one of `aria-label` or `aria-labelledby` is required. Enforced at the TypeScript type level via discriminated union — both absent is a type error. No default label is defined; an unlabeled progress bar is inaccessible.
+- `value` (`number | undefined`, default `undefined`) — 0–100. Omitting activates indeterminate mode. Out-of-range values clamp to `[0, 100]`.
+- `size` (`"sm" | "md"`, default `"md"`) — track height: `sm`=2px, `md`=4px. `border-radius: 999px` on track and fill at all sizes (pill shape, brand-fixed).
+- `tone` (`"default" | "success" | "warning" | "danger"`, default `"default"`) — fill color token: `default`→`--fg`, `success`→`--success`, `warning`→`--warning`, `danger`→`--danger`. Track is always `--surface` regardless of tone.
+- Width: not set by the component. Consumer assigns width via `className` or containing layout. Same convention as `<Spinner>`.
+- Determinate fill: `width: 100%`, `transform: scaleX(var(--progress-fraction, 0))`, `transform-origin: left center`. `--progress-fraction` set inline as a CSS custom property (`value / 100`). Transition: `transform var(--dur-mid) var(--easing)`. NEVER animate `width` — `scaleX` only.
+- Indeterminate: track contains two sibling bars (`position: absolute`, `width: 100%`) animated by `@keyframes poukai-progress-bar1` and `poukai-progress-bar2`. Both loop `var(--dur-progress-indeterminate)` (1400ms) with `--easing` (expo-out). Bar 2 starts at `translateX(-200%)` so it emerges behind bar 1 mid-cycle, producing the "two signals in sequence" sweep with no dead-track gap.
+- Keyframes: `poukai-progress-bar1` (0%: -100%, 20%: -100%, 60%: 0%, 80%: 0%, 100%: +100%) and `poukai-progress-bar2` (0%: -200%, 40%: -200%, 80%: 0%, 100%: +100%). The brief 60%–80% hold at 0% in bar1 creates a "full" pause before exit; the overlap prevents dead track.
+- Reduced-motion — indeterminate: `bar1` and `bar2` are `animation: none; display: none`. A `staticFill` element (`display: none` by default, `display: block` under reduced-motion) renders at `scaleX(0.5)` — half-filled, communicates "in progress" without a specific value or motion. Always present in DOM; toggled CSS-only.
+- Reduced-motion — determinate: `transition: none` on the fill (snap to value immediately).
+- New tokens added in this release: `--success` / `--bg-success` / `--fg-on-success` (light + dark), `--dur-progress-indeterminate: 1400ms`.
+- Tokens consumed: `--surface` (track), `--fg` / `--success` / `--warning` / `--danger` (fill by tone), `--dur-mid` (determinate transition), `--easing` (both transition and animation), `--dur-progress-indeterminate` (indeterminate loop period).
+- Do NOT animate `width`. The motion property contract is `transform` only. Playwright CT guards this regression.
+- Do NOT add `aria-valuenow` when indeterminate — the attribute must be absent, not set to `undefined` or `null`.
+- Do NOT omit both `aria-label` and `aria-labelledby` — TypeScript will reject the call site.
+- Do NOT add a `speed` or `duration` prop — override `--dur-progress-indeterminate` via a scoped CSS custom property on a parent element.
+- Do NOT use `<ProgressBar>` inside a `<Button>` — use `<Spinner>` for button-level loading.
+- Do NOT use as ambient decoration — every animation must communicate a real operation state.
+
+---
+
+## Anti-patterns
+
+- **Do not override Wordmark colors via style= or CSS.** Set color on a parent instead.
+- **Do not use --accent as a surface fill or body text color.** It is a signal color for interactivity and focus only.
+- **Do not use --fg as a decorative background fill.** No dark-mode scheme is defined.
+- **Do not hardcode hex values, raw pixel sizes, or magic numbers.** Every CSS value resolves to a var(--token) (ADR-0002).
+- **Do not render Wordmark below height={40}.** Isotype detail collapses into illegibility.
+- **Do not change the Wordmark aspect ratio.** Use only height; width is auto.
+- **Do not use the stacked lockup as the default.** The horizontal lockup is canonical; stacked is for square-format surfaces only.
+- **Do not nest Hero inside another Hero.** Invalid ARIA structure, duplicate h1, compounded max-width.
+- **Do not use :global selectors in .module.css files.** ADR-0002 prohibits this.
+- **Do not force-animate StatusBadge under prefers-reduced-motion.** The !important block in tokens.css handles it.
+- **Do not import from sub-paths in tests.** Import from the component file directly.
+- **Do not import from dist/ in source files.** Import from src/.
+- **Do not make prop removals or renames without a major version bump.**
+- **Do not ship a component without both a *.test.tsx and *.stories.tsx.**
+- **Do not use `--bg-elevated` as the page background.** It is for overlays only. The page is always `--bg`.
+- **Do not hardcode `#FFFFFF` for page background or content sections.** `#FFFFFF` is reserved for `--bg-elevated`. Use `--bg` (`#FBFBFD`) for the page.
+- **Do not collapse the elevation rhythm.** `--surface`, `--surface-section`, `--bg`, and `--bg-elevated` are four distinct steps. Skipping or reversing them (e.g. using `--bg-elevated` where `--bg` belongs, or using `--surface` as a section divider) is a brand-level error. Use `--surface-section` for section bands; never substitute `--surface` for that role.
+- **Do not use `variant="no-title"` without placing an `<h1>` in body content.** The molecule emits no heading element; the consumer is solely responsible. A page with `variant="no-title"` Hero and no `<h1>` anywhere is an accessibility violation (WCAG 2.4.6, axe-core `page-has-heading-one`).
+
+---
+
+## Brand voice
+
+Precise, direct, technically confident. Never hedges, inflates, or reassures. No startup boilerplate ("unlock," "leverage," "empower," "transform").
+
+- Eyebrows: "Role 01", "Role 02" (structural labels, not prose)
+- StatusBadge: "Taking conversations for Q3." / "Not taking new work at this time." (availability facts, no exclamation marks)
+- Button labels: sentence-case, max 4 words, specific verbs. "Get in touch", "Learn more", not "Click here" or "LET'S CONNECT!"
+- Error states (consumer responsibility): declarative, specific, not apologetic. "Email address is required." not "Oops! Something went wrong."
+
+### Toast
+- Imperative notification organism. Wraps `@radix-ui/react-toast` — all ARIA, swipe-to-dismiss, focus, and prefers-reduced-motion are delegated to Radix.
+- Architecture: `<ToastProvider>` wraps the app root once. `useToast()` returns `{ show, dismiss }` for imperative use anywhere in the tree.
+- `ToastPayload`: `{ tone?, title?, body, duration?, action? }`. `body` is the only required field.
+- Four tones: `"info"` (default), `"success"`, `"warning"`, `"danger"`. Tone determines background, left-rule color, and text color — identical palette contract to `<Banner>`.
+  - `info`: `--bg-elevated` bg, hairline border all sides, `--fg` text.
+  - `success`: `--bg-elevated` bg, 2px `--accent` left-rule, `--fg` text.
+  - `warning`: `--bg-warning` bg, 2px `--warning` left-rule, `--fg-on-warning` text.
+  - `danger`: `--bg-danger` bg, 2px `--danger` left-rule, `--fg-on-danger` text.
+- `ToastProvider` props: `defaultDuration` (default 5000ms), `max` (default 4 simultaneous), `position` (`"bottom-right"` default, `"top-right"`, `"top-center"`, `"bottom-center"`), `closeLabel` (default `"Close"`).
+- `position` drives the viewport's CSS class. Viewport is `position: fixed; z-index: 200` — above Dialog overlay (100) and content (101).
+- `max` enforces a queue cap: when exceeded, the oldest toast is dropped immediately.
+- Per-toast `duration` overrides `defaultDuration`. Radix fires `onOpenChange(false)` when duration expires, which triggers `dismiss(id)`.
+- `action`: `{ label: string; onClick: () => void }`. Rendered via Radix `<Toast.Action altText={label}>` wrapping `<Button variant="ghost" size="sm">`. `altText` is required by Radix for SR accessibility.
+- Close button: always rendered. `aria-label` = `closeLabel` prop (default `"Close"`). Uses Lucide `X` at 14px.
+- ARIA: Radix maps `type="foreground"` → `aria-live="assertive"` (warning/danger) and `type="background"` → `aria-live="polite"` (info/success).
+- Width: `min(420px, calc(100vw - 2 * var(--page-pad)))`. Padding: `--space-3` block, `--space-4` inline. Radius: `--radius-2`. Shadow: `0 4px 12px rgb(0 0 0 / 0.08)` (inline — no shadow token in DS vocabulary; same rationale as Dialog).
+- Entrance: slide from right. Exit: fade out. Both at `--dur-fast` (180ms). Reduced motion: handled by the global `tokens.css` block — no per-component override.
+- Toast is NOT `<Banner>` (Banner is persistent, inline, document-flow). Toast is NOT `<Dialog>` (Dialog is modal and blocking). Use Toast for time-limited, non-blocking feedback only.
+- Do NOT add `<ToastProvider>` to `<SiteShell>` — that is the consuming app's concern.
+- Do NOT use `useToast()` outside a `<ToastProvider>` — it throws.
+- Do NOT show more than `max` simultaneous toasts. The oldest is dropped automatically.
+- Do NOT use Toast for destructive confirmations — use `<Dialog>`.
+
+---
+
+## Decision provenance
+
+ADR-0001: Atomic design taxonomy (atoms/molecules/organisms). No fourth layer. Subpath exports are semver-governed.
+ADR-0002: CSS Modules; all values via tokens. No hex, raw px, or magic numbers. tokens.css owned by poukai-design.
+ADR-0003: Changesets for semver. Every PR needs a changeset. Prop removals = major. Token additions = minor.
+ADR-0004: Playwright CT + axe-core. Zero a11y violations. Every component needs *.test.tsx.
+ADR-0005: Ladle for showcase. Every component needs *.stories.tsx.
+ADR-0006: Scope @poukai-inc/ui (GitHub Packages).
+ADR-0007: vite-plugin-lib-inject-css. cssCodeSplit: true required.
+ADR-0008: SiteShell Wordmark height=56. Brand floor; do not pass height < 40.
+ADR-0009: Horizontal lockup is canonical. Stacked for square-format only.
+ADR-0010: Proposal-loop architecture. proposal:approved label is a human gate.
+ADR-0011: Wordmark gap 120 SVG units, wordtype 1.8x, isotype 1.25x. ViewBox 0 0 1184 290.

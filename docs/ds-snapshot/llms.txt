@@ -1,0 +1,89 @@
+# @poukai-inc/ui
+
+> Poukai design system — React component library, design tokens, and brand assets.
+
+Poukai is a React component library organised by Atomic Design (tokens → atoms → molecules → organisms).
+
+Version: `2.0.0`
+
+## LLM context
+
+Full brand rules, token semantics, component constraints, and anti-patterns are in `dist/llms-full.txt`.
+
+```
+cat node_modules/@poukai-inc/ui/dist/llms-full.txt
+```
+
+## Components
+
+Import tokens once at the app root: `import "@poukai-inc/ui/tokens.css"`. Then import components:
+
+**atoms:** `<Wordmark>`, `<StatusBadge>`, `<Button>`, `<IconButton>`, `<Stat>`, `<Eyebrow>`, `<EmailLink>`, `<Tag>`, `<Avatar>`, `<VisuallyHidden>`, `<Skeleton>`, `<Icon>`, `<Link>`, `<Divider>`, `<Spinner>`
+**molecules:** `<Hero>`, `<RoleCard>`, `<Principle>`, `<FailureMode>`, `<Statement>`, `<Portrait>`, `<Section>`, `<Pull>`, `<LinkCard>`, `<TeamCard>`, `<FeatureCard>`, `<FieldNote>`, `<Quote>`, `<Input>`, `<Textarea>`, `<Field>`, `<Banner>`
+**organisms:** `<SiteShell>`, `<Footer>`, `<Dialog>`, `<DialogBasic>`, `<Tabs>`, `<TabsBasic>`, `<Form>`, `<ToastProvider>`
+
+## Tokens
+
+Authoritative source: `src/tokens/tokens.css`. All values on `:root` — color, typography, spacing, motion, radii.
+
+## Exports
+
+- `@poukai-inc/ui`
+- `@poukai-inc/ui/atoms`
+- `@poukai-inc/ui/molecules`
+- `@poukai-inc/ui/organisms`
+- `@poukai-inc/ui/atoms/Avatar`
+- `@poukai-inc/ui/atoms/Icon`
+- `@poukai-inc/ui/atoms/IconButton`
+- `@poukai-inc/ui/atoms/Label`
+- `@poukai-inc/ui/atoms/Time`
+- `@poukai-inc/ui/atoms/Button`
+- `@poukai-inc/ui/atoms/EmailLink`
+- `@poukai-inc/ui/atoms/Eyebrow`
+- `@poukai-inc/ui/atoms/Heading`
+- `@poukai-inc/ui/atoms/Stat`
+- `@poukai-inc/ui/atoms/StatusBadge`
+- `@poukai-inc/ui/atoms/Tag`
+- `@poukai-inc/ui/atoms/Text`
+- `@poukai-inc/ui/atoms/Select`
+- `@poukai-inc/ui/atoms/Textarea`
+- `@poukai-inc/ui/atoms/Wordmark`
+- `@poukai-inc/ui/atoms/Link`
+- `@poukai-inc/ui/atoms/Prose`
+- `@poukai-inc/ui/atoms/ProgressBar`
+- `@poukai-inc/ui/atoms/Code`
+- `@poukai-inc/ui/atoms/Kbd`
+- `@poukai-inc/ui/atoms/Image`
+- `@poukai-inc/ui/atoms/Logo`
+- `@poukai-inc/ui/atoms/SkipLink`
+- `@poukai-inc/ui/atoms/NumberFormat`
+- `@poukai-inc/ui/atoms/Mark`
+- `@poukai-inc/ui/atoms/Spacer`
+- `@poukai-inc/ui/atoms/Checkbox`
+- `@poukai-inc/ui/atoms/Switch`
+- `@poukai-inc/ui/atoms/Input`
+- `@poukai-inc/ui/atoms/Radio`
+- `@poukai-inc/ui/molecules/FailureMode`
+- `@poukai-inc/ui/molecules/FeatureCard`
+- `@poukai-inc/ui/molecules/FieldNote`
+- `@poukai-inc/ui/molecules/Input`
+- `@poukai-inc/ui/molecules/Hero`
+- `@poukai-inc/ui/molecules/LinkCard`
+- `@poukai-inc/ui/molecules/Portrait`
+- `@poukai-inc/ui/molecules/Principle`
+- `@poukai-inc/ui/molecules/Pull`
+- `@poukai-inc/ui/molecules/Quote`
+- `@poukai-inc/ui/molecules/RoleCard`
+- `@poukai-inc/ui/molecules/Section`
+- `@poukai-inc/ui/molecules/Statement`
+- `@poukai-inc/ui/molecules/TeamCard`
+- `@poukai-inc/ui/organisms/Dialog`
+- `@poukai-inc/ui/organisms/Footer`
+- `@poukai-inc/ui/organisms/SiteShell`
+- `@poukai-inc/ui/tokens.css`
+- `@poukai-inc/ui/styles.css`
+- `@poukai-inc/ui/fonts/*`
+- `@poukai-inc/ui/brand/*`
+- `@poukai-inc/ui/llms.txt`
+- `@poukai-inc/ui/llms-full.txt`
+
