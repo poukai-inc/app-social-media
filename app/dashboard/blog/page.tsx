@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Button } from '@poukai-inc/ui/atoms/Button';
 
 interface PostAngle {
   angle: string;
@@ -155,13 +156,13 @@ export default function BlogRepurposePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[color:var(--bg)]">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Blog → LinkedIn</h1>
-            <p className="text-gray-600 mt-1">Repurpose blog content into engaging posts</p>
+            <h1 className="text-3xl font-bold text-[color:var(--fg)]">Blog → LinkedIn</h1>
+            <p className="text-[color:var(--fg-muted)] mt-1">Repurpose blog content into engaging posts</p>
           </div>
           <Link href="/dashboard" className="text-[color:var(--accent)] hover:text-[color:var(--accent)] font-medium">
             ← Back
@@ -231,13 +232,14 @@ export default function BlogRepurposePage() {
               />
             </div>
 
-            <button
+            <Button
+              variant="primary"
               onClick={handleAnalyze}
               disabled={loading || (!blogUrl && !blogContent)}
-              className="w-full py-3 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] disabled:opacity-50 font-medium"
+              className="w-full justify-center"
             >
               {loading ? 'Analyzing...' : 'Analyze Blog →'}
-            </button>
+            </Button>
           </div>
         )}
 
@@ -341,19 +343,17 @@ export default function BlogRepurposePage() {
                 </div>
 
                 <div className="flex gap-4 mt-6">
-                  <button
-                    onClick={() => setStep('input')}
-                    className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
+                  <Button variant="secondary" onClick={() => setStep('input')}>
                     ← Back
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="primary"
                     onClick={handleGenerate}
                     disabled={loading}
-                    className="flex-1 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] disabled:opacity-50 font-medium"
+                    className="flex-1 justify-center"
                   >
                     {loading ? 'Generating...' : 'Generate Post →'}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -422,24 +422,20 @@ export default function BlogRepurposePage() {
 
             {/* Actions */}
             <div className="flex gap-4">
-              <button
-                onClick={() => setStep('analyze')}
-                className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
+              <Button variant="secondary" onClick={() => setStep('analyze')}>
                 ← Change Angle
-              </button>
+              </Button>
               <button
                 onClick={handleSaveAsDraft}
                 className="flex-1 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium"
               >
                 Save as Draft
               </button>
-              <Link
-                href="/dashboard/approvals"
-                className="flex-1 py-3 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] font-medium text-center"
-              >
-                Go to Approvals
-              </Link>
+              <Button asChild variant="primary" className="flex-1 justify-center">
+                <Link href="/dashboard/approvals">
+                  Go to Approvals
+                </Link>
+              </Button>
             </div>
           </div>
         )}

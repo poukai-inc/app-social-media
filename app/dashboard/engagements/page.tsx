@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { EngagementCard } from '@/components/engagement-card';
 import { ReplyCard } from '@/components/reply-card';
+import { Button } from '@poukai-inc/ui/atoms/Button';
+import { Tag } from '@poukai-inc/ui/atoms/Tag';
 
 export default async function EngagementsPage() {
   const session = await auth();
@@ -139,20 +141,18 @@ export default async function EngagementsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Link
-            href="/dashboard/engagements/settings"
-            className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-          >
-            <Settings className="h-4 w-4" />
-            Settings
-          </Link>
-          <Link
-            href="/dashboard/engagements/add"
-            className="inline-flex items-center gap-2 rounded-lg bg-[color:var(--accent)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[color:var(--accent)]"
-          >
-            <Plus className="h-4 w-4" />
-            Add Post
-          </Link>
+          <Button asChild variant="secondary">
+            <Link href="/dashboard/engagements/settings">
+              <Settings className="h-4 w-4" />
+              Settings
+            </Link>
+          </Button>
+          <Button asChild variant="primary">
+            <Link href="/dashboard/engagements/add">
+              <Plus className="h-4 w-4" />
+              Add Post
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -169,9 +169,7 @@ export default async function EngagementsPage() {
             <div>
               <p className="font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                 ICP Twitter Engagement
-                <span className="px-2 py-0.5 rounded-full bg-[color:var(--surface)] text-[color:var(--accent)] text-xs">
-                  NEW
-                </span>
+                <Tag>NEW</Tag>
               </p>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 {icpStats.total} engagements • {icpStats.responses} responses • {icpStats.responseRate}% response rate (30d)
@@ -296,13 +294,12 @@ export default async function EngagementsPage() {
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
               Add LinkedIn post URLs to engage with them
             </p>
-            <Link
-              href="/dashboard/engagements/add"
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[color:var(--accent)] px-4 py-2 text-sm font-medium text-white hover:bg-[color:var(--accent)]"
-            >
-              <Plus className="h-4 w-4" />
-              Add Posts
-            </Link>
+            <Button asChild variant="primary">
+              <Link href="/dashboard/engagements/add">
+                <Plus className="h-4 w-4" />
+                Add Posts
+              </Link>
+            </Button>
           </div>
         ) : (
           <div className="space-y-3">

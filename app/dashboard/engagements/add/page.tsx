@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Button } from '@poukai-inc/ui/atoms/Button';
 
 export default function AddEngagementPage() {
   const router = useRouter();
@@ -208,10 +209,11 @@ export default function AddEngagementPage() {
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           )}
 
-          <button
+          <Button
             type="submit"
+            variant="primary"
             disabled={isSubmitting || !postUrl.trim()}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[color:var(--accent)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[color:var(--accent)] disabled:opacity-50"
+            className="w-full justify-center"
           >
             {isSubmitting ? (
               <>
@@ -224,7 +226,7 @@ export default function AddEngagementPage() {
                 Add to Queue
               </>
             )}
-          </button>
+          </Button>
         </form>
       )}
 
@@ -267,10 +269,11 @@ export default function AddEngagementPage() {
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           )}
 
-          <button
+          <Button
             type="submit"
+            variant="primary"
             disabled={isSubmitting || !bulkUrls.trim()}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[color:var(--accent)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[color:var(--accent)] disabled:opacity-50"
+            className="w-full justify-center"
           >
             {isSubmitting ? (
               <>
@@ -283,7 +286,7 @@ export default function AddEngagementPage() {
                 Import All
               </>
             )}
-          </button>
+          </Button>
 
           {/* Results */}
           {results && (

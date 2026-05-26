@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { logger } from '@/lib/logger';
+import { Button } from '@poukai-inc/ui/atoms/Button';
 
 const log = logger.child('dashboard:comments');
 
@@ -217,12 +218,9 @@ export default function CommentsPage() {
 
         {/* Add New Button */}
         <div className="mb-6">
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] font-medium"
-          >
+          <Button variant="primary" onClick={() => setShowAddForm(!showAddForm)}>
             + Add Post to Comment On
-          </button>
+          </Button>
         </div>
 
         {/* Add Form */}
@@ -271,19 +269,19 @@ export default function CommentsPage() {
               </div>
 
               <div className="flex gap-3">
-                <button
+                <Button
+                  variant="primary"
                   onClick={handleAddSuggestion}
                   disabled={addLoading || !newPostContent || !newPostAuthor}
-                  className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] disabled:opacity-50"
                 >
                   {addLoading ? 'Generating...' : 'Generate Comment'}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="secondary"
                   onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 border rounded-lg hover:bg-gray-50"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -406,15 +404,16 @@ export default function CommentsPage() {
                 {/* Actions */}
                 {activeTab === 'pending' && (
                   <div className="px-4 py-3 bg-gray-50 border-t flex gap-2">
-                    <button
+                    <Button
+                      variant="primary"
+                      size="sm"
                       onClick={() => {
                         setEditingSuggestion(suggestion);
                         setEditedComment(suggestion.editedComment || suggestion.suggestedComment);
                       }}
-                      className="px-3 py-1.5 text-sm bg-[color:var(--accent)] text-white rounded hover:bg-[color:var(--accent)]"
                     >
                       ✏️ Edit & Approve
-                    </button>
+                    </Button>
                     <button
                       onClick={() => handleAction(suggestion._id, 'posted')}
                       disabled={actionLoading === suggestion._id}
@@ -483,19 +482,19 @@ export default function CommentsPage() {
                 </p>
               </div>
               <div className="p-4 border-t flex justify-end gap-3">
-                <button
+                <Button
+                  variant="secondary"
                   onClick={() => setEditingSuggestion(null)}
-                  className="px-4 py-2 border rounded-lg hover:bg-gray-50"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="primary"
                   onClick={() => handleAction(editingSuggestion._id, 'approve', { editedComment })}
                   disabled={actionLoading === editingSuggestion._id}
-                  className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] disabled:opacity-50"
                 >
                   Save & Approve
-                </button>
+                </Button>
               </div>
             </div>
           </div>

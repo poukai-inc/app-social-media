@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { PlatformType } from '@/lib/platforms/types';
+import { Button } from '@poukai-inc/ui/atoms/Button';
 
 interface PlatformTiming {
   platform: PlatformType;
@@ -154,10 +155,10 @@ export default function ScheduleOptimizer({ pageId }: ScheduleOptimizerProps) {
             Quick mode (no AI)
           </label>
           
-          <button
+          <Button
+            variant="primary"
             onClick={analyzeSchedule}
             disabled={isLoading}
-            className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             {isLoading ? (
               <>
@@ -173,7 +174,7 @@ export default function ScheduleOptimizer({ pageId }: ScheduleOptimizerProps) {
                 Analyze
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
 

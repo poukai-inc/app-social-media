@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import NextImage from 'next/image';
 import { logger } from '@/lib/logger';
+import { Button } from '@poukai-inc/ui/atoms/Button';
+import { Avatar } from '@poukai-inc/ui/atoms/Avatar';
+import { Tag } from '@poukai-inc/ui/atoms/Tag';
 
 const log = logger.child('dashboard:pages:[id]');
 import {
@@ -385,14 +387,7 @@ export default function PageDashboard() {
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
               {page.avatar ? (
-                <NextImage
-                  src={page.avatar}
-                  alt={page.name}
-                  width={64}
-                  height={64}
-                  className="w-16 h-16 rounded-full object-cover"
-                  unoptimized
-                />
+                <Avatar mode="image" src={page.avatar} alt={page.name} size="lg" />
               ) : (
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
                   {page.type === 'personal' ? (
@@ -455,13 +450,12 @@ export default function PageDashboard() {
                 )}
                 Generate Post
               </button>
-              <Link
-                href={`/dashboard/create?pageId=${page._id}`}
-                className="flex items-center gap-2 px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
-              >
-                <Plus className="h-4 w-4" />
-                Create Post
-              </Link>
+              <Button asChild variant="primary">
+                <Link href={`/dashboard/create?pageId=${page._id}`}>
+                  <Plus className="h-4 w-4" />
+                  Create Post
+                </Link>
+              </Button>
               <Link
                 href={`/dashboard/pages/${page._id}/settings`}
                 className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800"
@@ -521,9 +515,7 @@ export default function PageDashboard() {
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   ICP Twitter Engagement
                 </h2>
-                <span className="px-2 py-0.5 rounded-full bg-[color:var(--surface)] text-[color:var(--accent)] text-xs">
-                  30 days
-                </span>
+                <Tag>30 days</Tag>
               </div>
               <Link
                 href="/dashboard/engagements/icp"
@@ -1040,13 +1032,12 @@ export default function PageDashboard() {
                     Retry Publishing
                   </button>
                 )}
-                <Link
-                  href={`/dashboard/edit/${selectedPost._id}`}
-                  className="px-4 py-2 bg-[color:var(--accent)] hover:bg-[color:var(--accent)] text-white rounded-lg flex items-center gap-2"
-                >
-                  <Edit3 className="h-4 w-4" />
-                  Edit Post
-                </Link>
+                <Button asChild variant="primary">
+                  <Link href={`/dashboard/edit/${selectedPost._id}`}>
+                    <Edit3 className="h-4 w-4" />
+                    Edit Post
+                  </Link>
+                </Button>
               </div>
             </div>
           </div>

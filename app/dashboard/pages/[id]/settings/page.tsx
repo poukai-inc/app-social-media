@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import NextImage from 'next/image';
 import { logger } from '@/lib/logger';
+import { Button } from '@poukai-inc/ui/atoms/Button';
+import { Avatar } from '@poukai-inc/ui/atoms/Avatar';
 
 const log = logger.child('dashboard:pages:[id]:settings');
 import {
@@ -310,14 +311,7 @@ export default function PageSettings() {
 
           <div className="flex items-center gap-4">
             {page.avatar ? (
-              <NextImage
-                src={page.avatar}
-                alt={page.name}
-                width={48}
-                height={48}
-                className="w-12 h-12 rounded-full object-cover"
-                unoptimized
-              />
+              <Avatar mode="image" src={page.avatar} alt={page.name} size="lg" />
             ) : (
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
                 {page.type === 'personal' ? (
@@ -423,7 +417,9 @@ export default function PageSettings() {
                     placeholder="Add topic..."
                     className="flex-1 px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                   />
-                  <button
+                  <Button
+                    variant="primary"
+                    size="sm"
                     onClick={() =>
                       addItem(
                         contentStrategy.topics,
@@ -432,10 +428,9 @@ export default function PageSettings() {
                         setTopicInput
                       )
                     }
-                    className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
                   >
                     Add
-                  </button>
+                  </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {contentStrategy.topics.map((topic) => (
@@ -550,7 +545,9 @@ export default function PageSettings() {
                     placeholder="https://..."
                     className="flex-1 px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                   />
-                  <button
+                  <Button
+                    variant="primary"
+                    size="sm"
                     onClick={() =>
                       addItem(
                         contentSources.blogUrls,
@@ -559,10 +556,9 @@ export default function PageSettings() {
                         setBlogInput
                       )
                     }
-                    className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
                   >
                     Add
-                  </button>
+                  </Button>
                 </div>
                 <div className="space-y-1">
                   {contentSources.blogUrls.map((url) => (
@@ -611,7 +607,9 @@ export default function PageSettings() {
                     placeholder="Add keyword..."
                     className="flex-1 px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                   />
-                  <button
+                  <Button
+                    variant="primary"
+                    size="sm"
                     onClick={() =>
                       addItem(
                         contentSources.keywords,
@@ -620,10 +618,9 @@ export default function PageSettings() {
                         setKeywordInput
                       )
                     }
-                    className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
                   >
                     Add
-                  </button>
+                  </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {contentSources.keywords.map((keyword) => (
@@ -736,7 +733,9 @@ export default function PageSettings() {
                     onChange={(e) => setTimeInput(e.target.value)}
                     className="flex-1 px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                   />
-                  <button
+                  <Button
+                    variant="primary"
+                    size="sm"
                     onClick={() => {
                       if (timeInput && !schedule.preferredTimes.includes(timeInput)) {
                         setSchedule({
@@ -746,10 +745,9 @@ export default function PageSettings() {
                         setTimeInput('');
                       }
                     }}
-                    className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
                   >
                     Add
-                  </button>
+                  </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {schedule.preferredTimes.map((time) => (
@@ -926,10 +924,10 @@ export default function PageSettings() {
             >
               Cancel
             </Link>
-            <button
+            <Button
+              variant="primary"
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] disabled:opacity-50"
             >
               {saving ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -937,7 +935,7 @@ export default function PageSettings() {
                 <Save className="h-4 w-4" />
               )}
               Save Settings
-            </button>
+            </Button>
           </div>
         </div>
       </div>

@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import NextImage from 'next/image';
 import { logger } from '@/lib/logger';
+import { Button } from '@poukai-inc/ui/atoms/Button';
+import { Avatar } from '@poukai-inc/ui/atoms/Avatar';
 
 const log = logger.child('dashboard:pages:new');
 import {
@@ -422,14 +424,7 @@ export default function NewPagePage() {
                           }`}
                         >
                           {account.avatar ? (
-                            <NextImage
-                              src={account.avatar}
-                              alt={account.name}
-                              width={48}
-                              height={48}
-                              className="w-12 h-12 rounded-full object-cover"
-                              unoptimized
-                            />
+                            <Avatar mode="image" src={account.avatar} alt={account.name} size="lg" />
                           ) : (
                             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
                               {account.type === 'personal' ? (
@@ -536,12 +531,9 @@ export default function NewPagePage() {
                       placeholder="Add a topic..."
                       className="flex-1 px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                     />
-                    <button
-                      onClick={addTopic}
-                      className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
-                    >
+                    <Button variant="primary" size="sm" onClick={addTopic}>
                       Add
-                    </button>
+                    </Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {contentStrategy.topics.map((topic) => (
@@ -681,12 +673,9 @@ export default function NewPagePage() {
                       onChange={(e) => setTimeInput(e.target.value)}
                       className="flex-1 px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
                     />
-                    <button
-                      onClick={addTime}
-                      className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
-                    >
+                    <Button variant="primary" size="sm" onClick={addTime}>
                       Add
-                    </button>
+                    </Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {schedule.preferredTimes.map((time) => (
@@ -841,14 +830,14 @@ export default function NewPagePage() {
           </button>
 
           {step < 4 ? (
-            <button
+            <Button
+              variant="primary"
               onClick={() => setStep(step + 1)}
               disabled={!canProceed()}
-              className="flex items-center gap-2 px-6 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
               <ArrowRight className="h-4 w-4" />
-            </button>
+            </Button>
           ) : (
             <button
               onClick={handleSubmit}

@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { logger } from '@/lib/logger';
+import { Button } from '@poukai-inc/ui/atoms/Button';
 
 const log = logger.child('dashboard:pages:[id]:data-sources');
 import {
@@ -281,13 +282,10 @@ export default function DataSourcesPage() {
               </div>
             </div>
 
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
-            >
+            <Button variant="primary" onClick={() => setShowAddModal(true)}>
               <Plus className="h-4 w-4" />
               Add Data Source
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -302,13 +300,10 @@ export default function DataSourcesPage() {
               <p className="text-gray-500 dark:text-gray-400 mb-6">
                 Connect a MySQL database to pull data for AI-powered content generation
               </p>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)]"
-              >
+              <Button variant="primary" onClick={() => setShowAddModal(true)}>
                 <Plus className="h-4 w-4" />
                 Add Your First Data Source
-              </button>
+              </Button>
             </div>
           ) : (
             dataSources.map((source) => (
@@ -656,7 +651,8 @@ export default function DataSourcesPage() {
                 >
                   Cancel
                 </button>
-                <button
+                <Button
+                  variant="primary"
                   onClick={handleAddSource}
                   disabled={
                     !newSource.name ||
@@ -664,7 +660,6 @@ export default function DataSourcesPage() {
                     !newSource.query ||
                     saving
                   }
-                  className="flex items-center gap-2 px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] disabled:opacity-50"
                 >
                   {saving ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -672,7 +667,7 @@ export default function DataSourcesPage() {
                     <Plus className="h-4 w-4" />
                   )}
                   Add Data Source
-                </button>
+                </Button>
               </div>
             </div>
           </div>

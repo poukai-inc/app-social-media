@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Button } from '@poukai-inc/ui/atoms/Button';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('dashboard:conversations');
@@ -217,12 +218,9 @@ function ConversationsContent() {
           />
           <span className="ml-2 text-sm text-gray-700">Show only active conversations</span>
         </label>
-        <button
-          onClick={fetchConversations}
-          className="px-3 py-2 bg-[color:var(--accent)] text-white rounded hover:bg-[color:var(--accent)] text-sm"
-        >
+        <Button variant="primary" size="sm" onClick={fetchConversations}>
           Refresh
-        </button>
+        </Button>
       </div>
 
       {/* Conversations List */}

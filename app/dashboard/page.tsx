@@ -6,6 +6,7 @@ import User from '@/lib/models/User';
 import { PostCard } from '@/components/post-card';
 import Link from 'next/link';
 import { Plus, FileText, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Button } from '@poukai-inc/ui/atoms/Button';
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -55,13 +56,12 @@ export default async function DashboardPage() {
             Manage your LinkedIn posts
           </p>
         </div>
-        <Link
-          href="/dashboard/create"
-          className="inline-flex items-center gap-2 rounded-lg bg-[color:var(--accent)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[color:var(--accent)]"
-        >
-          <Plus className="h-4 w-4" />
-          Create Post
-        </Link>
+        <Button asChild variant="primary">
+          <Link href="/dashboard/create">
+            <Plus className="h-4 w-4" />
+            Create Post
+          </Link>
+        </Button>
       </div>
 
       {/* Stats */}
@@ -147,13 +147,12 @@ export default async function DashboardPage() {
             <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
               Create your first post to get started
             </p>
-            <Link
-              href="/dashboard/create"
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[color:var(--accent)] px-4 py-2 text-sm font-medium text-white hover:bg-[color:var(--accent)]"
-            >
-              <Plus className="h-4 w-4" />
-              Create Post
-            </Link>
+            <Button asChild variant="primary">
+              <Link href="/dashboard/create">
+                <Plus className="h-4 w-4" />
+                Create Post
+              </Link>
+            </Button>
           </div>
         ) : (
           serializedPosts.map((post) => <PostCard key={post._id} post={post} />)

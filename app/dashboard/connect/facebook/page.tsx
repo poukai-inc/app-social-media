@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import NextImage from 'next/image';
 import { logger } from '@/lib/logger';
+import { Button } from '@poukai-inc/ui/atoms/Button';
 import { FacebookIcon } from '@/components/icons/platforms';
 
 const log = logger.child('dashboard:connect:facebook');
@@ -295,13 +296,14 @@ function ConnectFacebookPageContent() {
             >
               Cancel
             </Link>
-            <button
+            <Button
+              variant="primary"
               onClick={handleConnect}
               disabled={!selectedPage || !targetAppPage || isConnecting}
-              className="flex-1 px-6 py-3 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 justify-center"
             >
               {isConnecting ? 'Connecting...' : 'Connect Facebook Page'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

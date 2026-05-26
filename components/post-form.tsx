@@ -23,6 +23,7 @@ import NextImage from 'next/image';
 import { MediaUpload } from './media-upload';
 import type { StructuredInput } from './structured-input-form';
 import { StructuredInputForm } from './structured-input-form';
+import { Button } from '@poukai-inc/ui/atoms/Button';
 import PlatformSelector from './platform-selector';
 import type { PlatformType } from '@/lib/platforms/types';
 
@@ -771,21 +772,23 @@ Example: I just finished a weekend project building a CLI tool that converts Fig
 
       {/* Action Buttons */}
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={() => handleSubmit('draft')}
           disabled={isSubmitting}
-          className="flex items-center justify-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          className="justify-center"
         >
           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           Save as Draft
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={() => handleSubmit('schedule')}
           disabled={isSubmitting || !scheduledFor}
-          className="flex items-center justify-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          className="justify-center"
         >
           {isSubmitting ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -793,13 +796,14 @@ Example: I just finished a weekend project building a CLI tool that converts Fig
             <Clock className="h-4 w-4" />
           )}
           Schedule Post
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
+          variant="primary"
           onClick={() => handleSubmit('publish')}
           disabled={isSubmitting}
-          className="flex items-center justify-center gap-2 rounded-lg bg-[color:var(--accent)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[color:var(--accent)] disabled:opacity-50"
+          className="justify-center"
         >
           {isSubmitting ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -807,7 +811,7 @@ Example: I just finished a weekend project building a CLI tool that converts Fig
             <Send className="h-4 w-4" />
           )}
           Publish Now
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -1,15 +1,16 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  Linkedin, 
-  Calendar, 
-  Clock, 
-  Send, 
-  BarChart3, 
+import {
+  Linkedin,
+  Calendar,
+  Clock,
+  Send,
+  BarChart3,
   Shield,
   ArrowRight
 } from 'lucide-react';
+import { Button } from '@poukai-inc/ui/atoms/Button';
 
 export default async function Home() {
   const session = await auth();
@@ -39,14 +40,13 @@ export default async function Home() {
           </p>
 
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Link
-              href="/login"
-              className="flex items-center gap-2 rounded-xl bg-[color:var(--accent)] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[color:var(--accent)]"
-            >
-              <Linkedin className="h-5 w-5" />
-              Get Started Free
-              <ArrowRight className="h-5 w-5" />
-            </Link>
+            <Button asChild variant="primary">
+              <Link href="/login">
+                <Linkedin className="h-5 w-5" />
+                Get Started Free
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -146,13 +146,12 @@ export default async function Home() {
           <p className="mt-4 text-lg text-zinc-600 dark:text-zinc-400">
             Connect your LinkedIn account and start scheduling posts in minutes.
           </p>
-          <Link
-            href="/login"
-            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[color:var(--accent)] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[color:var(--accent)]"
-          >
-            <Linkedin className="h-5 w-5" />
-            Connect LinkedIn
-          </Link>
+          <Button asChild variant="primary" className="mt-8">
+            <Link href="/login">
+              <Linkedin className="h-5 w-5" />
+              Connect LinkedIn
+            </Link>
+          </Button>
         </div>
       </section>
 

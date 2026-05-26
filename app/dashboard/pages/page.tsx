@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import NextImage from 'next/image';
 import { logger } from '@/lib/logger';
+import { Button } from '@poukai-inc/ui/atoms/Button';
+import { Avatar } from '@poukai-inc/ui/atoms/Avatar';
 
 const log = logger.child('dashboard:pages');
 import {
@@ -97,13 +98,12 @@ export default function PagesPage() {
               Manage your LinkedIn profiles and company pages
             </p>
           </div>
-          <Link
-            href="/dashboard/pages/new"
-            className="flex items-center gap-2 bg-[color:var(--accent)] text-white px-4 py-2 rounded-lg hover:bg-[color:var(--accent)] transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Add Page
-          </Link>
+          <Button asChild variant="primary">
+            <Link href="/dashboard/pages/new">
+              <Plus className="h-4 w-4" />
+              Add Page
+            </Link>
+          </Button>
         </div>
 
         {/* Pages Grid */}
@@ -118,13 +118,12 @@ export default function PagesPage() {
             <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
               Add your LinkedIn profile or company pages to start creating and scheduling content tailored to each audience.
             </p>
-            <Link
-              href="/dashboard/pages/new"
-              className="inline-flex items-center gap-2 bg-[color:var(--accent)] text-white px-6 py-3 rounded-lg hover:bg-[color:var(--accent)] transition-colors"
-            >
-              <Plus className="h-5 w-5" />
-              Add Your First Page
-            </Link>
+            <Button asChild variant="primary">
+              <Link href="/dashboard/pages/new">
+                <Plus className="h-5 w-5" />
+                Add Your First Page
+              </Link>
+            </Button>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -162,14 +161,7 @@ function PageCard({ page }: { page: Page }) {
       <div className="p-5 border-b border-gray-100 dark:border-zinc-800">
         <div className="flex items-start gap-4">
           {page.avatar ? (
-            <NextImage
-              src={page.avatar}
-              alt={page.name}
-              width={48}
-              height={48}
-              className="w-12 h-12 rounded-full object-cover"
-              unoptimized
-            />
+            <Avatar mode="image" src={page.avatar} alt={page.name} size="lg" />
           ) : (
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
               {page.type === 'personal' ? (
@@ -258,13 +250,12 @@ function PageCard({ page }: { page: Page }) {
           >
             <Settings className="h-4 w-4" />
           </Link>
-          <Link
-            href={`/dashboard/pages/${page._id}`}
-            className="flex items-center gap-1 px-3 py-1.5 bg-[color:var(--accent)] text-white text-sm rounded-lg hover:bg-[color:var(--accent)] transition-colors"
-          >
-            View
-            <ChevronRight className="h-4 w-4" />
-          </Link>
+          <Button asChild variant="primary" size="sm">
+            <Link href={`/dashboard/pages/${page._id}`}>
+              View
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </div>
     </div>

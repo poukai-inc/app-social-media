@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { Button } from '@poukai-inc/ui/atoms/Button';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('dashboard:engagements:settings');
@@ -287,10 +288,11 @@ export default function EngagementSettingsPage() {
               {message}
             </p>
           )}
-          <button
+          <Button
+            variant="primary"
             onClick={handleSave}
             disabled={isSaving}
-            className="ml-auto inline-flex items-center gap-2 rounded-lg bg-[color:var(--accent)] px-6 py-2.5 text-sm font-medium text-white hover:bg-[color:var(--accent)] disabled:opacity-50"
+            className="ml-auto"
           >
             {isSaving ? (
               <>
@@ -303,7 +305,7 @@ export default function EngagementSettingsPage() {
                 Save Settings
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

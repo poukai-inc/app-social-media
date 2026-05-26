@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { logger } from '@/lib/logger';
+import { Button } from '@poukai-inc/ui/atoms/Button';
 
 const log = logger.child('dashboard:approvals');
 
@@ -117,7 +118,7 @@ function ApprovalsContent() {
       case 'high': return 'bg-red-100 text-red-800 border-red-200';
       case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-[color:var(--surface)] text-[color:var(--fg)] border-[color:var(--hairline)]';
     }
   };
 
@@ -134,13 +135,13 @@ function ApprovalsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[color:var(--bg)]">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Pending Approvals</h1>
-            <p className="text-gray-600 mt-1">Review and approve AI-generated posts</p>
+            <h1 className="text-3xl font-bold text-[color:var(--fg)]">Pending Approvals</h1>
+            <p className="text-[color:var(--fg-muted)] mt-1">Review and approve AI-generated posts</p>
           </div>
           <Link
             href="/dashboard"
@@ -171,25 +172,25 @@ function ApprovalsContent() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <div className="bg-[color:var(--bg-elevated)] p-4 rounded-lg shadow-sm border border-[color:var(--hairline)]">
             <div className="text-2xl font-bold text-yellow-600">{statusCounts.pending_approval || 0}</div>
-            <div className="text-sm text-gray-600">Pending</div>
+            <div className="text-sm text-[color:var(--fg-muted)]">Pending</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <div className="bg-[color:var(--bg-elevated)] p-4 rounded-lg shadow-sm border border-[color:var(--hairline)]">
             <div className="text-2xl font-bold text-[color:var(--accent)]">{statusCounts.scheduled || 0}</div>
-            <div className="text-sm text-gray-600">Scheduled</div>
+            <div className="text-sm text-[color:var(--fg-muted)]">Scheduled</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <div className="bg-[color:var(--bg-elevated)] p-4 rounded-lg shadow-sm border border-[color:var(--hairline)]">
             <div className="text-2xl font-bold text-green-600">{statusCounts.published || 0}</div>
-            <div className="text-sm text-gray-600">Published</div>
+            <div className="text-sm text-[color:var(--fg-muted)]">Published</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
-            <div className="text-2xl font-bold text-gray-600">{statusCounts.draft || 0}</div>
-            <div className="text-sm text-gray-600">Drafts</div>
+          <div className="bg-[color:var(--bg-elevated)] p-4 rounded-lg shadow-sm border border-[color:var(--hairline)]">
+            <div className="text-2xl font-bold text-[color:var(--fg-muted)]">{statusCounts.draft || 0}</div>
+            <div className="text-sm text-[color:var(--fg-muted)]">Drafts</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <div className="bg-[color:var(--bg-elevated)] p-4 rounded-lg shadow-sm border border-[color:var(--hairline)]">
             <div className="text-2xl font-bold text-red-600">{statusCounts.rejected || 0}</div>
-            <div className="text-sm text-gray-600">Rejected</div>
+            <div className="text-sm text-[color:var(--fg-muted)]">Rejected</div>
           </div>
         </div>
 
@@ -211,7 +212,7 @@ function ApprovalsContent() {
                 <span className="ml-2 font-semibold">{patterns.rejected}</span>
               </div>
               <div>
-                <span className="text-gray-700">Approval Rate:</span>
+                <span className="text-[color:var(--fg-muted)]">Approval Rate:</span>
                 <span className="ml-2 font-semibold">
                   {Math.round((patterns.approved / patterns.totalDecisions) * 100)}%
                 </span>
@@ -229,27 +230,26 @@ function ApprovalsContent() {
 
         {/* Pending Posts */}
         {posts.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+          <div className="bg-[color:var(--bg-elevated)] rounded-lg shadow-sm border border-[color:var(--hairline)] p-12 text-center">
             <div className="text-4xl mb-4">✅</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">All caught up!</h3>
-            <p className="text-gray-600 mb-6">No posts pending approval</p>
-            <Link
-              href="/dashboard/create"
-              className="inline-block bg-[color:var(--accent)] text-white px-6 py-2 rounded-lg hover:bg-[color:var(--accent)]"
-            >
-              Create New Post
-            </Link>
+            <h3 className="text-xl font-semibold text-[color:var(--fg)] mb-2">All caught up!</h3>
+            <p className="text-[color:var(--fg-muted)] mb-6">No posts pending approval</p>
+            <Button asChild variant="primary">
+              <Link href="/dashboard/create">
+                Create New Post
+              </Link>
+            </Button>
           </div>
         ) : (
           <div className="space-y-6">
             {posts.map((post) => (
-              <div key={post._id} className="bg-white rounded-lg shadow-sm border overflow-hidden">
+              <div key={post._id} className="bg-[color:var(--bg-elevated)] rounded-lg shadow-sm border border-[color:var(--hairline)] overflow-hidden">
                 {/* Post Header */}
-                <div className="px-6 py-4 bg-gray-50 border-b flex flex-wrap items-center gap-3">
+                <div className="px-6 py-4 bg-[color:var(--surface)] border-b border-[color:var(--hairline)] flex flex-wrap items-center gap-3">
                   {/* Confidence */}
                   {post.aiAnalysis && (
                     <div className="flex items-center gap-2">
-                      <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="w-16 h-2 bg-[color:var(--surface)] rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full ${
                             post.aiAnalysis.confidence >= 0.7 ? 'bg-green-500' :
@@ -287,7 +287,7 @@ function ApprovalsContent() {
 
                   {/* Blog source */}
                   {post.blogSource?.url && (
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-[color:var(--surface)] text-[color:var(--fg-muted)] border border-[color:var(--hairline)]">
                       📝 From Blog
                     </span>
                   )}
@@ -309,14 +309,14 @@ function ApprovalsContent() {
 
                 {/* Content */}
                 <div className="px-6 py-4">
-                  <pre className="whitespace-pre-wrap font-sans text-gray-800 text-sm leading-relaxed">
+                  <pre className="whitespace-pre-wrap font-sans text-[color:var(--fg)] text-sm leading-relaxed">
                     {post.content}
                   </pre>
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 bg-gray-50 border-t flex flex-wrap items-center justify-between gap-4">
-                  <div className="text-sm text-gray-600">
+                <div className="px-6 py-4 bg-[color:var(--surface)] border-t border-[color:var(--hairline)] flex flex-wrap items-center justify-between gap-4">
+                  <div className="text-sm text-[color:var(--fg-muted)]">
                     {post.scheduledFor && (
                       <span>
                         ⏰ Scheduled: {new Date(post.scheduledFor).toLocaleString()}
@@ -332,12 +332,11 @@ function ApprovalsContent() {
                     >
                       {actionLoading === post._id ? '...' : '✓ Approve'}
                     </button>
-                    <Link
-                      href={`/dashboard/edit/${post._id}`}
-                      className="px-4 py-2 bg-[color:var(--accent)] text-white rounded-lg hover:bg-[color:var(--accent)] font-medium"
-                    >
-                      ✏️ Edit
-                    </Link>
+                    <Button asChild variant="primary">
+                      <Link href={`/dashboard/edit/${post._id}`}>
+                        ✏️ Edit
+                      </Link>
+                    </Button>
                     <button
                       onClick={() => handleAction(post._id, 'reject')}
                       disabled={actionLoading === post._id}

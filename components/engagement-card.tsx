@@ -19,6 +19,7 @@ import {
   ExternalLink,
   Loader2,
 } from 'lucide-react';
+import { Button } from '@poukai-inc/ui/atoms/Button';
 
 interface Engagement {
   _id: string;
@@ -217,21 +218,23 @@ export function EngagementCard({ engagement }: EngagementCardProps) {
                     rows={3}
                   />
                   <div className="flex gap-2">
-                    <button
+                    <Button
+                      variant="primary"
+                      size="sm"
                       onClick={handleSaveComment}
                       disabled={isLoading}
-                      className="rounded-lg bg-[color:var(--accent)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[color:var(--accent)] disabled:opacity-50"
                     >
                       Save
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={handleRegenerateComment}
                       disabled={isLoading || !engagement.postContent}
-                      className="inline-flex items-center gap-1 rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300"
                     >
                       <RefreshCw className="h-3 w-3" />
                       Regenerate
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
