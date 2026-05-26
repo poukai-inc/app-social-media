@@ -189,8 +189,9 @@ jobs:
           app-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
 
-      - name: Open draft PR
+      - name: Open bot PR
         if: steps.check.outputs.skip != 'true'
+        id: cpr
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ steps.app-token.outputs.token }}
@@ -233,7 +234,22 @@ jobs:
             - [ ] Compare the build-artifact-sizes table against the prior bump PR
 
             cc @arianzargaran
-          draft: true
+          draft: false
           labels: |
             bot
             ds-bump
+
+      # Enable auto-merge so the PR squash-merges itself when the 7 required
+      # status checks on `main` go green. Uses the same App token to preserve
+      # bot authorship (GITHUB_TOKEN would silently suppress downstream CI
+      # triggers, leaving the PR stuck in pending forever).
+      - name: Enable auto-merge
+        if: steps.check.outputs.skip != 'true' && steps.cpr.outputs.pull-request-number
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh pr merge "${{ steps.cpr.outputs.pull-request-number }}" \
+            --repo poukai-inc/autopost \
+            --auto \
+            --squash \
+            --delete-branch
