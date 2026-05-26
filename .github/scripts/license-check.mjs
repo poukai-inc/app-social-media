@@ -28,9 +28,10 @@ const ALLOWED_LICENSES = new Set([
 ]);
 
 // Special: first-party packages may use these opaque pointers per Poukai PIUL-1.0.
-// 'UNLICENSED' is accepted as an interim value until poukai-inc/poukai-ui#144
-// flips the DS package.json to 'SEE LICENSE IN LICENSE'. Remove 'UNLICENSED'
-// from this list once that PR has shipped and propagated through a DS bump.
+// 'UNLICENSED' is an interim allowance — DS still ships license: UNLICENSED on
+// every release through v2.11.2 (poukai-inc/poukai-ui#144 closed without action;
+// tracked at poukai-inc/poukai-ui#366). Drop 'UNLICENSED' once that flip lands
+// and a DS bump propagates the new license string into autopost's lockfile.
 const FIRST_PARTY_OPAQUE = new Set(['SEE LICENSE IN LICENSE', 'UNLICENSED']);
 const FIRST_PARTY_PREFIXES = ['@poukai-inc/'];
 
