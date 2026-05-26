@@ -27,11 +27,12 @@ const ALLOWED_LICENSES = new Set([
   'Python-2.0',    // permissive, used by some tooling
 ]);
 
-// Special: first-party packages may use these opaque pointers per Poukai PIUL-1.0.
-// 'UNLICENSED' is an interim allowance — DS still ships license: UNLICENSED on
-// every release through v2.11.2 (poukai-inc/poukai-ui#144 closed without action;
-// tracked at poukai-inc/poukai-ui#366). Drop 'UNLICENSED' once that flip lands
-// and a DS bump propagates the new license string into autopost's lockfile.
+// Special: first-party packages may use either of these opaque pointers per
+// Poukai PIUL-1.0. Both are accepted as the steady state — DS deliberately
+// ships license: UNLICENSED (poukai-inc/poukai-ui#363 reverted the flip to
+// SEE LICENSE IN LICENSE because pnpm licenses list classifies the latter
+// as 'Unknown' rather than 'UNLICENSED', breaking R-064 allowlist gates
+// downstream). Keep both values until DS or pnpm changes shape.
 const FIRST_PARTY_OPAQUE = new Set(['SEE LICENSE IN LICENSE', 'UNLICENSED']);
 const FIRST_PARTY_PREFIXES = ['@poukai-inc/'];
 
