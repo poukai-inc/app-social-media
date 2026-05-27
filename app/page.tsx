@@ -246,8 +246,10 @@ export default async function Home() {
         copyright="© 2026 AutoPost"
         email="hello@autopost.app"
         links={[
-          { href: '/login', label: 'Sign in' },
+          { href: '/pricing', label: 'Pricing' },
+          { href: '/about', label: 'About' },
           { href: '#how-it-works', label: 'How it works' },
+          { href: '/login', label: 'Sign in' },
         ]}
       />
     </div>
