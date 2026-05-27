@@ -36,7 +36,6 @@ import {
   Expand,
   RotateCcw,
   ExternalLink,
-  Loader2,
   Target,
   MessageCircle,
   Heart,
@@ -44,6 +43,7 @@ import {
   ArrowRight,
   Trash2,
 } from 'lucide-react';
+import { Spinner } from '@poukai-inc/ui/atoms';
 
 interface PlatformConnection {
   platform: 'linkedin' | 'facebook' | 'twitter';
@@ -366,7 +366,7 @@ export default function PageDashboard() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)]"></div>
+        <Spinner size="md" />
       </div>
     );
   }
@@ -739,7 +739,7 @@ export default function PageDashboard() {
 
           {postsLoading ? (
             <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)] mx-auto"></div>
+              <Spinner size="md" />
             </div>
           ) : posts.length === 0 ? (
             <div className="p-8 text-center">
@@ -889,7 +889,7 @@ export default function PageDashboard() {
                           title="Retry publishing"
                         >
                           {retrying === post._id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <Spinner size="sm" />
                           ) : (
                             <RotateCcw className="h-4 w-4" />
                           )}
@@ -1034,7 +1034,7 @@ export default function PageDashboard() {
                     className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 disabled:opacity-50"
                   >
                     {retrying === selectedPost._id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Spinner size="sm" />
                     ) : (
                       <RotateCcw className="h-4 w-4" />
                     )}

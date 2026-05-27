@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { logger } from '@/lib/logger';
 import { Button } from '@poukai-inc/ui/atoms/Button';
 import { Avatar } from '@poukai-inc/ui/atoms/Avatar';
+import { Spinner } from '@poukai-inc/ui/atoms';
 
 const log = logger.child('dashboard:pages');
 import {
@@ -82,7 +83,7 @@ export default function PagesPage() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[color:var(--bg)]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)]"></div>
+        <Spinner size="md" />
       </div>
     );
   }
