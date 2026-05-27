@@ -3,9 +3,23 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@poukai-inc/ui/atoms/Button';
+import { Skeleton } from '@poukai-inc/ui/atoms';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('dashboard:conversations');
+
+function ConversationListSkeleton() {
+  return (
+    <div className="space-y-4" aria-busy="true" aria-live="polite">
+      {[0, 1, 2, 3, 4].map((i) => (
+        <div key={i} className="space-y-2">
+          <Skeleton height={16} width="70%" radius="sm" />
+          <Skeleton height={12} width="40%" radius="sm" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface Conversation {
   id: string;
@@ -148,11 +162,7 @@ function ConversationsContent() {
   if (loading) {
     return (
       <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-[color:var(--surface)] rounded w-1/4"></div>
-          <div className="h-4 bg-[color:var(--surface)] rounded w-1/2"></div>
-          <div className="h-4 bg-[color:var(--surface)] rounded w-1/3"></div>
-        </div>
+        <ConversationListSkeleton />
       </div>
     );
   }
@@ -343,11 +353,7 @@ export default function ConversationsPage() {
   return (
     <Suspense fallback={
       <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-[color:var(--surface)] rounded w-1/4"></div>
-          <div className="h-4 bg-[color:var(--surface)] rounded w-1/2"></div>
-          <div className="h-4 bg-[color:var(--surface)] rounded w-1/3"></div>
-        </div>
+        <ConversationListSkeleton />
       </div>
     }>
       <ConversationsContent />
