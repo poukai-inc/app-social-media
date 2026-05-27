@@ -30,7 +30,7 @@ export default function AboutPage() {
         <Heading as="h1" size="h1">Why this exists.</Heading>
         <div className="mt-6 max-w-2xl">
           <Text size="lede" tone="muted">
-            The LinkedIn scheduling category is a soup of dashboards built for agencies running a hundred accounts. If you're a founder, an operator, or a small team posting from one or two profiles, those tools are noise. Most of what they do is sell you on what they do.
+            The LinkedIn scheduling category is a soup of dashboards built for agencies running a hundred accounts. If you&apos;re a founder, an operator, or a small team posting from one or two profiles, those tools are noise. Most of what they do is sell you on what they do.
           </Text>
         </div>
       </Section>
@@ -43,17 +43,17 @@ export default function AboutPage() {
         <div className="mt-12 flex flex-col gap-12">
           <Principle numeral="i." title="The official API only.">
             <Text tone="muted">
-              No scraping. No headless browsers pretending to be you. No "growth hacks" that get accounts flagged. We use LinkedIn's documented endpoints and we wait when LinkedIn says wait.
+              No scraping. No headless browsers pretending to be you. No &quot;growth hacks&quot; that get accounts flagged. We use LinkedIn&apos;s documented endpoints and we wait when LinkedIn says wait.
             </Text>
           </Principle>
           <Principle numeral="ii." title="Default to the smaller screen.">
             <Text tone="muted">
-              Most posting happens from a phone or a quick desktop tab between meetings. We don't ship features that only work in a 1600-pixel dashboard. If it doesn't work on a 12-inch laptop on a plane, we ship something else.
+              Most posting happens from a phone or a quick desktop tab between meetings. We don&apos;t ship features that only work in a 1600-pixel dashboard. If it doesn&apos;t work on a 12-inch laptop on a plane, we ship something else.
             </Text>
           </Principle>
           <Principle numeral="iii." title="Quiet by default.">
             <Text tone="muted">
-              No upsell modals. No "Pro feature" badges on the buttons. No notification spam. The job is to get your post live — not to keep you in the app.
+              No upsell modals. No &quot;Pro feature&quot; badges on the buttons. No notification spam. The job is to get your post live — not to keep you in the app.
             </Text>
           </Principle>
         </div>

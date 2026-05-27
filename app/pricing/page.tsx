@@ -77,19 +77,19 @@ export default function PricingPage() {
         <dl className="mt-12 flex flex-col gap-10">
           <div>
             <dt><Heading as="h3" size="h4">When does pricing start?</Heading></dt>
-            <dd className="mt-2"><Text tone="muted">We'll publish tiers and turn on billing before general availability. You'll get 30 days notice and a one-click choice to stay on the launch tier or downgrade.</Text></dd>
+            <dd className="mt-2"><Text tone="muted">We&apos;ll publish tiers and turn on billing before general availability. You&apos;ll get 30 days notice and a one-click choice to stay on the launch tier or downgrade.</Text></dd>
           </div>
           <div>
             <dt><Heading as="h3" size="h4">Will there be a free tier after launch?</Heading></dt>
             <dd className="mt-2"><Text tone="muted">Probably — capped at one connected account and a small monthly post quota. Beta users get something better than that.</Text></dd>
           </div>
           <div>
-            <dt><Heading as="h3" size="h4">What does "grandfathered" actually mean?</Heading></dt>
-            <dd className="mt-2"><Text tone="muted">If you signed up during beta and stay on AutoPost continuously, your launch rate is locked in. We won't raise your price unilaterally to match a future paid tier.</Text></dd>
+            <dt><Heading as="h3" size="h4">What does &quot;grandfathered&quot; actually mean?</Heading></dt>
+            <dd className="mt-2"><Text tone="muted">If you signed up during beta and stay on AutoPost continuously, your launch rate is locked in. We won&apos;t raise your price unilaterally to match a future paid tier.</Text></dd>
           </div>
           <div>
-            <dt><Heading as="h3" size="h4">Can I get a refund if I don't like the pricing?</Heading></dt>
-            <dd className="mt-2"><Text tone="muted">You don't pay anything in beta, so there's nothing to refund. After launch, billing is monthly with a no-questions-asked first-month refund window.</Text></dd>
+            <dt><Heading as="h3" size="h4">Can I get a refund if I don&apos;t like the pricing?</Heading></dt>
+            <dd className="mt-2"><Text tone="muted">You don&apos;t pay anything in beta, so there&apos;s nothing to refund. After launch, billing is monthly with a no-questions-asked first-month refund window.</Text></dd>
           </div>
         </dl>
       </Section>
@@ -97,7 +97,7 @@ export default function PricingPage() {
       <Section size="tight">
         <div className="flex flex-col items-center gap-6 text-center">
           <Eyebrow>Get started</Eyebrow>
-          <Heading as="h2">Try it now while it's free.</Heading>
+          <Heading as="h2">Try it now while it&apos;s free.</Heading>
           <Text size="lede" tone="muted">
             Connect your LinkedIn account and start scheduling posts in minutes.
           </Text>
