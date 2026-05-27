@@ -26,11 +26,11 @@ import {
   User,
   Building2,
   Trash2,
-  Loader2,
   AlertTriangle,
   Database,
   ExternalLink,
 } from 'lucide-react';
+import { Spinner } from '@poukai-inc/ui/atoms';
 import PlatformConnections from '@/components/platform-connections';
 import type { PlatformType } from '@/lib/platforms/types';
 
@@ -294,7 +294,7 @@ export default function PageSettings() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)]"></div>
+        <Spinner size="md" />
       </div>
     );
   }
@@ -910,7 +910,7 @@ export default function PageSettings() {
                     className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
                   >
                     {deleting ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Spinner size="sm" />
                     ) : (
                       <Trash2 className="h-4 w-4" />
                     )}
@@ -941,7 +941,7 @@ export default function PageSettings() {
               disabled={saving}
             >
               {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Spinner size="sm" />
               ) : (
                 <Save className="h-4 w-4" />
               )}

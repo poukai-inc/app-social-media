@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@poukai-inc/ui/atoms/Button';
+import { Spinner } from '@poukai-inc/ui/atoms';
 
 interface PostAngle {
   angle: string;
@@ -53,7 +54,7 @@ export default function BlogRepurposePage() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)]"></div>
+        <Spinner size="md" />
       </div>
     );
   }

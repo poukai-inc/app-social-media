@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import { Button } from '@poukai-inc/ui/atoms/Button';
+import { Spinner } from '@poukai-inc/ui/atoms';
 import { logger } from '@/lib/logger';
 import { Input } from '@/components/ui/input';
 import {
@@ -87,7 +88,7 @@ export default function EngagementSettingsPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -307,7 +308,7 @@ export default function EngagementSettingsPage() {
           >
             {isSaving ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Spinner size="sm" />
                 Saving...
               </>
             ) : (

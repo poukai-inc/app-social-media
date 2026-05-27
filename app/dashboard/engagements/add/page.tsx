@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Plus, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@poukai-inc/ui/atoms/Button';
+import { Spinner } from '@poukai-inc/ui/atoms';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -230,7 +231,7 @@ export default function AddEngagementPage() {
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Spinner size="sm" />
                 Adding...
               </>
             ) : (
@@ -294,7 +295,7 @@ export default function AddEngagementPage() {
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Spinner size="sm" />
                 Importing...
               </>
             ) : (

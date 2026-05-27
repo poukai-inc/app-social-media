@@ -28,10 +28,10 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  Loader2,
   Code,
   AlertCircle,
 } from 'lucide-react';
+import { Spinner } from '@poukai-inc/ui/atoms';
 
 interface DataSource {
   id: string;
@@ -268,7 +268,7 @@ export default function DataSourcesPage() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[color:var(--accent)]" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -516,7 +516,7 @@ export default function DataSourcesPage() {
                       className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50"
                     >
                       {testing ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Spinner size="sm" />
                       ) : (
                         <Play className="h-4 w-4" />
                       )}
@@ -571,7 +571,7 @@ export default function DataSourcesPage() {
                     className="mt-3 flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-50"
                   >
                     {previewLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Spinner size="sm" />
                     ) : (
                       <Eye className="h-4 w-4" />
                     )}
@@ -682,7 +682,7 @@ export default function DataSourcesPage() {
                   }
                 >
                   {saving ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Spinner size="sm" />
                   ) : (
                     <Plus className="h-4 w-4" />
                   )}
@@ -720,7 +720,7 @@ export default function DataSourcesPage() {
               <div className="p-6">
                 {previewLoading ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-[color:var(--accent)]" />
+                    <Spinner size="md" />
                   </div>
                 ) : previewResults.success && previewResults.data ? (
                   <div className="border border-gray-200 dark:border-zinc-700 rounded-lg overflow-hidden">

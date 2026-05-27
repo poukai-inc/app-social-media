@@ -5,6 +5,7 @@ import Page from '@/lib/models/Page';
 import User from '@/lib/models/User';
 import type { PlatformConnection } from '@/lib/platforms/types';
 import { logger } from '@/lib/logger';
+import { verifyState } from '@/lib/oauth-state';
 
 const log = logger.child('api:auth:twitter:callback');
 
@@ -45,13 +46,16 @@ export async function GET(request: Request) {
       );
     }
 
-    // Decode and validate state
-    let state: { pageId?: string; email: string; codeVerifier: string; timestamp: number };
-    try {
-      state = JSON.parse(Buffer.from(stateParam, 'base64').toString());
-    } catch {
+    // Verify HMAC-signed state (backlog #111 / AUDIT-H2)
+    const state = verifyState<{
+      pageId?: string;
+      email: string;
+      codeVerifier: string;
+      timestamp: number;
+    }>(stateParam);
+    if (!state) {
       return NextResponse.redirect(
-        `${process.env.NEXTAUTH_URL}/dashboard?error=invalid_state`
+        `${process.env.NEXTAUTH_URL}/dashboard?error=invalid_state`,
       );
     }
 
@@ -59,6 +63,13 @@ export async function GET(request: Request) {
     if (Date.now() - state.timestamp > 10 * 60 * 1000) {
       return NextResponse.redirect(
         `${process.env.NEXTAUTH_URL}/dashboard?error=state_expired`
+      );
+    }
+
+    // Verify state belongs to the current session
+    if (state.email !== session.user.email) {
+      return NextResponse.redirect(
+        `${process.env.NEXTAUTH_URL}/dashboard?error=state_mismatch`,
       );
     }
 

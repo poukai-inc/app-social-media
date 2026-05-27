@@ -12,9 +12,22 @@ interface EmailConfig {
   fromName: string;
 }
 
+function getFromEmail(): string {
+  const from = process.env.EMAIL_FROM;
+  if (!from) {
+    throw new Error(
+      'EMAIL_FROM is required (no default). Set EMAIL_FROM=<no-reply@your-domain> in env.',
+    );
+  }
+  return from;
+}
+
 const config: EmailConfig = {
   apiKey: process.env.RESEND_API_KEY,
-  fromEmail: process.env.EMAIL_FROM || '',
+  // Resolved lazily so the module can be imported in code paths that never send.
+  get fromEmail() {
+    return getFromEmail();
+  },
   fromName: process.env.EMAIL_FROM_NAME || 'AutoPost',
 };
 
