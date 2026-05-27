@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { logger } from '@/lib/logger';
+import { signState } from '@/lib/oauth-state';
 
 const log = logger.child('api:auth:facebook');
 
@@ -38,12 +39,12 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const pageId = searchParams.get('pageId');
 
-    // Generate state parameter for security and to pass pageId
-    const state = Buffer.from(JSON.stringify({
+    // HMAC-signed state to prevent forgery (backlog #111 / AUDIT-H2)
+    const state = signState({
       pageId,
       email: session.user.email,
       timestamp: Date.now(),
-    })).toString('base64');
+    });
 
     // Build Facebook OAuth URL
     const authUrl = new URL('https://www.facebook.com/v18.0/dialog/oauth');

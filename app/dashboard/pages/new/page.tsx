@@ -30,9 +30,9 @@ import {
   Sparkles,
   Target,
   Calendar,
-  Loader2,
   PenLine,
 } from 'lucide-react';
+import { Spinner } from '@poukai-inc/ui/atoms';
 
 interface AvailableAccount {
   id: string;
@@ -256,7 +256,7 @@ export default function NewPagePage() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)]"></div>
+        <Spinner size="md" />
       </div>
     );
   }
@@ -856,7 +856,7 @@ export default function NewPagePage() {
             >
               {saving ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Spinner size="sm" />
                   Creating...
                 </>
               ) : (

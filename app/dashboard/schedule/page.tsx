@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ScheduleOptimizer from '@/components/schedule-optimizer';
 import { Button } from '@poukai-inc/ui/atoms/Button';
+import { Spinner } from '@poukai-inc/ui/atoms';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('dashboard:schedule');
@@ -120,7 +121,7 @@ export default function SchedulePage() {
         {/* Loading State */}
         {isLoading && (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[color:var(--accent)] mx-auto"></div>
+            <Spinner size="lg" />
             <p className="text-[color:var(--fg-muted)] mt-4">Loading...</p>
           </div>
         )}

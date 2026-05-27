@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
+import { signState } from '@/lib/oauth-state';
 
 const log = logger.child('api:auth:twitter');
 
@@ -49,13 +50,13 @@ export async function GET(request: Request) {
     // Generate PKCE
     const { verifier, challenge } = generatePKCE();
 
-    // Generate state parameter for security and to pass pageId + verifier
-    const state = Buffer.from(JSON.stringify({
+    // HMAC-signed state to prevent forgery (backlog #111 / AUDIT-H2)
+    const state = signState({
       pageId,
       email: session.user.email,
       codeVerifier: verifier,
       timestamp: Date.now(),
-    })).toString('base64');
+    });
 
     // Build X (Twitter) OAuth URL
     const authUrl = new URL('https://x.com/i/oauth2/authorize');

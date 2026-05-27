@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { logger } from '@/lib/logger';
 import { Button } from '@poukai-inc/ui/atoms/Button';
+import { Spinner } from '@poukai-inc/ui/atoms';
 
 const log = logger.child('dashboard:approvals');
 
@@ -129,7 +130,7 @@ function ApprovalsContent() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)]"></div>
+        <Spinner size="md" />
       </div>
     );
   }
@@ -359,7 +360,7 @@ export default function ApprovalsPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--accent)]"></div>
+        <Spinner size="md" />
       </div>
     }>
       <ApprovalsContent />
