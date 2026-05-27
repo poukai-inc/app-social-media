@@ -9,7 +9,6 @@ import { Hero } from '@poukai-inc/ui/molecules/Hero';
 import { Section } from '@poukai-inc/ui/molecules/Section';
 import { FeatureCard } from '@poukai-inc/ui/molecules/FeatureCard';
 import { Statement } from '@poukai-inc/ui/molecules/Statement';
-import { Footer } from '@poukai-inc/ui/organisms/Footer';
 
 export const metadata = {
   title: 'Pricing — AutoPost',
@@ -111,16 +110,6 @@ export default function PricingPage() {
         </div>
       </Section>
 
-      <Footer
-        as="footer"
-        copyright="© 2026 AutoPost"
-        email="hello@autopost.app"
-        links={[
-          { href: '/', label: 'Home' },
-          { href: '/about', label: 'About' },
-          { href: '/login', label: 'Sign in' },
-        ]}
-      />
     </div>
   );
 }

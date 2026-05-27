@@ -27,7 +27,6 @@ import { Quote } from '@poukai-inc/ui/molecules/Quote';
 import { Pull } from '@poukai-inc/ui/molecules/Pull';
 import { Principle } from '@poukai-inc/ui/molecules/Principle';
 import { RoleCard } from '@poukai-inc/ui/molecules/RoleCard';
-import { Footer } from '@poukai-inc/ui/organisms/Footer';
 
 export default async function Home() {
   const session = await auth();
@@ -241,17 +240,6 @@ export default async function Home() {
         </div>
       </Section>
 
-      <Footer
-        as="footer"
-        copyright="© 2026 AutoPost"
-        email="hello@autopost.app"
-        links={[
-          { href: '/pricing', label: 'Pricing' },
-          { href: '/about', label: 'About' },
-          { href: '#how-it-works', label: 'How it works' },
-          { href: '/login', label: 'Sign in' },
-        ]}
-      />
     </div>
   );
 }

@@ -9,7 +9,6 @@ import { Section } from '@poukai-inc/ui/molecules/Section';
 import { Statement } from '@poukai-inc/ui/molecules/Statement';
 import { Principle } from '@poukai-inc/ui/molecules/Principle';
 import { Pull } from '@poukai-inc/ui/molecules/Pull';
-import { Footer } from '@poukai-inc/ui/organisms/Footer';
 
 export const metadata = {
   title: 'About — AutoPost',
@@ -95,16 +94,6 @@ export default function AboutPage() {
         </div>
       </Section>
 
-      <Footer
-        as="footer"
-        copyright="© 2026 AutoPost"
-        email="hello@autopost.app"
-        links={[
-          { href: '/', label: 'Home' },
-          { href: '/pricing', label: 'Pricing' },
-          { href: '/login', label: 'Sign in' },
-        ]}
-      />
     </div>
   );
 }
