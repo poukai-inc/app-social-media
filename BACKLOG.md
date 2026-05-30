@@ -4,8 +4,9 @@
 - [MIGRATION_ANALYSIS.md](MIGRATION_ANALYSIS.md) v2.1 — multi-tenant SaaS + self-hostable rewrite
 - [STACK_ALIGNMENT_DECISIONS.md](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) (2026-05-20) — cross-repo stack alignment (D1–D7)
 
-**Last sync**: 2026-05-21
-**Total tasks**: 121 (15 C / 58 H / 27 M / 21 L)
+**Last sync**: 2026-05-29
+**Total tasks**: 159 (17 C / 66 H / 45 M / 31 L)
+**Latest audit**: 2026-05-29 full-repo audit (+38 tasks: 123–160; see "Audit additions" section)
 
 ## Legend
 
@@ -227,17 +228,83 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 
 ---
 
+## Audit additions (2026-05-29)
+
+Full-repo audit across security, correctness/concurrency, performance, and config/ops. New findings only — items already covered by tasks 1–122 were de-duplicated and excluded (e.g. cron-transport drift folded into #19, elk network into #85, dead deps into #15). File:line verified against current source. Sorted P0 → P3, severity C → L.
+
+### P0-C — Critical (new)
+
+| ID | Status | Task | File(s) |
+|---|---|---|---|
+| 123 | `[ ]` | **[AUDIT2-C1]** OAuth secrets leak to client — `GET /api/pages` (and `GET /api/pages/[id]`) returns raw `Page` docs via `.lean()` with no projection; `connections[].accessToken`/`refreshToken`/`oauthToken`/`oauthTokenSecret` ship to the browser on every dashboard load (`Page` model has no `toJSON` transform stripping them). Fix: add `.select('-connections.accessToken -connections.refreshToken -connections.oauthToken -connections.oauthTokenSecret')` or a schema `toJSON` transform that deletes token fields; audit all routes returning raw `Page`. | `app/api/pages/route.ts:29,67`, `app/api/pages/[id]/route.ts`, `lib/models/Page.ts` |
+| 124 | `[ ]` | **[AUDIT2-C2]** Double-publish risk — `executePublish()` selects `status:'scheduled', scheduledFor:{$lte:now}` and only writes status back *after* the (serial, multi-minute, retry-backoff) network publish; `withLock('publish')` TTL is 300s and auto-expires mid-run, so an overlapping cron run re-reads the same still-`scheduled` posts and republishes to live platforms. Fix: atomically claim each post first — `Post.findOneAndUpdate({_id, status:'scheduled'}, {$set:{status:'publishing'}})` and proceed only if a doc returns; or `extendLock` periodically during long runs. | `app/api/cron/publish/route.ts:296-365` |
+
+### P1-H — High (new)
+
+| ID | Status | Task | File(s) |
+|---|---|---|---|
+| 125 | `[ ]` | **[AUDIT2-H1]** Cross-tenant IDOR cluster — several routes resolve records by id with no page-ownership check: `conversations/[id]` GET (`ICPEngagement.findById`), `conversations` GET (`find({pageId})` on attacker-supplied `pageId`) + POST (`disableAutoResponse`/`updateOne` mutate any tenant's conversation), `pages/[id]/learning` GET (`Page.findById`). Any authenticated user reads/mutates another tenant's DMs, target-user PII, and analytics. Fix: resolve caller's pages and filter `findOne({_id, pageId:{$in:userPageIds}})` / `Page.findOne({_id, userId:user._id})`, else 404 (pattern already used by `pages/[id]` and `pages/[id]/posts`). | `app/api/conversations/[id]/route.ts:36`, `app/api/conversations/route.ts:50,133,137,144`, `app/api/pages/[id]/learning/route.ts:39` |
+| 126 | `[ ]` | **[AUDIT2-H2]** Unsafe lock release (TOCTOU) — `releaseLock` fallback does `findById` then `deleteOne({_id: lockId})` unconditionally; between the two calls a new holder can acquire, and the delete is not conditioned on `expiresAt`/`holder`, so a slow job whose lock TTL-expired deletes whatever valid lock now exists, breaking mutual exclusion (compounds #124). Fix: single atomic conditional delete `deleteOne({_id, holder:INSTANCE_ID})` and, for the expired path, `deleteOne({_id, expiresAt:{$lt:new Date()}})`. | `lib/distributed-lock.ts:160-178` |
+| 127 | `[ ]` | **[AUDIT2-H3]** Engage cron has no distributed lock — unlike publish/auto-generate, `cron/engage` calls no `withLock`; a slow run (3s+2s inter-item sleeps) overlapping the next invocation lets both pick up the same `pending`/`approved` rows and post duplicate LinkedIn comments/replies. Fix: wrap in `withLock('engage')` and atomically claim each `EngagementTarget`/`CommentReply` before acting. | `app/api/cron/engage/route.ts:74-296` |
+| 128 | `[ ]` | **[AUDIT2-H4]** Circuit breaker permanently corrupts shared config — on a 403 the instant-trip sets `this.entry.options.resetTimeoutMs = 3600000` on the process-wide cached breaker entry; the original (e.g. 15-min) timeout is lost forever, so every later failure for that key uses 1h even after the 403 clears. Fix: track the long reset in a local `openUntil` timestamp instead of mutating `options.resetTimeoutMs`. | `lib/circuit-breaker.ts:157` |
+| 129 | `[ ]` | **[AUDIT2-H5]** Scheduling ignores page timezone — `scheduledFor.setHours(hours,minutes,...)` uses the server's local tz and `getNextOccurrence` ignores its `_timezone` param (unused, underscore-prefixed). A page set to 09:00 local is scheduled at 09:00 server time. Fix: compute the target instant in `page.schedule.timezone`. | `app/api/cron/auto-generate/route.ts:52-69,410-415` |
+| 130 | `[ ]` | **[AUDIT2-H6]** Daily-usage limits are global, not per-tenant, and racy — `dailyUsageCache` is a module-global single object; `checkDailyLimits`/`incrementDailyUsage` mutate it with no page scoping or atomicity, and the DB aggregate counts *all* tenants' messages. The 50/day + $5/day caps are process-global (one tenant throttles everyone) with lost-update races. Fix: scope per page/user and back the counter with an atomic DB `$inc`. | `lib/engagement/conversation-manager.ts:267-354` |
+| 131 | `[ ]` | **[AUDIT2-H7]** `collect-metrics` cron is the heaviest path and partly broken — (a) `getPlatformAverages()` runs a full `EngagementHistory.aggregate` ($unwind+$group) once per platform per post inside a double loop (hundreds of full-history scans per run); (b) `Post.find({status:'published', publishedAt:{$gte:30d}}).populate('pageId')` is unbounded and global across tenants; (c) the aggregate `$match: {pageId}` compares a string (`page._id.toString()`) against an ObjectId field, matching 0 docs so historical baselines never apply and scoring silently falls back. Fix: precompute averages once per `(pageId,platform)` into a Map; cast `new mongoose.Types.ObjectId(pageId)`; add `.limit()`+`.lean()` and project only needed fields. | `app/api/cron/collect-metrics/route.ts:89-112,114,151-154,245` |
+| 132 | `[ ]` | **[AUDIT2-H8]** Live GitHub PAT on disk — `.env` holds a real-looking `NPM_TOKEN=ghp_…` referenced by `.npmrc` `_authToken`. `.env` is gitignored and not in history (verified), but a valid `ghp_` token sits in plaintext and in the Docker build context. Fix: rotate the PAT now at github.com/settings/tokens; inject `NPM_TOKEN` only via shell/CI secret; confirm `.env` never enters an image layer. | `.env:1`, `.npmrc:2`, `Dockerfile` |
+
+### P1-M / P2-M — Medium (new)
+
+| ID | Status | Task | File(s) |
+|---|---|---|---|
+| 133 | `[ ]` | **[AUDIT2-M1]** Unauthenticated info disclosure — `GET /api/health?detailed=true` returns DB connection state, `NODE_ENV`, AI provider, and presence flags for `MONGODB_URI`/`NEXTAUTH_SECRET`/`LINKEDIN_CLIENT_ID`/`RESEND_API_KEY` to any anonymous caller. Fix: gate the `detailed` branch behind auth or `CRON_SECRET`; keep the plain `{status,timestamp,version}` body public. | `app/api/health/route.ts:6-53` |
+| 134 | `[ ]` | **[AUDIT2-M2]** Mass-assignment in post update — `PUT /api/posts/[id]` blindly copies `pageId`, `organizationId`, `targetPlatforms`, `postAs` from the body with no check the referenced `pageId`/`organizationId` belong to the caller; a user can reassign their post to another tenant's `pageId`, polluting that page's analytics/learning aggregates. Fix: validate `body.pageId`/`organizationId` against caller-owned records before assigning. | `app/api/posts/[id]/route.ts:103-112` |
+| 135 | `[ ]` | **[AUDIT2-M3]** IDOR (info leak) in `schedule/optimize` GET — when `pageId` is supplied, `Page.findById(pageId)` (no userId) leaks another tenant's connected-platform list. Fix: `Page.findOne({_id:pageId, userId:user._id})` (the POST handler at :236 already does this). | `app/api/schedule/optimize/route.ts:72` |
+| 136 | `[ ]` | **[AUDIT2-M4]** Missing mongoose indexes for hot queries — add `Post.index({userId:1,status:1,publishedAt:-1})` (engage/replies/performance scans), `Post.index({pageId:1,status:1,createdAt:-1})` (auto-generate weekly count + status group), `EngagementTarget.index({status:1,scheduledFor:1,userId:1})` (engage distinct+scan), and optionally `ICPEngagement.index({pageId:1,platform:1,'conversation.autoResponseEnabled':1,'conversation.lastCheckedAt':-1})`. | `lib/models/Post.ts:471-478`, `lib/models/Engagement.ts:81-82`, `lib/models/ICPEngagement.ts` |
+| 137 | `[ ]` | **[AUDIT2-M5]** Unbounded list queries — `GET /api/posts` (`find({userId}).sort().lean()`), `posts/pending`, and `engagements/debug` return every doc (full body, aiReview, platformResults, metricHistory) per tenant, growing without bound. Fix: add `limit`/`skip` pagination + `.select()` of list-view fields. | `app/api/posts/route.ts:29-31`, `app/api/posts/pending/route.ts:25`, `app/api/engagements/debug/route.ts:27` |
+| 138 | `[ ]` | **[AUDIT2-M6]** Sequential N+1 in engage cron — per-user `User.findById`+`getOrCreateEngagementSettings`, then per published post `getPostComments`, then per comment `CommentReply.findOne({commentUrn})`, fully serial. Fix: batch settings via one `find({userId:{$in}})`; bulk-check comments with one `CommentReply.find({commentUrn:{$in:urns}})` per post (`commentUrn` is unique-indexed). | `app/api/cron/engage/route.ts:74-296` |
+| 139 | `[ ]` | **[AUDIT2-M7]** Publish loop redundancy — unbounded `Post.find({status:'scheduled'...}).populate('userId')` then per-post `User.findById` (redundant — already populated) and `Page.findById`. Fix: use populated `post.userId`; batch `Page.find({_id:{$in:pageIds}})`; add `.limit()` to the scheduled scan. | `app/api/cron/publish/route.ts:296-321` |
+| 140 | `[ ]` | **[AUDIT2-M8]** AI rate-limit cache races + dead increment — `recordUsage` does read-modify-write on module-global `dailyCache`/`minuteCache` across in-flight requests (lost updates → undercount → exceed Groq limits); line 197 `rateLimitHits: cached.rateLimitHits + (success ? 0 : 0)` always adds 0, so error counts never accrue. Fix: increment by `success ? 0 : 1`, treat cache as advisory, rely on atomic DB `$inc` for correctness. | `lib/ai-client.ts:162-198` |
+| 141 | `[ ]` | **[AUDIT2-M9]** Non-idempotent conversation reply — `lastCheckedAt` is bumped (and messages pushed) in separate non-transactional writes, and `currentAutoResponseCount` increments after `replyToTweet` succeeds in a separate write; a crash between them sends a reply that isn't counted, so the 3-per-conversation cap can be exceeded next run. Fix: record outgoing message + count increment atomically; dedupe on `replyResult.replyId`. | `lib/engagement/conversation-manager.ts:920-1061` |
+| 142 | `[ ]` | **[AUDIT2-M10]** Wrong-connection token update — publish-route token-refresh save matches only `'connections.platform': platform`, so a page with two connections of the same platform updates the first array element regardless of which expired (token-refresh route correctly also matches `platformId`). Fix: include `platformId` in the publish-route positional filter. | `app/api/cron/publish/route.ts:96-105` |
+| 143 | `[ ]` | **[AUDIT2-M11]** NaN in shares metric — `shares: metrics.retweet_count + (metrics.quote_count || 0)`; `retweet_count` is not defaulted, so an absent value yields `NaN` that propagates into engagement-rate math. Fix: `(metrics.retweet_count || 0) + (metrics.quote_count || 0)`. | `lib/platforms/twitter-adapter.ts:396` |
+| 144 | `[ ]` | **[AUDIT2-M12]** Misleading metric + O(n²) in icp-engage — `repliesSent: agentResult.repliesSuccessful` hides failed-but-attempted replies, and `pages.indexOf(page)` re-scans the array each iteration. Fix: report sent vs successful distinctly; use the loop index. | `app/api/cron/icp-engage/route.ts:101,106` |
+| 145 | `[ ]` | **[AUDIT2-M13]** Facebook access token in URL query — metrics fetch interpolates the access token into the URL query string, landing it in any proxy/access logs. Fix: use header auth or POST body. | `lib/platforms/facebook-adapter.ts:225` |
+| 146 | `[ ]` | **[AUDIT2-M14]** `CRON_SECRET` persisted to world-readable env file — `entrypoint.sh` writes it to `/etc/scheduler.env` in plaintext, inherited by every cron child (visible via `/proc/<pid>/environ`). Fix: read from a mounted secret file at call time; `chmod 600`. (distinct from #8 query→header.) | `scheduler/entrypoint.sh:13-15`, `scheduler/cron-call.sh:19` |
+| 147 | `[ ]` | **[AUDIT2-M15]** No image HEALTHCHECK — compose defines a healthcheck but the image has none, and `depends_on: app` (plain) waits only for start, not health, so the scheduler can fire against an unready app. Fix: add `HEALTHCHECK` to `Dockerfile`; use `depends_on: condition: service_healthy`. | `Dockerfile`, `docker-compose.yml:37-61` |
+| 148 | `[ ]` | **[AUDIT2-M16]** Scheduler image unpinned + redundant curl — `FROM alpine:latest` breaks reproducibility; curl is installed at build (`Dockerfile:3`) and again at runtime (`entrypoint.sh:4`, dead). Fix: pin `alpine:3.x`; drop the runtime `apk add curl`. | `scheduler/Dockerfile:1`, `scheduler/entrypoint.sh:4` |
+| 149 | `[ ]` | **[AUDIT2-M17]** No app-router error/loading boundaries — repo has no `error.tsx`, `global-error.tsx`, `loading.tsx`, or `not-found.tsx` anywhere; any unhandled render/fetch error in a Server Component shows the bare Next.js default screen with no recovery, and async segments have no Suspense fallback. Fix: add `app/error.tsx` + `app/global-error.tsx` + `app/dashboard/loading.tsx` at minimum. | `app/**` |
+| 150 | `[ ]` | **[AUDIT2-M18]** 34 tracked one-off debug/fixer scripts — `scripts/` holds ad-hoc fixers (`fix-failed-post.mjs`, `fix-datasource.mjs`, `reset-post.cjs`), diagnostics, and `test-*.mjs` harnesses that reimplement `lib/` generation flow; all exempt from no-console and unwired to any runner. Fix: move keep-worthy diagnostics to `tools/` with a README, delete superseded fixers, replace `test-*` harnesses with real Vitest/Playwright tests (ties to #117). | `scripts/*` |
+
+### P3-L — Low (new)
+
+| ID | Status | Task | File(s) |
+|---|---|---|---|
+| 151 | `[ ]` | **[AUDIT2-L1]** CSS-injection sink — `dangerouslySetInnerHTML` interpolates `--brand-primary:${BRAND_PRIMARY}` into a `<style>`. Source is a server env var (not exploitable now) but becomes an injection sink if `BRAND_PRIMARY` ever turns tenant-configurable. Fix: validate against a hex/CSS-color regex before interpolation. | `app/layout.tsx:30` |
+| 152 | `[ ]` | **[AUDIT2-L2]** `postcss` moderate advisory GHSA-qx2v-qp2m-jg93 (XSS via unescaped `</style>`) — build-time tooling only, no runtime exposure. Bump on next maintenance pass. | `package.json` |
+| 153 | `[ ]` | **[AUDIT2-L3]** Error-message leak — `pages/[id]/learning` returns raw `error.message` to the client; every other route returns a generic string. Fix: return a generic message, log detail server-side. | `app/api/pages/[id]/learning/route.ts:115` |
+| 154 | `[ ]` | **[AUDIT2-L4]** Retry backoff array/`MAX_RETRIES` misalignment — `RETRY_DELAY_MS` has 3 entries but the guard/recursion never delays a 4th attempt by a real slot; worst-case serial retry time (≈50s/platform) is what blows past the 300s lock TTL in #124. Fix: align `MAX_RETRIES` with the delay-array length; document worst-case runtime vs lock TTL. | `app/api/cron/publish/route.ts:20,175` |
+| 155 | `[ ]` | **[AUDIT2-L5]** In-memory aggregation in `schedule/optimize` — loads up to 500 full posts then buckets/sorts in JS. Fix: push day/hour/platform aggregation into a MongoDB `$group` pipeline or cache. | `app/api/schedule/optimize/route.ts:59-117` |
+| 156 | `[ ]` | **[AUDIT2-L6]** Wasted query — `GET /api/ai/usage` awaits `getUsageStatus()` then discards the result; the three usage helpers each re-read today's `AIUsage`. Fix: drop the unused call; share one usage snapshot. | `app/api/ai/usage/route.ts:33-35` |
+| 157 | `[ ]` | **[AUDIT2-L7]** README inaccuracies — says "Next.js 15" (actual `next@16.2.6`), AI "Groq" (actual default `AI_PROVIDER=ollama`, Groq optional), and `npm install && npm run dev` (repo is pnpm-pinned `packageManager: pnpm@10.33.0`). Fix: correct version, provider, and package-manager commands. | `README.md:48,51,93,112-113` |
+| 158 | `[ ]` | **[AUDIT2-L8]** No container resource limits — long-running auto-poster + ffmpeg video processing can balloon memory and OOM the host. Fix: add `mem_limit`/`cpus` (or `deploy.resources`) to the `app` service. | `docker-compose.yml` |
+| 159 | `[ ]` | **[AUDIT2-L9]** `allowJs: true` unnecessary for an all-TS app; loosens the build surface for the 34 root `.mjs`/`.cjs` scripts. Fix: drop `allowJs` unless a JS source is genuinely imported. | `tsconfig.json:6` |
+| 160 | `[ ]` | **[AUDIT2-L10]** Large planning docs at repo root — `MIGRATION_ANALYSIS.md` (~49KB) + `BACKLOG.md` (~24KB) clutter root. Fix: move to `docs/` (update cross-links). | repo root |
+
+---
+
 ## Snapshot by priority × severity
 
-_Updated after 2026-05-20 security audit (+10 tasks: 107–116), 2026-05-20 stack alignment (+5 tasks: 117–121, see [STACK_ALIGNMENT_DECISIONS.md](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md)), and 2026-05-21 CI-greening (+1 task: 122)._
+_Updated after 2026-05-20 security audit (+10 tasks: 107–116), 2026-05-20 stack alignment (+5 tasks: 117–121, see [STACK_ALIGNMENT_DECISIONS.md](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md)), 2026-05-21 CI-greening (+1 task: 122), and 2026-05-29 full-repo audit (+38 tasks: 123–160)._
 
 |        | C  | H  | M  | L  | **Total** |
 |--------|----|----|----|----|-----------|
-| **P0** | 15 |  0 |  0 |  0 | **15** |
-| **P1** |  0 | 43 | 13 |  0 | **56** |
+| **P0** | 17 |  0 |  0 |  0 | **17** |
+| **P1** |  0 | 51 | 31 |  0 | **82** |
 | **P2** |  0 | 15 | 14 |  0 | **29** |
-| **P3** |  0 |  0 |  0 | 21 | **21** |
-| **Total** | **15** | **58** | **27** | **21** | **121** |
+| **P3** |  0 |  0 |  0 | 31 | **31** |
+| **Total** | **17** | **66** | **45** | **31** | **159** |
+
+_2026-05-29 audit split: P0-C +2 (123–124); P1-H +8 (125–132); P1/P2-M +18 (133–150); P3-L +10 (151–160)._
 
 ## Phase ↔ tasks map
 
