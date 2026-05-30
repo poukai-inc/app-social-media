@@ -291,23 +291,59 @@ export async function GET(request: Request) {
  */
 async function executePublish() {
   try {
-    // Find all scheduled posts that are due
     const now = new Date();
-    const scheduledPosts = await Post.find({
+
+    // A post claimed for publishing but never finalized within this window is
+    // treated as abandoned (worker crashed mid-run) and may be reclaimed. Must
+    // exceed worst-case publish runtime (serial platforms × retry backoff). (issue #16)
+    const STALE_CLAIM_MS = 10 * 60 * 1000; // 10 minutes
+    const staleThreshold = new Date(now.getTime() - STALE_CLAIM_MS);
+
+    // Discover due posts that are unclaimed or whose prior claim went stale.
+    const candidates = await Post.find({
       status: 'scheduled',
       scheduledFor: { $lte: now },
-    }).populate('userId');
+      $or: [
+        { publishStartedAt: { $exists: false } },
+        { publishStartedAt: { $lt: staleThreshold } },
+      ],
+    })
+      .select('_id')
+      .lean();
 
     const results = [];
 
-    for (const post of scheduledPosts) {
+    for (const candidate of candidates) {
+      // Atomically claim the post: flip publishStartedAt only if it is still
+      // unclaimed/stale. The DB guarantees a single winner, so a concurrent run
+      // — or this endpoint re-entered after the 5-min lock TTL expired
+      // mid-publish — gets null and skips, preventing double-publish. (issue #16)
+      const post = await Post.findOneAndUpdate(
+        {
+          _id: candidate._id,
+          status: 'scheduled',
+          $or: [
+            { publishStartedAt: { $exists: false } },
+            { publishStartedAt: { $lt: staleThreshold } },
+          ],
+        },
+        { $set: { publishStartedAt: new Date() } },
+        { new: true }
+      ).populate('userId');
+
+      if (!post) {
+        // Lost the race — another worker claimed this post.
+        continue;
+      }
+
       try {
         // Get the user to get their email
         const user = await User.findById(post.userId);
-        
+
         if (!user) {
           post.status = 'failed';
           post.error = 'User not found';
+          post.publishStartedAt = undefined;
           await post.save();
           results.push({ postId: post._id, status: 'failed', error: 'User not found' });
           continue;
@@ -323,6 +359,7 @@ async function executePublish() {
           if (!page) {
             post.status = 'failed';
             post.error = 'Page not found';
+            post.publishStartedAt = undefined;
             await post.save();
             results.push({ postId: post._id, status: 'failed', error: 'Page not found' });
             continue;
@@ -344,6 +381,7 @@ async function executePublish() {
           post.status = overallStatus;
           post.platformResults = platformResults;
           post.publishedAt = overallStatus !== 'failed' ? new Date() : undefined;
+          post.publishStartedAt = undefined;
           
           // For backward compatibility, set linkedinPostId if LinkedIn was successful
           const linkedinResult = platformResults.find(r => r.platform === 'linkedin');
@@ -406,6 +444,7 @@ async function executePublish() {
             }];
           }
 
+          post.publishStartedAt = undefined;
           await post.save();
           results.push({
             postId: post._id,
@@ -416,6 +455,7 @@ async function executePublish() {
       } catch (error) {
         post.status = 'failed';
         post.error = error instanceof Error ? error.message : 'Unknown error';
+        post.publishStartedAt = undefined;
         await post.save();
         results.push({
           postId: post._id,

@@ -121,6 +121,10 @@ export interface IPost extends Document {
   scheduledFor?: Date;
   publishedAt?: Date;
   status: PostStatus;
+  // Concurrency claim marker for the publish cron: set when a worker begins
+  // publishing a scheduled post so overlapping/post-lock-TTL runs skip it.
+  // Cleared on terminal status. (issue #16)
+  publishStartedAt?: Date;
   linkedinPostId?: string; // DEPRECATED: Use platformResults instead
   error?: string;
   // Organization posting support
@@ -364,6 +368,10 @@ const PostSchema = new Schema<IPost>(
       type: String,
       enum: ['draft', 'pending_approval', 'scheduled', 'published', 'partially_published', 'failed', 'rejected'],
       default: 'draft',
+    },
+    // Publish-cron concurrency claim marker (issue #16)
+    publishStartedAt: {
+      type: Date,
     },
     linkedinPostId: {
       type: String,
