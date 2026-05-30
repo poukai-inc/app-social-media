@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import ICPEngagement from '@/lib/models/ICPEngagement';
+import { userOwnsPage } from '@/lib/page-access';
 import mongoose from 'mongoose';
 import { logger } from '@/lib/logger';
 
@@ -36,6 +37,12 @@ export async function GET(
     const conversation = await ICPEngagement.findById(conversationId).lean();
 
     if (!conversation) {
+      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+    }
+
+    // Authorization: confirm the caller owns the page this conversation belongs
+    // to. Map mismatch to 404 to avoid leaking another tenant's data. (issue #17)
+    if (!(await userOwnsPage(session, conversation.pageId))) {
       return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
     }
 

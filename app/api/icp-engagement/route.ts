@@ -10,7 +10,7 @@ import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
-import Page from '@/lib/models/Page';
+import { findOwnedPage, userOwnsPage } from '@/lib/page-access';
 import ICPEngagement from '@/lib/models/ICPEngagement';
 import type { AgentConfig } from '@/lib/engagement/icp-engagement-agent';
 import { runICPEngagementAgent } from '@/lib/engagement/icp-engagement-agent';
@@ -40,8 +40,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'pageId is required' }, { status: 400 });
     }
 
-    // Verify user owns this page
-    const page = await Page.findById(pageId);
+    // Verify the caller owns this page (prevents cross-tenant agent runs /
+    // AI-spend abuse on another tenant's page). (issue #17)
+    const page = await findOwnedPage(session, pageId);
     if (!page) {
       return NextResponse.json({ error: 'Page not found' }, { status: 404 });
     }
@@ -123,6 +124,12 @@ export async function GET(request: NextRequest) {
 
     if (!pageId) {
       return NextResponse.json({ error: 'pageId is required' }, { status: 400 });
+    }
+
+    // Authorization: only the page owner may read its ICP engagement data.
+    // Also guards against malformed ids reaching the ObjectId cast. (issue #17)
+    if (!(await userOwnsPage(session, pageId))) {
+      return NextResponse.json({ error: 'Page not found' }, { status: 404 });
     }
 
     const pageObjectId = new mongoose.Types.ObjectId(pageId);
