@@ -394,6 +394,37 @@ const PageSchema = new Schema<IPage>(
   }
 );
 
+// Defense-in-depth: strip OAuth secrets from any serialized Page document.
+// NOTE: Mongoose `.lean()` queries bypass these transforms — client-facing
+// routes that use `.lean()` must also call `stripPageSecrets` from
+// `lib/sanitize-page.ts`. (issue #15)
+const stripConnectionSecretsInPlace = (ret: Record<string, unknown>): void => {
+  const connections = ret.connections;
+  if (Array.isArray(connections)) {
+    for (const conn of connections) {
+      if (conn && typeof conn === 'object') {
+        delete (conn as Record<string, unknown>).accessToken;
+        delete (conn as Record<string, unknown>).refreshToken;
+        delete (conn as Record<string, unknown>).oauthToken;
+        delete (conn as Record<string, unknown>).oauthTokenSecret;
+      }
+    }
+  }
+};
+
+PageSchema.set('toJSON', {
+  transform: (_doc, ret) => {
+    stripConnectionSecretsInPlace(ret as unknown as Record<string, unknown>);
+    return ret;
+  },
+});
+PageSchema.set('toObject', {
+  transform: (_doc, ret) => {
+    stripConnectionSecretsInPlace(ret as unknown as Record<string, unknown>);
+    return ret;
+  },
+});
+
 // Indexes
 PageSchema.index({ userId: 1 });
 PageSchema.index({ userId: 1, isActive: 1 });

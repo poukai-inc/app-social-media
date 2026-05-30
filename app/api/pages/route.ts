@@ -6,6 +6,7 @@ import User from '@/lib/models/User';
 import Page from '@/lib/models/Page';
 import Post from '@/lib/models/Post';
 import { logger } from '@/lib/logger';
+import { stripPagesSecrets } from '@/lib/sanitize-page';
 
 const log = logger.child('api:pages');
 
@@ -26,7 +27,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const includeStats = searchParams.get('includeStats') === 'true';
 
-    const pages = await Page.find({ userId: user._id }).sort({ createdAt: -1 }).lean();
+    // Strip OAuth secrets from connections before any response leaves the server.
+    // .lean() bypasses schema toJSON transforms, so sanitize explicitly. (issue #15)
+    const pages = stripPagesSecrets(
+      await Page.find({ userId: user._id }).sort({ createdAt: -1 }).lean()
+    );
 
     // If stats requested, fetch post counts for each page
     if (includeStats) {
