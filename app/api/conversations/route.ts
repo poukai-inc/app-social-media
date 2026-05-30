@@ -11,6 +11,7 @@ import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import ICPEngagement from '@/lib/models/ICPEngagement';
 import { getConversationStats, disableAutoResponse } from '@/lib/engagement/conversation-manager';
+import { userOwnsPage } from '@/lib/page-access';
 import mongoose from 'mongoose';
 import { logger } from '@/lib/logger';
 
@@ -33,6 +34,12 @@ export async function GET(request: NextRequest) {
 
     if (!pageId) {
       return NextResponse.json({ error: 'pageId is required' }, { status: 400 });
+    }
+
+    // Authorization: the page must belong to the caller. Map any failure to 404
+    // so we never reveal whether another tenant's page exists. (issue #17)
+    if (!(await userOwnsPage(session, pageId))) {
+      return NextResponse.json({ error: 'Page not found' }, { status: 404 });
     }
 
     // Build query for conversations
@@ -126,6 +133,19 @@ export async function POST(request: NextRequest) {
         { error: 'action and conversationId are required' },
         { status: 400 }
       );
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+    }
+
+    // Authorization: resolve the conversation's owning page and confirm the
+    // caller owns it before mutating auto-response settings. (issue #17)
+    const engagement = await ICPEngagement.findById(conversationId)
+      .select('pageId')
+      .lean<{ pageId: mongoose.Types.ObjectId }>();
+    if (!engagement || !(await userOwnsPage(session, engagement.pageId))) {
+      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
     }
 
     switch (action) {

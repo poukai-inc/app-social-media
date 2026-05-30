@@ -2,8 +2,8 @@ import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
-import Page from '@/lib/models/Page';
-import { 
+import { findOwnedPage } from '@/lib/page-access';
+import {
   getPlatformInsights, 
   comparePlatformPerformance,
   getEngagementDataForOptimizer 
@@ -36,7 +36,9 @@ export async function GET(
     const { id: pageId } = await params;
     await connectToDatabase();
 
-    const page = await Page.findById(pageId);
+    // Authorization: only the page owner may read its learning insights.
+    // findOwnedPage returns null for missing/foreign pages → 404. (issue #17)
+    const page = await findOwnedPage(session, pageId);
     if (!page) {
       return NextResponse.json({ error: 'Page not found' }, { status: 404 });
     }
@@ -111,8 +113,9 @@ export async function GET(
 
   } catch (error) {
     log.error('Learning insights error', { error: error instanceof Error ? error.message : String(error) });
+    // Do not leak internal error detail to the client. (issue #45)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to get learning insights' },
+      { error: 'Failed to get learning insights' },
       { status: 500 }
     );
   }
