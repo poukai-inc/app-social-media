@@ -1,5 +1,6 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import connectToDatabase from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
 import type Page from '@/lib/models/Page';
@@ -89,7 +90,10 @@ async function getPlatformAverages(
   const result = await EngagementHistory.aggregate([
     {
       $match: {
-        pageId: pageId,
+        // pageId is an ObjectId field; the caller passes a string. Cast so the
+        // match actually hits (and uses the {pageId, platforms.platform} index)
+        // instead of silently returning 0 and disabling historical scoring. (issue #23)
+        pageId: new mongoose.Types.ObjectId(pageId),
         'platforms.platform': platform,
       },
     },
@@ -148,12 +152,33 @@ export async function GET(request: NextRequest) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
+    // Bound the scan so one run cannot grow without limit as total post volume
+    // grows; oldest-updated first so every post is eventually refreshed. (issue #23)
+    const MAX_POSTS_PER_RUN = 500;
     const publishedPosts = await Post.find({
       status: 'published',
       publishedAt: { $gte: thirtyDaysAgo },
-    }).populate('pageId');
+    })
+      .sort({ updatedAt: 1 })
+      .limit(MAX_POSTS_PER_RUN)
+      .populate('pageId');
 
+    if (publishedPosts.length === MAX_POSTS_PER_RUN) {
+      log.warn('Metrics run hit the per-run post cap; remaining posts roll to the next run', { cap: MAX_POSTS_PER_RUN });
+    }
     log.info('Processing published posts for metrics collection', { count: publishedPosts.length });
+
+    // Memoize historical averages per (pageId, platform) for this run so the
+    // aggregate runs once per pair instead of once per platform per post. (issue #23)
+    const averagesCache = new Map<string, { avgEngagementRate: number; avgImpressions: number } | null>();
+    const getCachedPlatformAverages = async (pageId: string, platform: PlatformType) => {
+      const key = `${pageId}:${platform}`;
+      const hit = averagesCache.get(key);
+      if (hit !== undefined) return hit;
+      const value = await getPlatformAverages(pageId, platform);
+      averagesCache.set(key, value);
+      return value;
+    };
 
     for (const post of publishedPosts) {
       const page = post.pageId as typeof Page.prototype;
@@ -241,8 +266,8 @@ export async function GET(request: NextRequest) {
             ? ((metrics.likes || 0) + (metrics.comments || 0) + (metrics.shares || 0)) / metrics.impressions
             : 0;
 
-          // Get platform averages for scoring
-          const platformAverages = await getPlatformAverages(page._id.toString(), platform);
+          // Get platform averages for scoring (memoized per pageId+platform)
+          const platformAverages = await getCachedPlatformAverages(page._id.toString(), platform);
           
           const currentMetrics = {
             impressions: metrics.impressions || 0,
