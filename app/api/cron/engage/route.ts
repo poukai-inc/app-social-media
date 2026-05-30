@@ -17,6 +17,7 @@ import {
   replyToComment 
 } from '@/lib/linkedin-engagement';
 import { generateComment, generateReply } from '@/lib/openai';
+import { withLock, extendLock } from '@/lib/distributed-lock';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('cron:engage');
@@ -28,18 +29,42 @@ const log = logger.child('cron:engage');
 // 2. Auto-replying to comments on user's published posts (CommentReply)
 
 export async function GET(request: Request) {
-  try {
-    // Verify authorization
-    const cronSecret = process.env.CRON_SECRET;
-    if (cronSecret) {
-      const authHeader = request.headers.get('authorization') ?? '';
-      if (authHeader !== `Bearer ${cronSecret}`) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
+  // Verify authorization
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret) {
+    const authHeader = request.headers.get('authorization') ?? '';
+    if (authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+  }
 
-    await connectToDatabase();
+  await connectToDatabase();
 
+  // Distributed lock prevents concurrent runs from double-engaging the same
+  // queued targets/comments. extendLock (inside the user loop) keeps it alive
+  // across long multi-user runs so it never expires mid-flight. (issue #19)
+  const lockResult = await withLock('engage', executeEngage, { ttlSeconds: 600 });
+
+  if (lockResult.skipped) {
+    return NextResponse.json({
+      success: false,
+      skipped: true,
+      message: 'Another instance is already running engage',
+    });
+  }
+
+  if (!lockResult.success) {
+    return NextResponse.json(
+      { error: lockResult.error || 'Engagement cron failed' },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json(lockResult.result);
+}
+
+async function executeEngage() {
+  try {
     const results = {
       engagements: [] as { id: string; status: string; error?: string }[],
       replies: [] as { id: string; status: string; error?: string }[],
@@ -72,6 +97,10 @@ export async function GET(request: Request) {
     debug.settingsFound = allUserIds.size;
 
     for (const odUserId of allUserIds) {
+      // Keep the distributed lock alive during long multi-user runs so it can
+      // never expire mid-flight and let an overlapping run double-engage. (issue #19)
+      await extendLock('engage', 600);
+
       const user = await User.findById(odUserId);
       if (!user || !user.linkedinAccessToken) continue;
       
@@ -295,19 +324,16 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.json({
+    return {
       success: true,
       engagementsProcessed: results.engagements.length,
       repliesProcessed: results.replies.length,
       newCommentsFound: results.newComments,
       details: results,
       debug,
-    });
+    };
   } catch (error) {
     log.error('Engagement cron error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown' },
-      { status: 500 }
-    );
+    throw error;
   }
 }
