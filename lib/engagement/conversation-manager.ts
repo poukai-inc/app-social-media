@@ -24,7 +24,7 @@ const log = logger.child('engagement:conversation-manager');
 // ============================================
 
 const PRODUCTION_LIMITS = {
-  maxResponsesPerDay: 50,              // Global daily limit to prevent runaway costs
+  maxResponsesPerDay: 50,              // Per-page daily limit to prevent runaway costs (issue #22)
   maxResponsesPerConversation: 3,      // Stop after 3 auto-responses per conversation
   maxConversationsPerRun: 20,          // Process max 20 conversations per cron run
   minTimeBetweenChecks: 30,            // Minutes between checking same conversation
@@ -264,23 +264,33 @@ async function checkToxicity(text: string): Promise<{ isToxic: boolean; reason?:
 // Cost Control & Rate Limiting
 // ============================================
 
-let dailyUsageCache: DailyUsage | null = null;
+// Daily usage is tracked PER PAGE (per tenant), keyed by `${pageId}:${date}`,
+// so one page's volume never throttles another and the response/cost caps
+// apply per page. The DB aggregate below is scoped to the page; the in-memory
+// entry is an advisory counter seeded from that authoritative query. (issue #22)
+const dailyUsageByKey = new Map<string, DailyUsage>();
 
-async function checkDailyLimits(): Promise<{ allowed: boolean; reason?: string }> {
+function usageKey(pageId: string, date: string): string {
+  return `${pageId}:${date}`;
+}
+
+async function checkDailyLimits(pageId: string): Promise<{ allowed: boolean; reason?: string }> {
   const today = new Date().toISOString().split('T')[0];
+  const key = usageKey(pageId, today);
 
   // Check cache first
-  if (dailyUsageCache && dailyUsageCache.date === today) {
-    if (dailyUsageCache.responsesSent >= PRODUCTION_LIMITS.maxResponsesPerDay) {
-      return { allowed: false, reason: `Daily limit reached: ${dailyUsageCache.responsesSent}/${PRODUCTION_LIMITS.maxResponsesPerDay}` };
+  const cached = dailyUsageByKey.get(key);
+  if (cached) {
+    if (cached.responsesSent >= PRODUCTION_LIMITS.maxResponsesPerDay) {
+      return { allowed: false, reason: `Daily limit reached: ${cached.responsesSent}/${PRODUCTION_LIMITS.maxResponsesPerDay}` };
     }
-    if (dailyUsageCache.estimatedCost >= PRODUCTION_LIMITS.costBudgetPerDay) {
-      return { allowed: false, reason: `Daily budget exceeded: $${dailyUsageCache.estimatedCost.toFixed(2)}` };
+    if (cached.estimatedCost >= PRODUCTION_LIMITS.costBudgetPerDay) {
+      return { allowed: false, reason: `Daily budget exceeded: $${cached.estimatedCost.toFixed(2)}` };
     }
     return { allowed: true };
   }
 
-  // Query database for today's usage
+  // Query database for today's usage, scoped to THIS page.
   const todayStart = new Date(today);
   const todayEnd = new Date(today);
   todayEnd.setDate(todayEnd.getDate() + 1);
@@ -288,6 +298,7 @@ async function checkDailyLimits(): Promise<{ allowed: boolean; reason?: string }
   const stats = await ICPEngagement.aggregate([
     {
       $match: {
+        pageId: new mongoose.Types.ObjectId(pageId),
         'conversation.messages.timestamp': {
           $gte: todayStart,
           $lt: todayEnd,
@@ -325,13 +336,13 @@ async function checkDailyLimits(): Promise<{ allowed: boolean; reason?: string }
   const totalResponses = stats[0]?.totalResponses || 0;
   const estimatedCost = totalResponses * 0.02; // Rough estimate: $0.02 per response
 
-  dailyUsageCache = {
+  dailyUsageByKey.set(key, {
     date: today,
     responsesGenerated: totalResponses,
     responsesSent: totalResponses,
     estimatedCost,
     errors: 0,
-  };
+  });
 
   if (totalResponses >= PRODUCTION_LIMITS.maxResponsesPerDay) {
     return { allowed: false, reason: `Daily limit reached: ${totalResponses}/${PRODUCTION_LIMITS.maxResponsesPerDay}` };
@@ -343,12 +354,15 @@ async function checkDailyLimits(): Promise<{ allowed: boolean; reason?: string }
   return { allowed: true };
 }
 
-function incrementDailyUsage(sent: boolean = true) {
-  if (dailyUsageCache) {
-    dailyUsageCache.responsesGenerated++;
+function incrementDailyUsage(pageId: string, sent: boolean = true) {
+  const today = new Date().toISOString().split('T')[0];
+  const entry = dailyUsageByKey.get(usageKey(pageId, today));
+  // No-op until checkDailyLimits has seeded this page's entry from the DB.
+  if (entry) {
+    entry.responsesGenerated++;
     if (sent) {
-      dailyUsageCache.responsesSent++;
-      dailyUsageCache.estimatedCost += 0.02;
+      entry.responsesSent++;
+      entry.estimatedCost += 0.02;
     }
   }
 }
@@ -642,9 +656,11 @@ export async function monitorAndRespondToConversations(
   }
 
   try {
-    // PRODUCTION SAFETY: Check daily limits before processing
-    if (!dryRun) {
-      const limitCheck = await checkDailyLimits();
+    // PRODUCTION SAFETY: per-page invocation gates early on the targeted page's
+    // usage. A global run (no pageId) enforces limits per-conversation below
+    // using each conversation's own pageId. (issue #22)
+    if (!dryRun && pageId) {
+      const limitCheck = await checkDailyLimits(pageId);
       if (!limitCheck.allowed) {
         result.errors.push(`Daily limits exceeded: ${limitCheck.reason}`);
         log.warn('Daily limit exceeded', { reason: limitCheck.reason });
@@ -1021,15 +1037,15 @@ export async function monitorAndRespondToConversations(
 
         log.info('Generated response', { engagementId: engagement._id, preview: response.slice(0, 100) });
         result.responsesGenerated++;
-        incrementDailyUsage(false); // Track generation
+        incrementDailyUsage(pageId, false); // Track generation (per page)
 
         if (dryRun) {
           log.info('DRY RUN - Would send response', { response });
           continue;
         }
 
-        // PRODUCTION SAFETY: Final check before sending
-        const finalLimitCheck = await checkDailyLimits();
+        // PRODUCTION SAFETY: Final check before sending (per page)
+        const finalLimitCheck = await checkDailyLimits(pageId);
         if (!finalLimitCheck.allowed) {
           result.errors.push(`Hit daily limit before sending: ${finalLimitCheck.reason}`);
           log.warn('Hit limit, stopping', { reason: finalLimitCheck.reason });
@@ -1074,7 +1090,7 @@ export async function monitorAndRespondToConversations(
         log.info('Successfully sent response', { engagementId: engagement._id });
         result.responsesSent++;
         responsesSent++;
-        incrementDailyUsage(true); // Track sent response
+        incrementDailyUsage(pageId, true); // Track sent response (per page)
 
         // Small delay between responses to avoid rate limits
         await new Promise(resolve => setTimeout(resolve, 2000));
