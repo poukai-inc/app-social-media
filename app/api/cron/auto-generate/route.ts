@@ -8,6 +8,7 @@ import User from '@/lib/models/User';
 import type { PostAngle } from '@/lib/models/Post';
 import type { PageContentStrategy } from '@/lib/openai';
 import { generatePostWithStrategy } from '@/lib/openai';
+import { getNextOccurrenceInTz, getNextWallTimeInTz, safeTimeZone } from '@/lib/timezone';
 import mongoose from 'mongoose';
 import type { ContentItem } from '@/lib/data-sources/database';
 import { fetchContentForGeneration } from '@/lib/data-sources/database';
@@ -47,26 +48,12 @@ interface PlatformGenerationResult {
 }
 
 /**
- * Get the next occurrence of a specific day and hour
+ * Get the next occurrence of a specific day and hour, in the page's timezone.
+ * Delegates to the tz-aware helper so a page configured for e.g. 09:00 in its
+ * own timezone is scheduled at that wall-clock time, not 09:00 server time. (issue #21)
  */
-function getNextOccurrence(dayOfWeek: number, hour: number, _timezone?: string): Date {
-  const now = new Date();
-  const result = new Date(now);
-  
-  // Set the hour
-  result.setHours(hour, 0, 0, 0);
-  
-  // Calculate days until target day
-  const currentDay = now.getDay();
-  let daysUntil = dayOfWeek - currentDay;
-  
-  if (daysUntil < 0 || (daysUntil === 0 && result <= now)) {
-    daysUntil += 7; // Next week
-  }
-  
-  result.setDate(result.getDate() + daysUntil);
-  
-  return result;
+function getNextOccurrence(dayOfWeek: number, hour: number, timezone?: string): Date {
+  return getNextOccurrenceInTz(dayOfWeek, hour, 0, safeTimeZone(timezone));
 }
 
 export async function GET(request: NextRequest) {
@@ -402,17 +389,17 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
                 scheduledFor = getNextOccurrence(optimalTime.day, optimalTime.hour, page.schedule?.timezone);
                 log.info('AI scheduled using learned optimal time', { platform, day: optimalTime.day, hour: optimalTime.hour });
               } else {
-                // Use preferred times from settings
+                // Use preferred times from settings, interpreted in the page's
+                // own timezone (today if still future, else tomorrow). (issue #21)
                 const preferredTimes = page.schedule?.preferredTimes || ['09:00'];
                 const preferredTime = preferredTimes[Math.floor(Math.random() * preferredTimes.length)];
                 const [hours, minutes] = preferredTime.split(':').map(Number);
-                
-                scheduledFor = new Date(today);
-                scheduledFor.setHours(hours, minutes, 0, 0);
-                
-                if (scheduledFor <= new Date()) {
-                  scheduledFor.setDate(scheduledFor.getDate() + 1);
-                }
+
+                scheduledFor = getNextWallTimeInTz(
+                  hours,
+                  minutes,
+                  safeTimeZone(page.schedule?.timezone)
+                );
               }
               
               log.info('AI auto-approved and scheduled', { platform, score: reviewDecision.criteria.overallScore });
