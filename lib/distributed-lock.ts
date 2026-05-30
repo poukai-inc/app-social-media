@@ -166,17 +166,23 @@ export async function releaseLock(lockName: string): Promise<boolean> {
       log.info(`Lock released: ${lockId}`, { lockId });
       return true;
     }
-    
-    // If we couldn't release by holder match, it might be because INSTANCE_ID
-    // changed (e.g. serverless cold start). In withLock context, we know we
-    // acquired it, so force-release if it's past the TTL.
-    const lock = await CronLock.findById(lockId);
-    if (lock && lock.expiresAt < new Date()) {
-      await CronLock.deleteOne({ _id: lockId });
+
+    // Holder mismatch (e.g. INSTANCE_ID changed on a serverless cold start).
+    // Reclaim ONLY if the lock is still expired, and do it as a single atomic
+    // conditional delete. A separate findById + unconditional deleteOne had a
+    // TOCTOU window: another instance could acquire a fresh lock between the
+    // two calls, and the unconditional delete would then drop that valid lock,
+    // breaking mutual exclusion. The `expiresAt < now` filter guarantees we
+    // never delete a lock that someone has freshly (re)acquired. (issue #18)
+    const expiredResult = await CronLock.deleteOne({
+      _id: lockId,
+      expiresAt: { $lt: new Date() },
+    });
+    if (expiredResult.deletedCount > 0) {
       log.info(`Lock force-released (expired): ${lockId}`, { lockId });
       return true;
     }
-    
+
     log.warn(`Lock not released (not held by us or still valid): ${lockId}`, { lockId });
     return false;
   } catch (error) {
