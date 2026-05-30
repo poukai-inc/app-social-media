@@ -7,9 +7,15 @@ RUN corepack enable
 WORKDIR /app
 
 # Copy lockfile + manifest + npmrc (engine-strict=false; future @poukai-inc registry config)
+# .npmrc contains only the ${NPM_TOKEN} placeholder — never a literal token.
 COPY package.json pnpm-lock.yaml .npmrc ./
 
 # Install dependencies — frozen lockfile enforces R-066
+# SECURITY: when @poukai-inc registry auth becomes required at build time, pass
+# NPM_TOKEN via a BuildKit secret mount, NOT an ARG/ENV — an ARG bakes the token
+# into image history. e.g.:
+#   RUN --mount=type=secret,id=npm_token \
+#       NPM_TOKEN="$(cat /run/secrets/npm_token)" pnpm install --frozen-lockfile
 RUN pnpm install --frozen-lockfile
 
 # Copy source code
