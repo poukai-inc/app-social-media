@@ -32,6 +32,13 @@ interface CircuitState {
   lastFailureAt: number;
   openedAt: number;
   lastError?: string;
+  /**
+   * How long the circuit stays OPEN for THIS trip, in ms. Set per-trip so an
+   * instant-trip (e.g. 403 → 1h) does not permanently overwrite the breaker's
+   * configured resetTimeoutMs. Falls back to options.resetTimeoutMs when unset.
+   * (issue #20)
+   */
+  openTimeoutMs?: number;
 }
 
 const DEFAULT_OPTIONS: Required<CircuitBreakerOptions> = {
@@ -76,6 +83,11 @@ export class CircuitBreaker {
     return this.entry.state;
   }
 
+  /** Open-duration for the current trip, falling back to the configured default. */
+  private get openTimeoutMs(): number {
+    return this.s.openTimeoutMs ?? this.options.resetTimeoutMs;
+  }
+
   /**
    * Check whether a request is allowed to proceed.
    */
@@ -97,7 +109,7 @@ export class CircuitBreaker {
 
       case 'OPEN':
         // Check if enough time has passed to transition to HALF_OPEN
-        if (now - this.s.openedAt >= this.options.resetTimeoutMs) {
+        if (now - this.s.openedAt >= this.openTimeoutMs) {
           this.s.state = 'HALF_OPEN';
           logger.info('circuit-breaker', 'Transitioning to HALF_OPEN — allowing probe request', { key: this.key });
           return true;
@@ -118,7 +130,7 @@ export class CircuitBreaker {
    */
   getRejectionReason(): string {
     const waitSec = Math.ceil(
-      (this.options.resetTimeoutMs - (Date.now() - this.s.openedAt)) / 1000
+      (this.openTimeoutMs - (Date.now() - this.s.openedAt)) / 1000
     );
     return `Circuit breaker OPEN for "${this.key}": ${this.s.lastError || 'too many failures'}. ` +
       `Retry in ~${waitSec}s. (${this.s.failureCount} failures)`;
@@ -134,6 +146,7 @@ export class CircuitBreaker {
     this.s.state = 'CLOSED';
     this.s.failureCount = 0;
     this.s.lastError = undefined;
+    this.s.openTimeoutMs = undefined;
   }
 
   /**
@@ -153,8 +166,10 @@ export class CircuitBreaker {
     if (statusCode && this.options.instantTripCodes.includes(statusCode)) {
       this.s.state = 'OPEN';
       this.s.openedAt = now;
-      // For permission errors, use a longer timeout (1 hour)
-      this.entry.options.resetTimeoutMs = 60 * 60 * 1000;
+      // For permission errors, use a longer timeout (1 hour) for THIS trip only.
+      // Stored on state, not options, so the breaker's configured resetTimeoutMs
+      // is not permanently overwritten for every future trip. (issue #20)
+      this.s.openTimeoutMs = 60 * 60 * 1000;
       logger.info('circuit-breaker', 'INSTANT TRIP — circuit OPEN for 1 hour', { key: this.key, statusCode });
       return;
     }
@@ -163,6 +178,7 @@ export class CircuitBreaker {
       // Probe failed — go back to OPEN
       this.s.state = 'OPEN';
       this.s.openedAt = now;
+      this.s.openTimeoutMs = this.options.resetTimeoutMs;
       logger.info('circuit-breaker', 'Probe failed — circuit back to OPEN', { key: this.key });
       return;
     }
@@ -170,6 +186,7 @@ export class CircuitBreaker {
     if (this.s.failureCount >= this.options.failureThreshold) {
       this.s.state = 'OPEN';
       this.s.openedAt = now;
+      this.s.openTimeoutMs = this.options.resetTimeoutMs;
       logger.info('circuit-breaker', 'Failure threshold reached — circuit OPEN', { key: this.key, threshold: this.options.failureThreshold });
     }
   }
@@ -190,6 +207,7 @@ export class CircuitBreaker {
     this.s.lastFailureAt = 0;
     this.s.openedAt = 0;
     this.s.lastError = undefined;
+    this.s.openTimeoutMs = undefined;
     logger.info('circuit-breaker', 'Manually reset to CLOSED', { key: this.key });
   }
 }
