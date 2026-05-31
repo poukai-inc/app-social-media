@@ -1,7 +1,23 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import mongoose from 'mongoose';
+
+/**
+ * The detailed branch exposes infrastructure internals (DB state, NODE_ENV,
+ * which secrets are set). Restrict it to an authenticated session or a caller
+ * presenting CRON_SECRET; everyone else gets the plain public body. (issue #25)
+ */
+async function canViewDetailed(request: NextRequest): Promise<boolean> {
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret) {
+    const authHeader = request.headers.get('authorization') ?? '';
+    if (authHeader === `Bearer ${cronSecret}`) return true;
+  }
+  const session = await auth();
+  return Boolean(session?.user);
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -13,7 +29,7 @@ export async function GET(request: NextRequest) {
     version: process.env.npm_package_version || '0.1.0',
   };
 
-  if (detailed) {
+  if (detailed && (await canViewDetailed(request))) {
     // Check MongoDB
     let dbStatus = 'unknown';
     try {
