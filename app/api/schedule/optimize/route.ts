@@ -5,6 +5,7 @@ import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import Page from '@/lib/models/Page';
 import Post from '@/lib/models/Post';
+import { findOwnedPage } from '@/lib/page-access';
 import type { PlatformType } from '@/lib/platforms/types';
 import type {
   EngagementDataPoint} from '@/lib/platforms/schedule-optimizer';
@@ -68,8 +69,9 @@ export async function GET(request: NextRequest) {
     if (platformsParam) {
       platformsToAnalyze = platformsParam.split(',') as PlatformType[];
     } else if (pageId) {
-      // Get platforms from page connections
-      const page = await Page.findById(pageId);
+      // Get platforms from page connections — only if the caller owns the page,
+      // otherwise this leaks another tenant's connected-platform list. (issue #27)
+      const page = await findOwnedPage(session, pageId);
       platformsToAnalyze = page?.connections
         ?.filter((c: { isActive: boolean }) => c.isActive)
         ?.map((c: { platform: PlatformType }) => c.platform) || ['linkedin'];
