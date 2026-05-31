@@ -1,0 +1,57 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits"
+  ],
+  "timezone": "America/Caracas",
+  "schedule": ["before 6am on monday"],
+  "labels": ["dependencies"],
+  "prConcurrentLimit": 5,
+  "rangeStrategy": "bump",
+  "lockFileMaintenance": { "enabled": true, "schedule": ["before 6am on monday"] },
+  "vulnerabilityAlerts": { "labels": ["security"], "automerge": false },
+  "packageRules": [
+    {
+      "description": "Auto-merge minor + patch + lockfile updates once CI is green (BACKLOG #87).",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest", "lockFileMaintenance"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Major updates always require manual review.",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "addLabels": ["major-update"]
+    },
+    {
+      "description": "next-auth is exact-pinned on a beta. NEVER auto-merge; always manual review (BACKLOG #119 / D3). Keep the version exact.",
+      "matchPackageNames": ["next-auth", "@auth/core", "@auth/drizzle-adapter"],
+      "automerge": false,
+      "rangeStrategy": "pin",
+      "addLabels": ["auth-review", "do-not-merge-without-review"]
+    },
+    {
+      "description": "Cross-repo-coordinated deps (React, the design system, lucide) — manual review only, per stack-alignment D1/D4 (BACKLOG #37/#38/#121).",
+      "matchPackageNames": [
+        "react",
+        "react-dom",
+        "@types/react",
+        "@types/react-dom",
+        "@poukai-inc/ui",
+        "lucide-react"
+      ],
+      "automerge": false,
+      "addLabels": ["cross-repo-review"]
+    },
+    {
+      "description": "Next.js major/minor — manual review (framework upgrades are coordinated).",
+      "matchPackageNames": ["next"],
+      "matchUpdateTypes": ["major", "minor"],
+      "automerge": false,
+      "addLabels": ["framework-review"]
+    }
+  ]
+}
