@@ -8,11 +8,15 @@ until curl -sf "$APP_URL/api/health" >/dev/null; do
   sleep 2
 done
 
-echo "Writing scheduler env..."
-{
-  printf 'APP_URL=%s\n' "$APP_URL"
-  printf 'CRON_SECRET=%s\n' "$CRON_SECRET"
-} > /etc/scheduler.env
+echo "Writing scheduler config..."
+# Keep the secret out of a world-readable, env-sourced file. Write APP_URL
+# (non-secret) and CRON_SECRET to separate files, and lock the secret to
+# 0600 so only root can read it; cron-call.sh reads it at call time. (issue #38)
+mkdir -p /etc/scheduler
+printf '%s' "$APP_URL" > /etc/scheduler/app_url
+umask 077
+printf '%s' "$CRON_SECRET" > /etc/scheduler/cron_secret
+chmod 600 /etc/scheduler/cron_secret
 
 mkdir -p /var/log
 : > /var/log/cron-publish.log
