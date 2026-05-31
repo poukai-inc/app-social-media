@@ -5,6 +5,7 @@ import connectToDatabase from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
 import User from '@/lib/models/User';
 import { postToLinkedIn } from '@/lib/linkedin';
+import { findOwnedPage } from '@/lib/page-access';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('api:posts:[id]');
@@ -108,7 +109,18 @@ export async function PUT(
     if ('postAs' in body) post.postAs = body.postAs;
     if ('organizationId' in body) post.organizationId = body.organizationId;
     if ('organizationName' in body) post.organizationName = body.organizationName;
-    if ('pageId' in body) post.pageId = body.pageId;
+    if ('pageId' in body) {
+      // Validate the target page belongs to the caller before reassigning, so a
+      // post can't be moved into another tenant's page (which would pollute that
+      // page's analytics/learning aggregates keyed on pageId). (issue #26)
+      if (body.pageId) {
+        const ownedPage = await findOwnedPage(session, String(body.pageId));
+        if (!ownedPage) {
+          return NextResponse.json({ error: 'Invalid pageId' }, { status: 400 });
+        }
+      }
+      post.pageId = body.pageId;
+    }
     if ('targetPlatforms' in body) post.targetPlatforms = body.targetPlatforms;
     
     if (scheduledFor) {
