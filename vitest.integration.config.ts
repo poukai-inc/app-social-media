@@ -22,6 +22,9 @@ export default defineConfig({
       // Force the Groq selection branch in ai-client (no network is made).
       AI_PROVIDER: 'groq',
       GROQ_API_KEY: 'test-key-not-called',
+      // Cron route auth for integration tests.
+      CRON_SECRET: 'test-cron-secret',
+      NEXTAUTH_URL: 'http://localhost:3000',
     },
   },
 });
