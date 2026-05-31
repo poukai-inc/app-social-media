@@ -16,8 +16,12 @@ const log = logger.child('cron:publish');
 // You should call this endpoint via a cron job service (e.g., Vercel Cron, GitHub Actions, or external services)
 // Recommended: Run every minute or every 5 minutes
 
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = [5000, 15000, 30000]; // Exponential backoff
+const RETRY_DELAY_MS = [5000, 15000, 30000]; // Exponential backoff, one entry per retry
+// Keep MAX_RETRIES tied to the delay array so every retry has a real delay slot.
+// Worst case per platform ≈ sum of delays (~50s) plus request time; across
+// serial platforms this must stay well under the 300s publish lock TTL. The
+// per-post atomic claim (issue #16) guards correctness if it ever doesn't. (issue #46)
+const MAX_RETRIES = RETRY_DELAY_MS.length;
 
 interface PublishContext {
   post: IPost;
