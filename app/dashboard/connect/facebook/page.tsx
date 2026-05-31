@@ -28,47 +28,40 @@ interface PageData {
 function ConnectFacebookPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [pageData, _setPageData] = useState<PageData | null>(() => {
-    const dataParam = searchParams.get('data');
-    if (!dataParam) return null;
-    try {
-      return JSON.parse(Buffer.from(dataParam, 'base64').toString()) as PageData;
-    } catch {
-      return null;
-    }
-  });
-  const [selectedPage, setSelectedPage] = useState<string | null>(() => {
-    const dataParam = searchParams.get('data');
-    if (!dataParam) return null;
-    try {
-      const decoded = JSON.parse(Buffer.from(dataParam, 'base64').toString()) as PageData;
-      return decoded.pages?.length === 1 ? decoded.pages[0].id : null;
-    } catch {
-      return null;
-    }
-  });
+  const pendingKey = searchParams.get('key');
+  const [pageData, setPageData] = useState<PageData | null>(null);
+  const [selectedPage, setSelectedPage] = useState<string | null>(null);
   const [appPages, setAppPages] = useState<{ _id: string; name: string }[]>([]);
-  const [targetAppPage, setTargetAppPage] = useState<string>(() => {
-    const dataParam = searchParams.get('data');
-    if (!dataParam) return '';
-    try {
-      const decoded = JSON.parse(Buffer.from(dataParam, 'base64').toString()) as PageData;
-      return decoded.targetPageId ?? '';
-    } catch {
-      return '';
-    }
-  });
+  const [targetAppPage, setTargetAppPage] = useState<string>('');
   const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(() => {
-    const dataParam = searchParams.get('data');
-    if (!dataParam) return null;
-    try {
-      JSON.parse(Buffer.from(dataParam, 'base64').toString());
-      return null;
-    } catch {
-      return 'Invalid data received';
-    }
-  });
+  const [error, setError] = useState<string | null>(
+    pendingKey ? null : 'Missing or invalid connection link. Please reconnect.'
+  );
+
+  // Load the pending connection (page tokens) once via the opaque one-time key —
+  // tokens are no longer passed in the URL. (issue #110)
+  useEffect(() => {
+    if (!pendingKey) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/auth/pending-connection/${pendingKey}`);
+        if (!res.ok) {
+          if (!cancelled) setError('Connection link expired or invalid. Please reconnect.');
+          return;
+        }
+        const json = await res.json();
+        if (cancelled) return;
+        const data = json.payload as PageData;
+        setPageData(data);
+        if (data.pages?.length === 1) setSelectedPage(data.pages[0].id);
+        if (data.targetPageId) setTargetAppPage(data.targetPageId);
+      } catch {
+        if (!cancelled) setError('Failed to load connection. Please try again.');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [pendingKey]);
 
   useEffect(() => {
     // Fetch user's app pages

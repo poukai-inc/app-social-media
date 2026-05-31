@@ -26,28 +26,35 @@ interface TwitterData {
 function ConnectTwitterPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [twitterData, _setTwitterData] = useState<TwitterData | null>(() => {
-    const dataParam = searchParams.get('data');
-    if (!dataParam) return null;
-    try {
-      return JSON.parse(Buffer.from(dataParam, 'base64').toString()) as TwitterData;
-    } catch {
-      return null;
-    }
-  });
+  const pendingKey = searchParams.get('key');
+  const [twitterData, setTwitterData] = useState<TwitterData | null>(null);
   const [appPages, setAppPages] = useState<{ _id: string; name: string }[]>([]);
   const [targetAppPage, setTargetAppPage] = useState<string>('');
   const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(() => {
-    const dataParam = searchParams.get('data');
-    if (!dataParam) return null;
-    try {
-      JSON.parse(Buffer.from(dataParam, 'base64').toString());
-      return null;
-    } catch {
-      return 'Invalid data received';
-    }
-  });
+  const [error, setError] = useState<string | null>(
+    pendingKey ? null : 'Missing or invalid connection link. Please reconnect.'
+  );
+
+  // Load the pending connection (tokens) once via the opaque one-time key —
+  // tokens are no longer passed in the URL. (issue #110)
+  useEffect(() => {
+    if (!pendingKey) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/auth/pending-connection/${pendingKey}`);
+        if (!res.ok) {
+          if (!cancelled) setError('Connection link expired or invalid. Please reconnect.');
+          return;
+        }
+        const json = await res.json();
+        if (!cancelled) setTwitterData(json.payload as TwitterData);
+      } catch {
+        if (!cancelled) setError('Failed to load connection. Please try again.');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [pendingKey]);
 
   useEffect(() => {
     // Fetch user's app pages

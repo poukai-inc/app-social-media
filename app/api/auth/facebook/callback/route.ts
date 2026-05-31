@@ -6,6 +6,7 @@ import User from '@/lib/models/User';
 import type { PlatformConnection } from '@/lib/platforms/types';
 import { logger } from '@/lib/logger';
 import { verifyState } from '@/lib/oauth-state';
+import { createPendingConnection } from '@/lib/models/PendingConnection';
 
 const log = logger.child('api:auth:facebook:callback');
 
@@ -241,16 +242,17 @@ export async function GET(request: Request) {
       token: p.access_token,
     }));
 
-    // For security, we'll encode this and pass to a selection page
-    const encodedPages = Buffer.from(JSON.stringify({
+    // Stash page tokens server-side and redirect with an opaque one-time key —
+    // never put access tokens in the URL. (issue #110)
+    const pendingKey = await createPendingConnection(user._id, 'facebook', {
       pages: pagesInfo,
       userToken: userAccessToken,
       expiresIn: tokenExpiresIn,
       targetPageId: state.pageId,
-    })).toString('base64');
+    });
 
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL}/dashboard/connect/facebook?data=${encodedPages}`
+      `${process.env.NEXTAUTH_URL}/dashboard/connect/facebook?key=${pendingKey}`
     );
   } catch (error) {
     log.error('Facebook OAuth callback error', { error: error instanceof Error ? error.message : String(error) });
