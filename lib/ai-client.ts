@@ -188,13 +188,16 @@ function getMinuteUsage(model: string): { tokens: number; requests: number } {
 async function recordUsage(model: string, tokens: number, success: boolean = true): Promise<void> {
   const today = getDateKey();
 
-  // Update in-memory caches immediately
+  // Update in-memory caches immediately. These are ADVISORY only — under
+  // concurrency the read-modify-write can lose updates, so correctness relies
+  // on the atomic DB $inc below. (issue #32)
   updateMinuteCache(model, tokens);
   const cached = dailyCache.usage.get(model) || { tokens: 0, requests: 0, rateLimitHits: 0 };
   dailyCache.usage.set(model, {
     tokens: cached.tokens + tokens,
     requests: cached.requests + 1,
-    rateLimitHits: cached.rateLimitHits + (success ? 0 : 0),
+    // Was `success ? 0 : 0` (always 0) — failures never accrued. (issue #32)
+    rateLimitHits: cached.rateLimitHits + (success ? 0 : 1),
   });
   
   try {
