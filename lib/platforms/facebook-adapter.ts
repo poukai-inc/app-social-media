@@ -221,9 +221,14 @@ export class FacebookAdapter extends BasePlatformAdapter {
         };
       }
 
+      // Pass the access token via the Authorization header rather than the URL
+      // query string, so it does not land in proxy/access logs. (issue #37)
       const response = await fetchWithTimeout(
-        `${FACEBOOK_GRAPH_API}/${postId}?fields=insights.metric(post_impressions,post_engaged_users,post_reactions_by_type_total),shares,comments.summary(true),reactions.summary(true)&access_token=${connection.accessToken}`,
-        { timeoutMs: 15_000 }
+        `${FACEBOOK_GRAPH_API}/${postId}?fields=insights.metric(post_impressions,post_engaged_users,post_reactions_by_type_total),shares,comments.summary(true),reactions.summary(true)`,
+        {
+          timeoutMs: 15_000,
+          headers: { Authorization: `Bearer ${connection.accessToken}` },
+        }
       );
 
       if (!response.ok) {
