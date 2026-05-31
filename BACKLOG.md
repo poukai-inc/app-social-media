@@ -287,7 +287,7 @@ Full-repo audit across security, correctness/concurrency, performance, and confi
 | 156 | `[~]` | **[AUDIT2-L6]** Wasted query — `GET /api/ai/usage` awaits `getUsageStatus()` then discards the result; the three usage helpers each re-read today's `AIUsage`. Fix: drop the unused call; share one usage snapshot. | `app/api/ai/usage/route.ts:33-35` |
 | 157 | `[~]` | **[AUDIT2-L7]** README inaccuracies — says "Next.js 15" (actual `next@16.2.6`), AI "Groq" (actual default `AI_PROVIDER=ollama`, Groq optional), and `npm install && npm run dev` (repo is pnpm-pinned `packageManager: pnpm@10.33.0`). Fix: correct version, provider, and package-manager commands. | `README.md:48,51,93,112-113` |
 | 158 | `[~]` | **[AUDIT2-L8]** No container resource limits — long-running auto-poster + ffmpeg video processing can balloon memory and OOM the host. Fix: add `mem_limit`/`cpus` (or `deploy.resources`) to the `app` service. | `docker-compose.yml` |
-| 159 | `[ ]` | **[AUDIT2-L9]** `allowJs: true` unnecessary for an all-TS app; loosens the build surface for the 34 root `.mjs`/`.cjs` scripts. Fix: drop `allowJs` unless a JS source is genuinely imported. | `tsconfig.json:6` |
+| 159 | `[~]` | **[AUDIT2-L9]** `allowJs: true` unnecessary for an all-TS app; loosens the build surface for the 34 root `.mjs`/`.cjs` scripts. Fix: drop `allowJs` unless a JS source is genuinely imported. | `tsconfig.json:6` |
 | 160 | `[ ]` | **[AUDIT2-L10]** Large planning docs at repo root — `MIGRATION_ANALYSIS.md` (~49KB) + `BACKLOG.md` (~24KB) clutter root. Fix: move to `docs/` (update cross-links). | repo root |
 
 ---
