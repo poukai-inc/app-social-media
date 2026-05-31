@@ -59,7 +59,8 @@ services:
     container_name: autopostv2-scheduler
     restart: unless-stopped
     depends_on:
-      - app
+      app:
+        condition: service_healthy
     environment:
       - CRON_SECRET=${CRON_SECRET}
       - APP_URL=http://app:3000
