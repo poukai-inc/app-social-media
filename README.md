@@ -45,10 +45,10 @@ A self-hosted multi-platform social media automation tool with AI-powered conten
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Database**: MongoDB
 - **Auth**: NextAuth.js v5
-- **AI**: Groq (16 models with load balancing)
+- **AI**: Ollama (default, self-hosted) or Groq (16 models with load balancing, optional cloud fallback)
 - **Storage**: S3-compatible (MinIO, AWS S3)
 - **Email**: Resend
 - **Styling**: Tailwind CSS
@@ -61,7 +61,7 @@ A self-hosted multi-platform social media automation tool with AI-powered conten
 - MongoDB instance
 - MinIO or S3-compatible storage
 - Platform Developer Apps (LinkedIn, Twitter, Facebook)
-- Groq API key
+- Groq API key (optional — only for the Groq cloud AI provider; Ollama is the default)
 - Resend API key (for email alerts)
 
 ### Environment Setup
@@ -90,7 +90,7 @@ FACEBOOK_APP_ID=your-app-id
 FACEBOOK_APP_SECRET=your-app-secret
 FACEBOOK_REDIRECT_URI=http://localhost:3000/api/auth/facebook/callback
 
-# AI (Groq)
+# AI — Ollama is the default provider; set AI_PROVIDER=groq to use Groq instead
 GROQ_API_KEY=your-groq-key
 
 # S3/MinIO Storage
@@ -109,8 +109,8 @@ CRON_SECRET=your-random-secret
 ### Development
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 Open http://localhost:3000
