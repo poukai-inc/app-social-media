@@ -12,7 +12,7 @@
 
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { getUsageStatus, getTotalCapacity, getSelectedModel, GROQ_MODEL_LIMITS, MODEL_PRIORITY } from '@/lib/ai-client';
+import { getTotalCapacity, getSelectedModel, GROQ_MODEL_LIMITS, MODEL_PRIORITY } from '@/lib/ai-client';
 import connectDB from '@/lib/mongodb';
 import AIUsage, { getDateKey } from '@/lib/models/AIUsage';
 import { logger } from '@/lib/logger';
@@ -29,8 +29,8 @@ export async function GET(_request: Request) {
     
     await connectDB();
     
-    // Get current usage status
-    await getUsageStatus();
+    // getUsageStatus() was called here and its result discarded — removed the
+    // wasted read. (issue #48)
     const capacity = await getTotalCapacity();
     const selectedModel = await getSelectedModel();
     
