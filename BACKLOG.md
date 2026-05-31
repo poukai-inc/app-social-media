@@ -44,11 +44,11 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 5 | `[x]` | UI path — **Full `@poukai-inc/ui` adoption** (open DS issues for gaps; revised 2026-05-31, supersedes Path C) | `decisions/0005-ui-path.md` |
 | 6 | `[x]` | Dark mode — **push to DS** (DS tokens own both themes; revised 2026-05-31) | `decisions/0006-dark-mode.md` |
 | 7 | `[x]` | Notification channels MVP — **email + in-app** (Slack→P2; revised 2026-05-31) | `decisions/0007-notifications.md` |
-| 8 | `[ ]` | Move `CRON_SECRET` query→header | `scheduler/cron-call.sh`, 7× `app/api/cron/*/route.ts` |
-| 9 | `[ ]` | Remove hardcoded `192.168.1.9:11434` | `lib/ai-client.ts:36-37` |
-| 10 | `[ ]` | Strip placeholder secrets from `Dockerfile` build env | `Dockerfile:18-31` |
-| 11 | `[ ]` | Delete tracked backup file | `lib/platforms/twitter-adapter.ts.backup` |
-| 12 | `[ ]` | Remove `EMAIL_FROM` default `noreply@schedular.primestrides.com`; env-required, fail-fast | `lib/email.ts:14` |
+| 8 | `[x]` | Move `CRON_SECRET` query→header | `scheduler/cron-call.sh`, 7× `app/api/cron/*/route.ts` |
+| 9 | `[x]` | Remove hardcoded `192.168.1.9:11434` | `lib/ai-client.ts:36-37` |
+| 10 | `[x]` | Strip placeholder secrets from `Dockerfile` build env | `Dockerfile:18-31` |
+| 11 | `[x]` | Delete tracked backup file | `lib/platforms/twitter-adapter.ts.backup` |
+| 12 | `[x]` | Remove `EMAIL_FROM` default `noreply@schedular.primestrides.com`; env-required, fail-fast | `lib/email.ts:14` |
 | 107 | `[x]` | **[AUDIT-C1]** Add auth guard to `POST /api/posts/[id]/approve` — no `auth()` call in POST handler; any unauthenticated caller who knows a post ObjectId can approve/reject/schedule/publish. Add session check + verify `post.userId === user._id` | `app/api/posts/[id]/approve/route.ts:178` |
 | 108 | `[x]` | **[AUDIT-C2]** SSRF in blog URL fetcher — no URL validation; direct `fetch(url)` fallback when Jina fails allows probing `169.254.169.254`, `localhost`, private subnets. Fix: validate URL (allowlist `http/https`, block private/loopback/link-local ranges), remove direct-fetch fallback entirely | `app/api/blog/analyze/route.ts:30-59` |
 | 109 | `[x]` | **[AUDIT-C3]** Prompt injection — external content (blog fetch, DB data-source body, live Twitter tweets) injected verbatim into LLM prompts with no sanitization. Fix: wrap in `<UNTRUSTED_EXTERNAL>` XML delimiters, add system-prompt note marking them untrusted, strip `ignore.*instructions` / `you are now` / `disregard` patterns before injection | `lib/openai.ts:425`, `app/api/generate/route.ts:117`, `lib/engagement/icp-engagement-agent.ts:748` |
@@ -65,14 +65,14 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 
 | ID | Status | Task | File(s) |
 |---|---|---|---|
-| 13 | `[ ]` | Switch to pnpm; Node pin `>=20 <21` | `package.json`, lockfiles |
-| 14 | `[ ]` | Add CI (install/lint/typecheck/build/audit/gitleaks/license-check/test) | `.github/workflows/ci.yml` (new) |
-| 15 | `[!]` | ~~Drop dead deps (`mysql2`, `dotenv`)~~ — **NOT DEAD**: `mysql2` used in `lib/data-sources/database.ts:1,54,67,159` (data source connector for external MySQL DBs); `dotenv` used in 20 `scripts/*.mjs|.cjs`. Re-scope: audit each, keep both. New sub-tasks: (15a) document MySQL data-source purpose in `lib/data-sources/README.md`; (15b) consider replacing `dotenv` in scripts with native Node 20 `--env-file` flag | `lib/data-sources/database.ts`, `scripts/*` |
-| 16 | `[ ]` | Resolve `O_API_KEY`/`OPENAI_API_KEY` drift | `docker-compose.yml`, `.env.example` |
-| 17 | `[ ]` | `console.*` → `lib/logger.ts`; eslint `no-console: error` | repo-wide |
-| 18 | `[ ]` | `vercel.json` security headers (HSTS, nosniff, Referrer-Policy, Permissions-Policy) | `vercel.json` |
-| 19 | `[ ]` | Pick **one** cron transport per deploy target; document | `vercel.json`, `scheduler/`, `docs/cron.md` |
-| 20 | `[ ]` | Mongoose interim hardening (timeouts, pool size) | `lib/mongodb.ts` |
+| 13 | `[x]` | Switch to pnpm; Node pin `>=20 <21` | `package.json`, lockfiles |
+| 14 | `[x]` | Add CI (install/lint/typecheck/build/audit/gitleaks/license-check/test) | `.github/workflows/ci.yml` (new) |
+| 15 | `[!]` | ~~Drop dead deps (`mysql2`, `dotenv`)~~ — **NOT DEAD**: `mysql2` used in `lib/data-sources/database.ts:1,54,67,159` (data source connector for external MySQL DBs); `dotenv` used in 20 `scripts/*.mjs|.cjs`. Re-scope: audit each, keep both. Sub-tasks: **(15a) `[x]` done** — `lib/data-sources/README.md` documents the MySQL connector + why `mysql2` is a real dep; (15b) `[ ]` consider replacing `dotenv` in scripts with native Node 20 `--env-file` (low priority — scripts work today) | `lib/data-sources/database.ts`, `scripts/*` |
+| 16 | `[x]` | Resolve `O_API_KEY`/`OPENAI_API_KEY` drift | `docker-compose.yml`, `.env.example` |
+| 17 | `[x]` | `console.*` → `lib/logger.ts`; eslint `no-console: error` | repo-wide |
+| 18 | `[x]` | `vercel.json` security headers (HSTS, nosniff, Referrer-Policy, Permissions-Policy) | `vercel.json` |
+| 19 | `[x]` | Pick **one** cron transport per deploy target; document | `vercel.json`, `scheduler/`, `docs/cron.md` |
+| 20 | `[x]` | Mongoose interim hardening (timeouts, pool size) | `lib/mongodb.ts` |
 | 110 | `[ ]` | **[AUDIT-H1]** OAuth tokens in redirect URL — Twitter refresh token (permanent) + Facebook page tokens base64'd in `?data=` query param; appear in server access logs, browser history, Referer headers. Fix: store pending connection data in short-lived signed server-side session; redirect with opaque one-time key only | `app/api/auth/twitter/callback/route.ts:169`, `app/api/auth/facebook/callback/route.ts:229` |
 | 111 | `[ ]` | **[AUDIT-H2]** HMAC-sign OAuth state param — state is plain base64 JSON, forgeable by any authenticated user; attacker can craft state targeting another user's `pageId` or a future `email`. Fix: sign with `NEXTAUTH_SECRET` via HMAC-SHA256; verify `state.email === session.user.email` in callback. Supersedes audit scope of #71 | `app/api/auth/twitter/route.ts:52`, `app/api/auth/facebook/route.ts`, both callbacks |
 | 117 | `[ ]` | **[D2]** Bootstrap test harness — install `vitest`, `@vitest/coverage-v8`, `@playwright/test`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`, `mongodb-memory-server`, `testcontainers`. Add `vitest.config.ts`, `playwright.config.ts`. Add CI jobs for unit + integration + E2E with 80% coverage gate. Prereq for tasks #75–80. See [STACK_ALIGNMENT_DECISIONS.md#d2](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) | `package.json`, `vitest.config.ts` (new), `playwright.config.ts` (new), `.github/workflows/ci.yml` |
