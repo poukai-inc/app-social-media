@@ -478,7 +478,9 @@ const PostSchema = new Schema<IPost>(
 // Index for efficient querying of scheduled posts
 PostSchema.index({ status: 1, scheduledFor: 1 });
 PostSchema.index({ userId: 1, createdAt: -1 });
+PostSchema.index({ userId: 1, status: 1, publishedAt: -1 }); // engage/replies/performance scans (issue #28)
 PostSchema.index({ pageId: 1, status: 1 }); // For page-specific post queries
+PostSchema.index({ pageId: 1, status: 1, createdAt: -1 }); // auto-generate weekly count + status group (issue #28)
 PostSchema.index({ pageId: 1, createdAt: -1 }); // For page post listing
 PostSchema.index({ 'approval.approvalToken': 1 }); // For email approval lookups
 PostSchema.index({ status: 1, requiresApproval: 1 }); // For pending approvals

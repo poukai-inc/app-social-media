@@ -187,6 +187,8 @@ const ICPEngagementSchema = new Schema<IICPEngagement>(
 ICPEngagementSchema.index({ pageId: 1, 'targetUser.id': 1, engagedAt: -1 });
 ICPEngagementSchema.index({ pageId: 1, platform: 1, engagedAt: -1 });
 ICPEngagementSchema.index({ pageId: 1, status: 1 });
+// conversation list/monitor sort+filter (issue #28)
+ICPEngagementSchema.index({ pageId: 1, platform: 1, 'conversation.autoResponseEnabled': 1, 'conversation.lastCheckedAt': -1 });
 ICPEngagementSchema.index({ 'targetPost.id': 1 }, { unique: true });
 
 // ============================================
