@@ -1,5 +1,7 @@
-FROM alpine:latest
+# Pinned for reproducible builds (issue #40)
+FROM alpine:3.21
 
+# curl is installed once here; entrypoint.sh no longer re-installs it
 RUN apk add --no-cache curl
 
 WORKDIR /scheduler

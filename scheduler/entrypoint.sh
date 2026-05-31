@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-apk add --no-cache curl >/dev/null
+# curl is installed in the image (scheduler/Dockerfile); no runtime install. (issue #40)
 
 echo "Waiting for app health at $APP_URL/api/health ..."
 until curl -sf "$APP_URL/api/health" >/dev/null; do
