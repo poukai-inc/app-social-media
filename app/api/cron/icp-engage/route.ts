@@ -43,7 +43,8 @@ export async function GET(request: NextRequest) {
     pageId: string;
     pageName: string;
     success: boolean;
-    repliesSent: number;
+    repliesAttempted: number;
+    repliesSuccessful: number;
     errors: string[];
   }[] = [];
 
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
     log.info('Found pages with Twitter connections', { count: pages.length });
 
     // Process each page
-    for (const page of pages) {
+    for (const [pageIndex, page] of pages.entries()) {
       try {
         log.info('Processing page', { name: page.name, id: page._id });
 
@@ -76,7 +77,8 @@ export async function GET(request: NextRequest) {
             pageId: page._id.toString(),
             pageName: page.name,
             success: false,
-            repliesSent: 0,
+            repliesAttempted: 0,
+            repliesSuccessful: 0,
             errors: ['No content strategy configured'],
           });
           continue;
@@ -98,12 +100,13 @@ export async function GET(request: NextRequest) {
           pageId: page._id.toString(),
           pageName: page.name,
           success: agentResult.success,
-          repliesSent: agentResult.repliesSuccessful,
+          repliesAttempted: agentResult.repliesSent,
+          repliesSuccessful: agentResult.repliesSuccessful,
           errors: agentResult.errors,
         });
 
         // Rate limit between pages
-        if (pages.indexOf(page) < pages.length - 1) {
+        if (pageIndex < pages.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 10000)); // 10 second delay
         }
       } catch (error) {
@@ -112,24 +115,27 @@ export async function GET(request: NextRequest) {
           pageId: page._id.toString(),
           pageName: page.name,
           success: false,
-          repliesSent: 0,
+          repliesAttempted: 0,
+          repliesSuccessful: 0,
           errors: [error instanceof Error ? error.message : 'Unknown error'],
         });
       }
     }
 
     const duration = Date.now() - startTime;
-    const totalReplies = results.reduce((sum, r) => sum + r.repliesSent, 0);
+    const totalSuccessful = results.reduce((sum, r) => sum + r.repliesSuccessful, 0);
+    const totalAttempted = results.reduce((sum, r) => sum + r.repliesAttempted, 0);
     const successCount = results.filter(r => r.success).length;
 
-    log.info('Completed', { durationMs: duration, successful: successCount, total: results.length, totalReplies });
+    log.info('Completed', { durationMs: duration, successful: successCount, total: results.length, totalSuccessful, totalAttempted });
 
     return NextResponse.json({
       success: true,
       summary: {
         pagesProcessed: results.length,
         pagesSuccessful: successCount,
-        totalRepliesSent: totalReplies,
+        totalRepliesAttempted: totalAttempted,
+        totalRepliesSent: totalSuccessful,
         durationMs: duration,
       },
       results,
