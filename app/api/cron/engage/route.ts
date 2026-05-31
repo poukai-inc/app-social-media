@@ -96,16 +96,26 @@ async function executeEngage() {
 
     debug.settingsFound = allUserIds.size;
 
+    // Batch-load users and their settings up front to avoid a per-user
+    // User.findById + EngagementSettings.findOne (N+1). (issue #30)
+    const userIdList = [...allUserIds];
+    const [usersList, settingsList] = await Promise.all([
+      User.find({ _id: { $in: userIdList } }),
+      EngagementSettings.find({ userId: { $in: userIdList } }),
+    ]);
+    const userMap = new Map(usersList.map(u => [u._id.toString(), u]));
+    const settingsMap = new Map(settingsList.map(s => [s.userId.toString(), s]));
+
     for (const odUserId of allUserIds) {
       // Keep the distributed lock alive during long multi-user runs so it can
       // never expire mid-flight and let an overlapping run double-engage. (issue #19)
       await extendLock('engage', 600);
 
-      const user = await User.findById(odUserId);
+      const user = userMap.get(odUserId);
       if (!user || !user.linkedinAccessToken) continue;
-      
-      // Get or create settings for this user
-      const settings = await getOrCreateEngagementSettings(user._id);
+
+      // Use prefetched settings; create defaults only if this user has none.
+      const settings = settingsMap.get(user._id.toString()) ?? await getOrCreateEngagementSettings(user._id);
       debug.usersProcessed++;
 
       // Calculate how many engagements we can do today
@@ -232,10 +242,18 @@ async function executeEngage() {
           
           if (!commentsResult.success || !commentsResult.comments) continue;
 
+          // Bulk-check which comments we've already processed (one query per
+          // post instead of one findOne per comment). (issue #30)
+          const commentUrns = commentsResult.comments.map(c => c.urn);
+          const existingReplies = await CommentReply.find({ commentUrn: { $in: commentUrns } })
+            .select('commentUrn')
+            .lean();
+          const processedUrns = new Set(existingReplies.map(r => r.commentUrn));
+
           for (const comment of commentsResult.comments) {
             // Skip if we've already processed this comment
-            const existingReply = await CommentReply.findOne({ commentUrn: comment.urn });
-            if (existingReply) continue;
+            if (processedUrns.has(comment.urn)) continue;
+            processedUrns.add(comment.urn); // guard against duplicates within this batch
 
             // Create a new CommentReply record
             let aiReply: string | undefined;
