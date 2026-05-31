@@ -97,9 +97,9 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 32 | `[ ]` | Notification abstraction `lib/notifications/` (dispatcher + channels + events) | `lib/notifications/` (new) |
 | 33 | `[ ]` | Migrate email call sites → `notify(orgId, event, data)` | `app/api/blog/generate/route.ts`, `app/api/cron/auto-generate/route.ts`, `app/api/cron/token-refresh/route.ts` |
 | 34 | `[ ]` | In-app notification feed (DB + dashboard bell + read/unread) | `db/schema.ts`, `app/dashboard/notifications/`, `components/ui/notification-bell.tsx` |
-| 35 | `[ ]` | Slack webhook channel adapter | `lib/notifications/channels/slack.ts` (new) |
+| 35 | `[ ]` | Slack webhook channel adapter — **moved to P2** (ADR-0007 rev 2026-05-31: MVP = email + in-app only) | `lib/notifications/channels/slack.ts` (new) |
 
-#### Phase 3 — Design system Path C hybrid (2-3 wks)
+#### Phase 3 — Design system: full `@poukai-inc/ui` adoption (ADR-0005 rev 2026-05-31; gated on DS delivery — poukai-ui#390–394)
 
 | ID | Status | Task | File(s) |
 |---|---|---|---|
@@ -107,14 +107,14 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 37 | `[ ]` | React 19 ↔ DS dual-CT validation (D1): widen `@poukai-inc/ui` peer to `>=18 \|\| >=19`; CI matrix runs Playwright CT under React 18 + 19; bump `@types/react` + `@types/react-dom` to support both. See [STACK_ALIGNMENT_DECISIONS.md#d1](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) | `package.json`, `poukai-ui` PR |
 | 38 | `[ ]` | Bump `lucide-react` to latest 0.5xx across all three repos (D4); tighten `@poukai-inc/ui` peer floor to `>=0.500`; audit icon renames in lucide changelog between current versions and target. See [STACK_ALIGNMENT_DECISIONS.md#d4](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) | `package.json`, `poukai-ui` PR |
 | 39 | `[ ]` | Import `@poukai-inc/ui/tokens.css` | `app/layout.tsx` |
-| 40 | `[ ]` | Build `components/ui/` app-local primitives (~25 files on Radix + DS tokens) | `components/ui/{input,textarea,select,combobox,checkbox,radio-group,switch,label,helper-text,error-message,spinner,skeleton,toast,tooltip,progress-bar,dropdown-menu,tabs,pagination,empty-state,breadcrumb,date-picker,time-picker,file-uploader,form-field,data-table}.tsx` |
-| 41 | `[ ]` | Build `AppShell` organism extending DS `SiteShell` | `components/app-shell.tsx` (new) |
+| 40 | `[!]` | ~~Build `components/ui/` app-local primitives~~ — **RE-SCOPED (ADR-0005 rev 2026-05-31: full DS adoption, no app-local fork).** Consume `@poukai-inc/ui` primitives; open/track DS gaps via [poukai-ui#390](https://github.com/poukai-inc/poukai-ui/issues/390). Blocked on DS delivery. | consume `@poukai-inc/ui`; remove existing `components/ui/*` stubs |
+| 41 | `[ ]` | Use DS `SiteShell` directly for app chrome (ADR-0005 rev: no `AppShell` fork). Capabilities tracked in [poukai-ui#391](https://github.com/poukai-inc/poukai-ui/issues/391) | `app/layout.tsx` (consume DS `SiteShell`) |
 | 42 | `[ ]` | Replace navbar with `AppShell` | `components/navbar.tsx` (delete), `app/layout.tsx` |
 | 43 | `[ ]` | Replace ad-hoc atoms with DS where shape fits | `components/*.tsx` |
-| 44 | `[ ]` | Replace dashboard forms with `components/ui/` primitives | `components/post-form.tsx`, `structured-input-form.tsx`, `app/dashboard/pages/**/settings/page.tsx` |
+| 44 | `[ ]` | Replace dashboard forms with **DS form primitives** (ADR-0005 rev; depends on [poukai-ui#390](https://github.com/poukai-inc/poukai-ui/issues/390)) | `components/post-form.tsx`, `structured-input-form.tsx`, `app/dashboard/pages/**/settings/page.tsx` |
 | 45 | `[ ]` | Brand-override contract (env-driven CSS vars: `BRAND_PRIMARY`/`WORDMARK_URL`/`NAME`/`FAVICON_URL`) | `app/brand-override.css` (new), `app/layout.tsx` |
-| 46 | `[ ]` | Push DS PR: `Wordmark` `src` prop (or new `BrandMark` atom) | `poukai-ui` PR |
-| 47 | `[ ]` | Dark mode — implement Phase 0 0f decision | `app/globals.css`, `app/brand-override.css` |
+| 46 | `[ ]` | Push DS PR: `Wordmark` `src` prop (or new `BrandMark` atom) — filed [poukai-ui#394](https://github.com/poukai-inc/poukai-ui/issues/394) | `poukai-ui` PR |
+| 47 | `[ ]` | Dark mode — **consume DS dark tokens; remove app-local `app/dark-tokens.css`** (ADR-0006 rev 2026-05-31; depends on [poukai-ui#393](https://github.com/poukai-inc/poukai-ui/issues/393)) | `app/dark-tokens.css` (delete), `app/globals.css` |
 | 48 | `[ ]` | Token-ize hardcoded brand colors | `components/navbar.tsx:57`, `components/**` |
 | 49 | `[ ]` | Extract inline platform SVGs to `components/icons/platforms/` | `components/icons/platforms/{linkedin,twitter,facebook,instagram}.tsx`, `components/post-card.tsx` |
 | 121 | `[ ]` | **[D1+D6]** Consume next `@poukai-inc/ui` release with React 19 support — wait for lib release that adds R19 dual-peer (per #37), then bump `@poukai-inc/ui` to that version simultaneously with React 19 upgrade (autopost already on R19; this re-validates the pair end-to-end). See [STACK_ALIGNMENT_DECISIONS.md#d1](https://github.com/poukai-inc/poukai-org-meta/blob/main/STACK_ALIGNMENT_DECISIONS.md) | `package.json` |
@@ -315,7 +315,7 @@ _2026-05-29 audit split: P0-C +2 (123–124); P1-H +8 (125–132); P1/P2-M +18 (
 | Phase 1 — Operational hygiene + **security P0** + stack alignment | 8-12, 13-20, **107-109**, 117-119 | 1 wk |
 | Phase 1 — Security hardening (H) | 110-111 | 1 wk (parallel with hygiene) |
 | Phase 2 — Postgres + tenancy + notifications | 21-35 | 2-3 wks |
-| Phase 3 — DS Path C | 36-50, 121 | 2-3 wks |
+| Phase 3 — DS full adoption (gated on poukai-ui#390–394) | 36-50, 121 | 2-3 wks |
 | Phase 4 — Distribution packaging | 58-67 | 1 wk |
 | Phase 5 — Observability | 68-70 | 0.5 wk |
 | Phase 6 — Tests + validation + cleanup | 71-85, 112-114 | 1-1.5 wks |
