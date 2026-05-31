@@ -5,6 +5,11 @@ services:
       dockerfile: Dockerfile
     container_name: autopostv2
     restart: unless-stopped
+    # Cap resources so the long-running app + ffmpeg media processing can't
+    # balloon and OOM the host. Tune via env for your hardware. (issue #50)
+    mem_limit: ${APP_MEM_LIMIT:-1g}
+    mem_reservation: ${APP_MEM_RESERVATION:-512m}
+    cpus: ${APP_CPUS:-1.5}
     ports:
       - "${PORT:-3000}:3000"
     extra_hosts:
