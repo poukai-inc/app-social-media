@@ -1,9 +1,19 @@
 # DECISION-0006: Dark mode
 
-**Status**: Accepted
-**Date**: 2026-05-20
+**Status**: Accepted (revised 2026-05-31)
+**Date**: 2026-05-31 (orig. 2026-05-20)
 **Deciders**: Founder (Arian)
-**Supersedes**: —
+**Supersedes**: Revision 1 of this ADR (2026-05-20, "Keep — app-local dark-tokens.css")
+
+## Revision 2026-05-31 — supersedes app-local dark mode
+
+Founder reversed the app-local call: **dark mode is owned by `@poukai-inc/ui`**. The DS `tokens.css` provides both light and dark theme values; the app consumes them and does not maintain its own `app/dark-tokens.css` override. This follows from ADR-0005 rev-2 (full DS adoption) — a parallel app-local theme would contradict single-source-of-UI-truth.
+
+Action: open a DS issue to add dark-theme tokens to `@poukai-inc/ui`; remove `app/dark-tokens.css` once the DS ships them; apply theme via the DS's documented toggle/`prefers-color-scheme` mechanism.
+
+The original app-local analysis below is retained as historical context but is **superseded**.
+
+---
 
 ## Context
 

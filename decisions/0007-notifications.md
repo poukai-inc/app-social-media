@@ -1,9 +1,19 @@
 # DECISION-0007: Notification Channels for MVP
 
-**Status**: Accepted
-**Date**: 2026-05-20
+**Status**: Accepted (revised 2026-05-31)
+**Date**: 2026-05-31 (orig. 2026-05-20)
 **Deciders**: Founder (Arian)
-**Supersedes**: —
+**Supersedes**: Revision 1 of this ADR (2026-05-20, "email + in-app + Slack in MVP")
+
+## Revision 2026-05-31 — Slack out of MVP
+
+Founder narrowed the MVP channel set: **MVP ships email (Resend) + in-app feed only**. The pluggable `lib/notifications/` abstraction and per-org config are unchanged. **Slack webhook moves to P2** (alongside Discord); Telegram stays P3.
+
+Net: the dispatcher and adapter pattern below still stand; only the channel phasing changes — Slack is no longer required for launch.
+
+The original three-channel MVP analysis below is retained as historical context; treat the Slack adapter as **P2, not MVP**.
+
+---
 
 ## Context
 

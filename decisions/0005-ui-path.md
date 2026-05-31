@@ -1,9 +1,22 @@
 # DECISION-0005: UI Integration Path
 
-**Status**: Accepted
-**Date**: 2026-05-20
+**Status**: Accepted (revised 2026-05-31)
+**Date**: 2026-05-31 (orig. 2026-05-20)
 **Deciders**: Founder (Arian)
-**Supersedes**: —
+**Supersedes**: Revision 1 of this ADR (2026-05-20, "Path C hybrid")
+
+## Revision 2026-05-31 — supersedes Path C
+
+Founder reversed the Path C hybrid call: **use `@poukai-inc/ui` for everything**. The app does not maintain a parallel `components/ui/` primitive library. Where the DS lacks a needed primitive (Input, Select, Table, Toast, Combobox, DatePicker, FileUploader, etc.), **open an issue/PR upstream to `@poukai-inc/ui`** and consume it once shipped — do not fork it into the app.
+
+Rationale for the change:
+- Single source of UI truth across all Poukai apps; no app-vs-marketing divergence.
+- DS gaps become tracked upstream work (issues on `poukai-inc/poukai-ui`) instead of permanent app-local debt.
+- Trade-off accepted: app UI work can block on DS delivery for missing primitives; mitigated by prioritising the DS issues that gate launch.
+
+The original Path C analysis below is retained as historical context but is **superseded**.
+
+---
 
 ## Context
 
