@@ -80,6 +80,7 @@ const EngagementTargetSchema = new Schema<IEngagementTarget>(
 // Index for efficient querying
 EngagementTargetSchema.index({ userId: 1, status: 1 });
 EngagementTargetSchema.index({ scheduledFor: 1, status: 1 });
+EngagementTargetSchema.index({ status: 1, scheduledFor: 1, userId: 1 }); // engage cron distinct + scheduled scan (issue #28)
 
 export const EngagementTarget: Model<IEngagementTarget> =
   mongoose.models.EngagementTarget ||
