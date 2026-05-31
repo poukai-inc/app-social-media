@@ -19,6 +19,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -70,6 +71,7 @@
     "eslint-config-next": "16.2.6",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "jsdom": "^29.1.1",
+    "mongodb-memory-server": "^11.2.0",
     "prettier": "^3.8.3",
     "tailwindcss": "^4",
     "typescript": "^5",
