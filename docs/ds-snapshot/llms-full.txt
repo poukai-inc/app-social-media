@@ -3571,3 +3571,52 @@ useEffect(() => {
   <ArticleLayout as="div">…</ArticleLayout>
 </DocsLayout>
 ```
+
+### NotFound
+- Canonical 404 page organism for all pouk.ai surfaces. Composes a chrome-less `SiteShell` (wordmark-only header, no nav, no footer) with a centered content column presenting the error code, headline, description, optional suggestions list, and a home CTA.
+- Root element: `<div>` via `SiteShell`. `forwardRef<HTMLDivElement, NotFoundProps>`. `...rest` spread to `SiteShell` root. `displayName = "NotFound"`.
+- RSC-safe: no `'use client'`, no `useState`, no `useEffect`, no event handlers. Static render works in RSC, SSR, SSG, and client-only environments.
+- `homeHref` (string, default `"/"`) — destination for both the SiteShell wordmark link and the home CTA button. Both always agree.
+- `headline` (string, default `"Page not found."`) — rendered as `<h1>`. Sub-apps override for context-specific copy.
+- `description` (string, default `"The page you're looking for doesn't exist or has been moved."`) — rendered as `<p>` below the headline. One to two sentences maximum.
+- `suggestions` (array of `{ label: string; href: string }`, default `[]`) — when non-empty, renders a `<ul>` of plain `<a>` links above the home CTA. Each item inherits the global animated underline treatment.
+- `homeLabel` (string, default `"Go home"`) — visible label on the home CTA `<Button variant="primary" size="md" asChild>`.
+- Anatomy (top to bottom): SiteShell header (wordmark only, no nav) → content column → `<p class=code>` ("404", `--fs-stat`, `--font-serif`, `--fg-muted`, `--tracking-stat`) → `<h1>` headline (`--fs-tagline-intimate`, `--font-serif`, `--fg`) → `<p>` description (`--fs-body`, `--font-sans`, `--fg-muted`) → `<ul>` suggestions (conditional) → `<Button>` home CTA.
+- Vertical rhythm: code→headline `--space-4`, headline→description `--space-6`, description→suggestions (or CTA) `--space-8`, suggestions→CTA `--space-8`.
+- Tokens: `--hero-max`, `--space-2`, `--space-4`, `--space-6`, `--space-8`, `--space-16`, `--fs-stat`, `--fs-tagline-intimate`, `--fs-body`, `--font-serif`, `--font-sans`, `--fg`, `--fg-muted`, `--tracking-stat`, `--lh-meta`, `--lh-body`.
+- Composition rules: render `<NotFound />` as the entire page — NEVER inside an existing `SiteShell` (nested landmarks are a structural error). The `homeHref` prop drives both the wordmark link and the CTA.
+- HTTP status: component renders the visual only. Consumers set the 404 response code via their framework (`notFound()` in Next.js, `CatchBoundary` in Remix, etc.).
+- Do NOT compose NotFound inside `Section`, `Hero`, or any content molecule. It is a full-page organism, not a content slot.
+
+```tsx
+// (a) Default (all defaults):
+<NotFound />
+
+// (b) With suggestions:
+<NotFound
+  suggestions={[
+    { label: "Home", href: "/" },
+    { label: "Why AI", href: "/why-ai" },
+  ]}
+/>
+
+// (c) Custom headline and home destination:
+<NotFound
+  headline="This role doesn't exist."
+  description="The URL may have changed or this role was removed."
+  homeHref="/roles"
+  homeLabel="Back to roles"
+/>
+
+// (d) All props:
+<NotFound
+  homeHref="/dashboard"
+  headline="Dashboard page not found."
+  description="The dashboard page you requested has been moved or no longer exists."
+  homeLabel="Go to dashboard"
+  suggestions={[
+    { label: "Home", href: "/" },
+    { label: "Overview", href: "/dashboard/overview" },
+  ]}
+/>
+```
