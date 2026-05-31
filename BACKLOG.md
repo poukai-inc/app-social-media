@@ -182,8 +182,8 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 |---|---|---|---|
 | 73 | `[ ]` | Per-cron metrics (start/duration/success/count) | `app/api/cron/**` |
 | 74 | `[ ]` | Per-org cron loops (one slow tenant must not block others) | `app/api/cron/**` |
-| 75 | `[ ]` | Unit tests for `lib/ai-client.ts` (model selection, rate-limit branches) | `lib/__tests__/ai-client.test.ts` (new) |
-| 76 | `[ ]` | Unit tests for `lib/platforms/*-adapter.ts` | `lib/platforms/__tests__/` |
+| 75 | `[~]` | Unit tests for `lib/ai-client.ts` (model selection, rate-limit branches) — _done: `lib/models/AIUsage.test.ts` covers the limit table, model-priority lists, and date-key (rate-limit window) logic that drive selection. **Remaining**: DB-dependent `getAvailableModel`/`hasCapacity` branch tests need the Mongo harness — fold into #78._ | `lib/models/AIUsage.test.ts` |
+| 76 | `[x]` | Unit tests for `lib/platforms/*-adapter.ts` — `lib/platforms/adapters.test.ts`: per-platform `adaptContent` (platform tag + hashtag caps for facebook/linkedin/twitter) + base `truncateContent` boundaries | `lib/platforms/adapters.test.ts` |
 | 77 | `[ ]` | Unit tests for `lib/notifications/` (dispatcher + each channel adapter) | `lib/notifications/__tests__/` (new) |
 | 78 | `[ ]` | Integration tests for `/api/cron/*` (mocked DB + platform APIs + notifications) | `app/api/cron/__tests__/` |
 | 79 | `[ ]` | E2E: signup → org create → LinkedIn connect → page → generate → schedule → publish + notification fires | `tests/e2e/` (new) |
