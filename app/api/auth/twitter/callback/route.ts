@@ -6,6 +6,7 @@ import User from '@/lib/models/User';
 import type { PlatformConnection } from '@/lib/platforms/types';
 import { logger } from '@/lib/logger';
 import { verifyState } from '@/lib/oauth-state';
+import { createPendingConnection } from '@/lib/models/PendingConnection';
 
 const log = logger.child('api:auth:twitter:callback');
 
@@ -176,8 +177,9 @@ export async function GET(request: Request) {
       }
     }
 
-    // No page specified - redirect to selection page
-    const connectionData = Buffer.from(JSON.stringify({
+    // No page specified - stash tokens server-side and redirect with an opaque
+    // one-time key (never put tokens in the URL). (issue #110)
+    const pendingKey = await createPendingConnection(user._id, 'twitter', {
       platform: 'twitter',
       platformId: twitterUser.id,
       platformUsername: `@${twitterUser.username}`,
@@ -189,10 +191,10 @@ export async function GET(request: Request) {
         username: twitterUser.username,
         profileImageUrl: twitterUser.profile_image_url,
       },
-    })).toString('base64');
+    });
 
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL}/dashboard/connect/twitter?data=${connectionData}`
+      `${process.env.NEXTAUTH_URL}/dashboard/connect/twitter?key=${pendingKey}`
     );
   } catch (error) {
     log.error('Twitter OAuth callback error', { error: error instanceof Error ? error.message : String(error) });
