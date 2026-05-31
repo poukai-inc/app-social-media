@@ -37,13 +37,13 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 
 | ID | Status | Task | Output |
 |---|---|---|---|
-| 1 | `[ ]` | License pick (autopost + `@poukai-inc/ui`) | `LICENSE`, `decisions/0001-licensing.md` |
-| 2 | `[ ]` | DB pick confirmation (Postgres + Drizzle) | `decisions/0002-database.md` |
-| 3 | `[ ]` | Distribution shape (hosted + self-host bundle) | `decisions/0003-distribution.md` |
-| 4 | `[ ]` | Hosting stack (Neon + R2 + Vercel + Resend + Hetzner) | `decisions/0004-hosting.md` |
-| 5 | `[ ]` | UI path (Path C hybrid) | `decisions/0005-ui-path.md` |
-| 6 | `[ ]` | Dark mode decision (keep / drop / push-to-DS) | `decisions/0006-dark-mode.md` |
-| 7 | `[ ]` | Notification channels MVP (email + in-app + Slack) | `decisions/0007-notifications.md` |
+| 1 | `[x]` | License pick (autopost + `@poukai-inc/ui`) | `LICENSE`, `decisions/0001-licensing.md` |
+| 2 | `[x]` | DB pick confirmation (Postgres + Drizzle) | `decisions/0002-database.md` |
+| 3 | `[x]` | Distribution shape (hosted + self-host bundle) | `decisions/0003-distribution.md` |
+| 4 | `[x]` | Hosting stack (Neon + R2 + Vercel + Resend + Hetzner) | `decisions/0004-hosting.md` |
+| 5 | `[x]` | UI path — **Full `@poukai-inc/ui` adoption** (open DS issues for gaps; revised 2026-05-31, supersedes Path C) | `decisions/0005-ui-path.md` |
+| 6 | `[x]` | Dark mode — **push to DS** (DS tokens own both themes; revised 2026-05-31) | `decisions/0006-dark-mode.md` |
+| 7 | `[x]` | Notification channels MVP — **email + in-app** (Slack→P2; revised 2026-05-31) | `decisions/0007-notifications.md` |
 | 8 | `[ ]` | Move `CRON_SECRET` query→header | `scheduler/cron-call.sh`, 7× `app/api/cron/*/route.ts` |
 | 9 | `[ ]` | Remove hardcoded `192.168.1.9:11434` | `lib/ai-client.ts:36-37` |
 | 10 | `[ ]` | Strip placeholder secrets from `Dockerfile` build env | `Dockerfile:18-31` |
