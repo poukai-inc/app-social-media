@@ -300,6 +300,8 @@ async function executePublish() {
     const staleThreshold = new Date(now.getTime() - STALE_CLAIM_MS);
 
     // Discover due posts that are unclaimed or whose prior claim went stale.
+    // Bounded per run; earliest scheduled first. (issue #31)
+    const MAX_POSTS_PER_RUN = 200;
     const candidates = await Post.find({
       status: 'scheduled',
       scheduledFor: { $lte: now },
@@ -308,8 +310,16 @@ async function executePublish() {
         { publishStartedAt: { $lt: staleThreshold } },
       ],
     })
-      .select('_id')
+      .select('_id pageId')
+      .sort({ scheduledFor: 1 })
+      .limit(MAX_POSTS_PER_RUN)
       .lean();
+
+    // Prefetch the pages these posts belong to (one query instead of a
+    // Page.findById per post). (issue #31)
+    const pageIds = candidates.flatMap(c => (c.pageId ? [c.pageId] : []));
+    const pages = pageIds.length ? await Page.find({ _id: { $in: pageIds } }) : [];
+    const pageMap = new Map(pages.map(p => [p._id.toString(), p]));
 
     const results = [];
 
@@ -329,7 +339,7 @@ async function executePublish() {
         },
         { $set: { publishStartedAt: new Date() } },
         { new: true }
-      ).populate('userId');
+      );
 
       if (!post) {
         // Lost the race — another worker claimed this post.
@@ -337,7 +347,7 @@ async function executePublish() {
       }
 
       try {
-        // Get the user to get their email
+        // Single user fetch (the claim above no longer redundantly populates). (issue #31)
         const user = await User.findById(post.userId);
 
         if (!user) {
@@ -353,9 +363,9 @@ async function executePublish() {
         const hasMultiplePlatforms = post.targetPlatforms && post.targetPlatforms.length > 0;
         
         if (hasMultiplePlatforms && post.pageId) {
-          // New multi-platform publishing flow
-          const page = await Page.findById(post.pageId);
-          
+          // New multi-platform publishing flow — page came from the prefetch. (issue #31)
+          const page = pageMap.get(post.pageId.toString());
+
           if (!page) {
             post.status = 'failed';
             post.error = 'Page not found';
