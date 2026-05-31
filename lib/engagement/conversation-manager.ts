@@ -932,15 +932,14 @@ export async function monitorAndRespondToConversations(
           return isFromOthers && isNotAlreadyProcessed;
         });
 
-        // Update last checked time
-        await ICPEngagement.updateOne(
-          { _id: engagement._id },
-          {
-            $set: { 'conversation.lastCheckedAt': new Date() },
-          }
-        );
-
         if (newRepliesFromOthers.length === 0) {
+          // Nothing new — just record that we checked. (When there ARE new
+          // replies, lastCheckedAt is bumped atomically with persisting them
+          // below, so a crash can't advance the cursor past unsaved replies. — issue #33)
+          await ICPEngagement.updateOne(
+            { _id: engagement._id },
+            { $set: { 'conversation.lastCheckedAt': new Date() } }
+          );
           continue; // No new replies to process
         }
 
@@ -981,6 +980,8 @@ export async function monitorAndRespondToConversations(
             $set: {
               'followUp.theyReplied': true,
               'followUp.conversationLength': (engagement.followUp?.conversationLength || 1) + newRepliesFromOthers.length,
+              // Advance the cursor only once their replies are persisted. (issue #33)
+              'conversation.lastCheckedAt': new Date(),
             },
           }
         );
