@@ -393,7 +393,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
         impressions: nonPublic.impression_count || metrics.impression_count,
         likes: metrics.like_count || 0,
         comments: metrics.reply_count || 0,
-        shares: metrics.retweet_count + (metrics.quote_count || 0),
+        shares: (metrics.retweet_count || 0) + (metrics.quote_count || 0),
         clicks: nonPublic.url_link_clicks,
         lastUpdated: new Date(),
       };
