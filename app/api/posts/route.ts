@@ -10,24 +10,31 @@ import { logger } from '@/lib/logger';
 
 const log = logger.child('api:posts');
 
-// GET /api/posts - Get all posts for the current user
-export async function GET() {
+// GET /api/posts - Get the current user's posts (paginated)
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await connectToDatabase();
-    
+
     const user = await User.findOne({ email: session.user.email });
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    // Bound the result set so it cannot grow without limit per tenant. (issue #29)
+    const { searchParams } = new URL(request.url);
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '100', 10) || 100, 1), 500);
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10) || 0, 0);
+
     const posts = await Post.find({ userId: user._id })
       .sort({ createdAt: -1 })
+      .skip(offset)
+      .limit(limit)
       .lean();
 
     return NextResponse.json(posts);

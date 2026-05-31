@@ -24,7 +24,10 @@ export async function GET() {
     }
 
     const settings = await EngagementSettings.findOne({ userId: user._id });
-    const allEngagements = await EngagementTarget.find({ userId: user._id });
+    // bound result set; debug view of the most recent engagements (issue #29)
+    const allEngagements = await EngagementTarget.find({ userId: user._id })
+      .sort({ createdAt: -1 })
+      .limit(500);
 
     // Breakdown by status
     const byStatus = {
