@@ -27,6 +27,7 @@ export async function GET(_request: NextRequest) {
       status: 'pending_approval',
     })
       .sort({ createdAt: -1 })
+      .limit(200) // bound result set (issue #29)
       .lean();
 
     // Get stats
