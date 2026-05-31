@@ -115,6 +115,33 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm license-check
 
+  test:
+    name: Unit tests + coverage
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:coverage
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # NOTE: E2E (Playwright) is wired via `pnpm test:e2e` + playwright.config.ts but
+  # not gated in CI yet — it needs a running app + seeded DB (BACKLOG #79).
+
   secret-scan:
     name: Secret scan (trufflehog)
     runs-on: ubuntu-latest
