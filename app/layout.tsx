@@ -9,7 +9,14 @@ import { AppShell } from "@/components/app-shell";
 
 const BRAND_NAME = process.env.BRAND_NAME ?? "AutoPost";
 const BRAND_FAVICON_URL = process.env.BRAND_FAVICON_URL;
-const BRAND_PRIMARY = process.env.BRAND_PRIMARY;
+
+// BRAND_PRIMARY is interpolated into a <style> tag, so validate it against a
+// strict CSS-color allowlist (hex / rgb[a] / hsl[a] / keyword). Anything else
+// — including a CSS-injection payload — is rejected and the override is
+// skipped. Currently a server env var, but this guards future tenant config. (issue #43)
+const CSS_COLOR = /^#[0-9a-fA-F]{3,8}$|^(?:rgb|rgba|hsl|hsla)\([0-9.,%\s/]+\)$|^[a-zA-Z]+$/;
+const rawBrandPrimary = process.env.BRAND_PRIMARY?.trim();
+const BRAND_PRIMARY = rawBrandPrimary && CSS_COLOR.test(rawBrandPrimary) ? rawBrandPrimary : undefined;
 
 export const metadata: Metadata = {
   title: `${BRAND_NAME} - LinkedIn Scheduler`,

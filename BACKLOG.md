@@ -279,7 +279,7 @@ Full-repo audit across security, correctness/concurrency, performance, and confi
 
 | ID | Status | Task | File(s) |
 |---|---|---|---|
-| 151 | `[ ]` | **[AUDIT2-L1]** CSS-injection sink — `dangerouslySetInnerHTML` interpolates `--brand-primary:${BRAND_PRIMARY}` into a `<style>`. Source is a server env var (not exploitable now) but becomes an injection sink if `BRAND_PRIMARY` ever turns tenant-configurable. Fix: validate against a hex/CSS-color regex before interpolation. | `app/layout.tsx:30` |
+| 151 | `[~]` | **[AUDIT2-L1]** CSS-injection sink — `dangerouslySetInnerHTML` interpolates `--brand-primary:${BRAND_PRIMARY}` into a `<style>`. Source is a server env var (not exploitable now) but becomes an injection sink if `BRAND_PRIMARY` ever turns tenant-configurable. Fix: validate against a hex/CSS-color regex before interpolation. | `app/layout.tsx:30` |
 | 152 | `[ ]` | **[AUDIT2-L2]** `postcss` moderate advisory GHSA-qx2v-qp2m-jg93 (XSS via unescaped `</style>`) — build-time tooling only, no runtime exposure. Bump on next maintenance pass. | `package.json` |
 | 153 | `[~]` | **[AUDIT2-L3]** Error-message leak — `pages/[id]/learning` returns raw `error.message` to the client; every other route returns a generic string. Fix: return a generic message, log detail server-side. | `app/api/pages/[id]/learning/route.ts:115` |
 | 154 | `[ ]` | **[AUDIT2-L4]** Retry backoff array/`MAX_RETRIES` misalignment — `RETRY_DELAY_MS` has 3 entries but the guard/recursion never delays a 4th attempt by a real slot; worst-case serial retry time (≈50s/platform) is what blows past the 300s lock TTL in #124. Fix: align `MAX_RETRIES` with the delay-array length; document worst-case runtime vs lock TTL. | `app/api/cron/publish/route.ts:20,175` |
