@@ -94,9 +94,15 @@ async function publishToPlatform(
       if (context.page) {
         try {
           await Page.findOneAndUpdate(
-            { _id: context.page._id, 'connections.platform': platform },
-            { 
-              $set: { 
+            // Match on platformId too, so the positional `$` updates THIS
+            // connection — not the first connection of the same platform when a
+            // page has more than one. (issue #34)
+            {
+              _id: context.page._id,
+              connections: { $elemMatch: { platform, platformId: connection.platformId } },
+            },
+            {
+              $set: {
                 'connections.$.accessToken': refreshed.accessToken,
                 'connections.$.refreshToken': refreshed.refreshToken,
                 'connections.$.tokenExpiresAt': refreshed.tokenExpiresAt,
