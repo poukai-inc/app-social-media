@@ -59,7 +59,7 @@ import type { PlatformType } from '@/lib/platforms/types';
 export const orgRole = pgEnum('org_role', ['owner', 'admin', 'member']);
 export const pageType = pgEnum('page_type', ['personal', 'organization', 'manual']);
 export const postAs = pgEnum('post_as', ['person', 'organization']);
-export const postMode = pgEnum('post_mode', ['structured', 'freeform', 'ai_generated', 'blog', 'data_source']);
+export const postMode = pgEnum('post_mode', ['manual', 'structured', 'ai', 'blog_repurpose']);
 export const postStatus = pgEnum('post_status', [
   'draft',
   'pending_approval',
@@ -89,14 +89,8 @@ export const icpStatus = pgEnum('icp_status', [
   'conversation',
   'ignored',
 ]);
-export const commentStatus = pgEnum('comment_status', [
-  'pending',
-  'approved',
-  'posted',
-  'skipped',
-  'rejected',
-]);
-export const commentSource = pgEnum('comment_source', ['feed', 'search', 'manual', 'icp']);
+export const commentStatus = pgEnum('comment_status', ['pending', 'approved', 'posted', 'skipped']);
+export const commentSource = pgEnum('comment_source', ['feed', 'target_profile', 'engagement_reply']);
 export const engagementPotential = pgEnum('engagement_potential', ['low', 'medium', 'high']);
 export const tokenAlertType = pgEnum('token_alert_type', ['expiring_soon', 'expired', 'refresh_failed']);
 export const tokenAlertPlatform = pgEnum('token_alert_platform', ['twitter', 'facebook', 'linkedin']);
@@ -235,7 +229,7 @@ export const posts = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     pageId: uuid('page_id').references(() => pages.id, { onDelete: 'set null' }),
-    mode: postMode('mode').notNull().default('freeform'),
+    mode: postMode('mode').notNull().default('manual'),
     content: text('content').notNull(),
     generatedContent: text('generated_content'),
     structuredInput: jsonb('structured_input').$type<StructuredInput>(),

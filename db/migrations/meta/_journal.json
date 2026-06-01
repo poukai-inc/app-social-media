@@ -22,6 +22,13 @@
       "when": 1780277381586,
       "tag": "0002_membership_bootstrap_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1780278301287,
+      "tag": "0003_fix_enums",
+      "breakpoints": true
     }
   ]
 }

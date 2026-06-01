@@ -86,7 +86,7 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 21 | `[x]` | Drizzle schema (`db/schema.ts`) — 9 models + `Organization` + `OrganizationMember` + `Notification` | `db/schema.ts` (new) |
 | 22 | `[x]` | RLS policies on all tenant tables | `db/migrations/*_rls.sql` |
 | 23 | `[x]` | Repository layer: every query takes `orgId` first arg | `db/queries/*.ts` (new), `app/api/**` |
-| 24 | `[ ]` | Mongo→Postgres migration script (idempotent) | `scripts/migrate-mongo-to-postgres.ts` (new) |
+| 24 | `[x]` | Mongo→Postgres migration script (idempotent) | `scripts/migrate-mongo-to-postgres.ts` (new) |
 | 25 | `[ ]` | Dual-write window adapter + cutover plan | `lib/db/dual-write.ts` (temporary), `docs/cutover.md` |
 | 26 | `[ ]` | NextAuth `@auth/drizzle-adapter`; remove Mongo session storage | `lib/auth.ts` |
 | 27 | `[ ]` | S3 key prefixing by `org_<uuid>` | `lib/s3.ts` |
