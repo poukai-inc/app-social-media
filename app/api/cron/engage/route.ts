@@ -177,7 +177,7 @@ async function executeEngage() {
                 const contentForAI = engagement.postContent || `LinkedIn post from ${engagement.postAuthor || 'a professional'}`;
                 commentToPost = await generateComment({
                   postContent: contentForAI,
-                  postAuthor: engagement.postAuthor,
+                  ...(engagement.postAuthor !== undefined && { postAuthor: engagement.postAuthor }),
                   style: settings.engagementStyle || 'professional',
                 });
                 engagement.aiGeneratedComment = commentToPost;
@@ -194,23 +194,25 @@ async function executeEngage() {
             // Execute engagement
             const result = await engageWithPost(user.email, engagement.postUrn, {
               like: engagement.engagementType === 'like' || engagement.engagementType === 'both',
-              comment: needsComment ? commentToPost : undefined,
+              ...(needsComment && commentToPost !== undefined && { comment: commentToPost }),
             });
 
             if (result.success || result.liked || result.commented) {
               engagement.status = 'engaged';
               engagement.engagedAt = new Date();
-              engagement.error = result.error; // May have partial error
+              if (result.error !== undefined) {
+                engagement.error = result.error; // May have partial error
+              }
             } else {
               engagement.status = 'failed';
-              engagement.error = result.error;
+              if (result.error !== undefined) engagement.error = result.error;
             }
 
             await engagement.save();
             results.engagements.push({
               id: engagement._id.toString(),
               status: engagement.status,
-              error: engagement.error,
+              ...(engagement.error !== undefined && { error: engagement.error }),
             });
 
             // Add delay between engagements
@@ -274,9 +276,9 @@ async function executeEngage() {
               linkedinPostUrn: post.linkedinPostId,
               commentUrn: comment.urn,
               commenterName: comment.actorName,
-              commenterProfileUrl: comment.actorProfileUrl,
+              ...(comment.actorProfileUrl !== undefined && { commenterProfileUrl: comment.actorProfileUrl }),
               commentText: comment.message,
-              aiGeneratedReply: aiReply,
+              ...(aiReply !== undefined && { aiGeneratedReply: aiReply }),
               status: settings.requireApproval ? 'pending' : 'approved',
             });
 
@@ -325,14 +327,14 @@ async function executeEngage() {
               reply.repliedAt = new Date();
             } else {
               reply.status = 'failed';
-              reply.error = result.error;
+              if (result.error !== undefined) reply.error = result.error;
             }
 
             await reply.save();
             results.replies.push({
               id: reply._id.toString(),
               status: reply.status,
-              error: reply.error,
+              ...(reply.error !== undefined && { error: reply.error }),
             });
 
             // Add delay between replies

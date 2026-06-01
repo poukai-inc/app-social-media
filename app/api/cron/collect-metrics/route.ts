@@ -198,7 +198,7 @@ export async function GET(request: NextRequest) {
             topic: post.sourceContent?.title || 'general',
             contentLength: post.content.length,
             hasMedia: post.media && post.media.length > 0,
-            mediaType: post.media && post.media.length > 0 ? post.media[0].type : 'none',
+            mediaType: post.media && post.media.length > 0 ? (post.media[0]?.type ?? 'none') : 'none',
             hashtags: extractHashtags(post.content),
           },
           platforms: [],
@@ -302,7 +302,7 @@ export async function GET(request: NextRequest) {
             platformEngagement = {
               platform,
               platformPostId: platformResult.postId,
-              platformPostUrl: platformResult.postUrl,
+              ...(platformResult.postUrl !== undefined && { platformPostUrl: platformResult.postUrl }),
               publishedAt: publishedDate,
               currentMetrics,
               metricHistory: [snapshot],
@@ -367,17 +367,18 @@ export async function GET(request: NextRequest) {
           { impressions: 0, reactions: 0, comments: 0, shares: 0, engagementSum: 0 }
         );
 
+        const bestPlatform = engagementHistory.platforms.reduce(
+          (best: PlatformEngagement | null, p: PlatformEngagement) =>
+            !best || p.performanceScore > best.performanceScore ? p : best,
+          null
+        );
         engagementHistory.aggregateStats = {
           totalImpressions: totals.impressions,
           totalReactions: totals.reactions,
           totalComments: totals.comments,
           totalShares: totals.shares,
           avgEngagementRate: totals.engagementSum / engagementHistory.platforms.length,
-          bestPerformingPlatform: engagementHistory.platforms.reduce(
-            (best: PlatformEngagement | null, p: PlatformEngagement) => 
-              !best || p.performanceScore > best.performanceScore ? p : best,
-            null
-          )?.platform,
+          ...(bestPlatform !== null && { bestPerformingPlatform: bestPlatform.platform }),
         };
       }
 

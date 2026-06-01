@@ -15,7 +15,7 @@ const log = logger.child('api:pages:[id]:data-sources');
 
 // GET /api/pages/[id]/data-sources - List all data sources
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -230,10 +230,15 @@ export async function PUT(
       );
     }
 
+    const existingSource = page.dataSources.databases[sourceIndex];
+    if (!existingSource) {
+      return NextResponse.json({ error: 'Data source not found' }, { status: 404 });
+    }
+
     // If connection string is being updated, test it
     if (updates.connectionString) {
       const testResult = await testConnection(
-        updates.type || page.dataSources.databases[sourceIndex].type,
+        updates.type || existingSource.type,
         updates.connectionString
       );
       if (!testResult.success) {
@@ -245,7 +250,7 @@ export async function PUT(
     }
 
     // Update the source
-    Object.assign(page.dataSources.databases[sourceIndex], updates);
+    Object.assign(existingSource, updates);
     page.markModified('dataSources');
     await page.save();
 

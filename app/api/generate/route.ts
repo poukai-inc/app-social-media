@@ -107,13 +107,14 @@ export async function POST(request: NextRequest) {
         
         // Find specific content item or pick first
         if (contentItemId) {
-          sourceContentItem = fetchResult.items.find(item => item.id === contentItemId) || fetchResult.items[0];
+          sourceContentItem = fetchResult.items.find(item => item.id === contentItemId) ?? fetchResult.items[0] ?? null;
         } else {
-          sourceContentItem = fetchResult.items[0];
+          sourceContentItem = fetchResult.items[0] ?? null;
         }
         
         // Build inspiration from the content item
-        finalInspiration = `
+        if (sourceContentItem !== null) {
+          finalInspiration = `
 ## Source Blog Post to Repurpose:
 
 **Title:** ${sourceContentItem.title}
@@ -124,13 +125,15 @@ ${sourceContentItem.body.slice(0, 3000)}
 ---
 Transform this blog post into an engaging LinkedIn post. Extract the key insight or takeaway and present it in a way that's valuable for a LinkedIn audience. Don't just summarize - find the most interesting angle and lead with that.
 `.trim();
+        }
       }
 
       // Generate content using page strategy
+      const resolvedTopic = topic || (sourceContentItem?.title ? `Repurposing: ${sourceContentItem.title}` : undefined);
       const result = await generatePostWithStrategy({
         strategy: page.contentStrategy as PageContentStrategy,
-        topic: topic || (sourceContentItem?.title ? `Repurposing: ${sourceContentItem.title}` : undefined),
-        angle,
+        ...(resolvedTopic !== undefined && { topic: resolvedTopic }),
+        ...(angle !== undefined && { angle }),
         inspiration: finalInspiration,
         pageId: page._id.toString(),
         platform: 'linkedin', // Legacy field - actual platforms determined by connections
@@ -215,12 +218,12 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
 
       const content = await generateLinkedInPost({
         mode,
-        structuredInput,
-        aiPrompt,
-        tone,
-        includeEmojis,
-        includeHashtags,
-        targetAudience,
+        ...(structuredInput !== undefined && { structuredInput }),
+        ...(aiPrompt !== undefined && { aiPrompt }),
+        ...(tone !== undefined && { tone }),
+        ...(includeEmojis !== undefined && { includeEmojis }),
+        ...(includeHashtags !== undefined && { includeHashtags }),
+        ...(targetAudience !== undefined && { targetAudience }),
       });
 
       return NextResponse.json({ content });

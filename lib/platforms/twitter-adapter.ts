@@ -33,7 +33,7 @@ function generateOAuth1Signature(
   // Sort parameters alphabetically
   const sortedParams = Object.keys(params)
     .sort()
-    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key] ?? '')}`)
     .join('&');
 
   // Create signature base string
@@ -94,7 +94,7 @@ function generateOAuth1Header(
   const headerParts = Object.keys(oauthParams)
     .filter(key => key.startsWith('oauth_'))
     .sort()
-    .map(key => `${encodeURIComponent(key)}="${encodeURIComponent(oauthParams[key])}"`)
+    .map(key => `${encodeURIComponent(key)}="${encodeURIComponent(oauthParams[key] ?? '')}"`)
     .join(', ');
 
   return `OAuth ${headerParts}`;
@@ -200,7 +200,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
         connectionId: connection.platformId,
         success: true,
         postId: tweetId,
-        postUrl: tweetId ? `https://twitter.com/i/web/status/${tweetId}` : undefined,
+        ...(tweetId ? { postUrl: `https://twitter.com/i/web/status/${tweetId}` } : {}),
         publishedAt: new Date(),
       };
     } catch (error) {
@@ -217,7 +217,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
    * Upload media to Twitter
    * Note: Twitter v1.1 media upload requires OAuth 1.0a authentication
    */
-  async uploadMedia(
+  override async uploadMedia(
     connection: IPlatformConnection,
     mediaUrl: string,
     mediaType: 'image' | 'video'
@@ -329,7 +329,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         const headers: Record<string, string> = hasOAuth1
-          ? { 'Authorization': generateOAuth1Header('GET', statusUrl.split('?')[0], connection) }
+          ? { 'Authorization': generateOAuth1Header('GET', statusUrl.split('?')[0] ?? '', connection) }
           : { 'Authorization': `Bearer ${connection.accessToken}` };
         
         const response = await fetch(statusUrl, { headers });
@@ -365,7 +365,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
   /**
    * Fetch tweet metrics
    */
-  async fetchMetrics(
+  override async fetchMetrics(
     connection: IPlatformConnection,
     postId: string
   ): Promise<PlatformMetrics> {
@@ -409,7 +409,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
   /**
    * Refresh OAuth 2.0 token
    */
-  async refreshToken(connection: PlatformConnection): Promise<{
+  override async refreshToken(connection: PlatformConnection): Promise<{
     accessToken: string;
     refreshToken?: string;
     expiresAt?: Date;
@@ -652,7 +652,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
       return {
         success: true,
         replyId,
-        replyUrl: replyId ? `https://twitter.com/i/web/status/${replyId}` : undefined,
+        ...(replyId ? { replyUrl: `https://twitter.com/i/web/status/${replyId}` } : {}),
       };
     } catch (error) {
       return {
@@ -794,7 +794,7 @@ class TwitterAdapter extends BasePlatformAdapter implements IPlatformAdapter {
   async checkConversationReplies(
     connection: IPlatformConnection,
     conversationId: string,
-    sinceDate?: Date,
+    _sinceDate?: Date,
     ourReplyId?: string
   ): Promise<{
     success: boolean;

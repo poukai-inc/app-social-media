@@ -282,7 +282,10 @@ export async function reviewMultipleContents(
     );
     
     batch.forEach((ctx, idx) => {
-      results.set(ctx.content.slice(0, 50), reviews[idx]);
+      const review = reviews[idx];
+      if (review) {
+        results.set(ctx.content.slice(0, 50), review);
+      }
     });
     
     // Small delay between batches to respect rate limits

@@ -252,14 +252,15 @@ export async function GET(request: Request) {
         if (!TOKEN_ALERT_PLATFORMS.includes(connection.platform as TokenAlertPlatform)) continue;
         const narrowedPlatform = connection.platform as TokenAlertPlatform;
 
+        const hoursUntilExpiry = getHoursUntilExpiry(connection.tokenExpiresAt);
         const result: TokenCheckResult = {
           pageId: page._id.toString(),
           pageName: page.name,
           platform: connection.platform,
-          platformUsername: connection.platformUsername,
+          ...(connection.platformUsername !== undefined && { platformUsername: connection.platformUsername }),
           status: 'ok',
-          expiresAt: connection.tokenExpiresAt,
-          hoursUntilExpiry: getHoursUntilExpiry(connection.tokenExpiresAt),
+          ...(connection.tokenExpiresAt !== undefined && { expiresAt: connection.tokenExpiresAt }),
+          ...(hoursUntilExpiry !== undefined && { hoursUntilExpiry }),
         };
         
         // Check if token has no expiry info (some tokens don't expire)
@@ -323,11 +324,11 @@ export async function GET(request: Request) {
             platform: narrowedPlatform, // safe: narrowed to TokenAlertPlatform above
             platformId: connection.platformId,
             alertType,
-            tokenExpiresAt: connection.tokenExpiresAt,
+            ...(connection.tokenExpiresAt !== undefined && { tokenExpiresAt: connection.tokenExpiresAt }),
             refreshAttempted: false,
             refreshSucceeded: false,
             emailSent,
-            hoursUntilExpiry: result.hoursUntilExpiry,
+            ...(result.hoursUntilExpiry !== undefined && { hoursUntilExpiry: result.hoursUntilExpiry }),
           });
           
           result.emailSent = emailSent;
@@ -367,11 +368,11 @@ export async function GET(request: Request) {
             platform: narrowedPlatform, // safe: narrowed to TokenAlertPlatform above
             platformId: connection.platformId,
             alertType,
-            tokenExpiresAt: connection.tokenExpiresAt,
+            ...(connection.tokenExpiresAt !== undefined && { tokenExpiresAt: connection.tokenExpiresAt }),
             refreshAttempted: true,
             refreshSucceeded: true,
             emailSent: false,
-            hoursUntilExpiry: result.hoursUntilExpiry,
+            ...(result.hoursUntilExpiry !== undefined && { hoursUntilExpiry: result.hoursUntilExpiry }),
           });
           
           result.status = 'refreshed';
@@ -379,7 +380,7 @@ export async function GET(request: Request) {
           log.info('Successfully refreshed token', { platform: connection.platform, pageName: page.name });
         } else {
           result.status = 'refresh_failed';
-          result.error = refreshResult.error;
+          if (refreshResult.error !== undefined) result.error = refreshResult.error;
           refreshFailed++;
           
           log.error('Failed to refresh token', { platform: connection.platform, error: refreshResult.error });
@@ -413,12 +414,12 @@ export async function GET(request: Request) {
               platform: narrowedPlatform, // safe: narrowed to TokenAlertPlatform above
               platformId: connection.platformId,
               alertType: 'refresh_failed',
-              tokenExpiresAt: connection.tokenExpiresAt,
+              ...(connection.tokenExpiresAt !== undefined && { tokenExpiresAt: connection.tokenExpiresAt }),
               refreshAttempted: true,
               refreshSucceeded: false,
-              refreshError: refreshResult.error,
+              ...(refreshResult.error !== undefined && { refreshError: refreshResult.error }),
               emailSent,
-              hoursUntilExpiry: result.hoursUntilExpiry,
+              ...(result.hoursUntilExpiry !== undefined && { hoursUntilExpiry: result.hoursUntilExpiry }),
             });
             
             result.emailSent = emailSent;

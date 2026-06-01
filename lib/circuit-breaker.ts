@@ -145,8 +145,8 @@ export class CircuitBreaker {
     }
     this.s.state = 'CLOSED';
     this.s.failureCount = 0;
-    this.s.lastError = undefined;
-    this.s.openTimeoutMs = undefined;
+    delete this.s.lastError;
+    delete this.s.openTimeoutMs;
   }
 
   /**
@@ -206,8 +206,8 @@ export class CircuitBreaker {
     this.s.failureCount = 0;
     this.s.lastFailureAt = 0;
     this.s.openedAt = 0;
-    this.s.lastError = undefined;
-    this.s.openTimeoutMs = undefined;
+    delete this.s.lastError;
+    delete this.s.openTimeoutMs;
     logger.info('circuit-breaker', 'Manually reset to CLOSED', { key: this.key });
   }
 }

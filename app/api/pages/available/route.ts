@@ -42,7 +42,7 @@ export async function GET(_request: NextRequest) {
         id: user.linkedinId,
         type: 'personal',
         name: user.name,
-        avatar: user.image,
+        ...(user.image !== undefined && { avatar: user.image }),
         alreadyAdded: existingLinkedinIds.has(user.linkedinId),
       });
     }
@@ -54,8 +54,8 @@ export async function GET(_request: NextRequest) {
           id: org.id,
           type: 'organization',
           name: org.name,
-          avatar: org.logoUrl,
-          vanityName: org.vanityName,
+          ...(org.logoUrl !== undefined && { avatar: org.logoUrl }),
+          ...(org.vanityName !== undefined && { vanityName: org.vanityName }),
           organizationId: org.id,
           alreadyAdded: existingLinkedinIds.has(org.id),
         });

@@ -10,11 +10,14 @@ describe('ai-client model selection (integration)', () => {
   it('skips an over-limit model and reflects seeded usage', async () => {
     // MODEL_PRIORITY[0] has a finite daily token limit — exhaust it.
     const exhausted = MODEL_PRIORITY[0];
-    const limit = GROQ_MODEL_LIMITS[exhausted].tokensPerDay as number;
+    expect(exhausted).toBeDefined();
+    const modelLimits = GROQ_MODEL_LIMITS[exhausted!];
+    expect(modelLimits).toBeDefined();
+    const limit = modelLimits!.tokensPerDay as number;
     const seeded = limit + 1000;
     await AIUsage.create({
       date: getDateKey(),
-      modelName: exhausted,
+      modelName: exhausted!, // exhausted is defined — asserted above
       tokensUsed: seeded,
       requestCount: 1,
     });
@@ -30,7 +33,9 @@ describe('ai-client model selection (integration)', () => {
     expect(selected.model).not.toBe(exhausted);
 
     const status = await getUsageStatus();
-    expect(status[exhausted].tokensUsed).toBe(seeded);
-    expect(status[exhausted].available).toBe(false);
+    const exhaustedStatus = status[exhausted!];
+    expect(exhaustedStatus).toBeDefined();
+    expect(exhaustedStatus!.tokensUsed).toBe(seeded);
+    expect(exhaustedStatus!.available).toBe(false);
   });
 });

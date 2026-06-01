@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
         if (postContent) {
           aiGeneratedComment = await generateComment({
             postContent,
-            postAuthor: authorForAI,
+            ...(authorForAI !== undefined && { postAuthor: authorForAI }),
             style: 'professional',
           });
         }
@@ -175,16 +175,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const authorToStore = authorForAI ?? postAuthor;
     const engagement = await EngagementTarget.create({
       userId: user._id,
       postUrl,
-      postUrn,
-      postAuthor: authorForAI || postAuthor,
-      postContent,
+      ...(postUrn !== undefined && { postUrn }),
+      ...(authorToStore !== undefined && { postAuthor: authorToStore }),
+      ...(postContent !== undefined && { postContent }),
       engagementType,
-      aiGeneratedComment,
+      ...(aiGeneratedComment !== undefined && { aiGeneratedComment }),
       status: 'pending',
-      scheduledFor: scheduledFor ? new Date(scheduledFor) : undefined,
+      ...(scheduledFor !== undefined && { scheduledFor: new Date(scheduledFor) }),
     });
 
     return NextResponse.json({
@@ -296,9 +297,10 @@ export async function PUT(request: NextRequest) {
       let aiGeneratedComment: string | undefined;
       if (postContent && (engagementType === 'comment' || engagementType === 'both')) {
         try {
+          const authorForComment = postAuthorName ?? postAuthor;
           aiGeneratedComment = await generateComment({
             postContent,
-            postAuthor: postAuthorName || postAuthor,
+            ...(authorForComment !== undefined && { postAuthor: authorForComment }),
             style: 'professional',
           });
         } catch {
@@ -307,14 +309,15 @@ export async function PUT(request: NextRequest) {
       }
 
       try {
+        const bulkAuthor = postAuthorName ?? postAuthor;
         await EngagementTarget.create({
           userId: user._id,
           postUrl,
-          postUrn,
-          postAuthor: postAuthorName || postAuthor,
-          postContent,
+          ...(postUrn !== undefined && { postUrn }),
+          ...(bulkAuthor !== undefined && { postAuthor: bulkAuthor }),
+          ...(postContent !== undefined && { postContent }),
           engagementType,
-          aiGeneratedComment,
+          ...(aiGeneratedComment !== undefined && { aiGeneratedComment }),
           status: 'pending',
         });
         results.push({ url: postUrl, success: true });

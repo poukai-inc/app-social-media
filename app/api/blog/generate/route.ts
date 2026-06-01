@@ -61,25 +61,30 @@ export async function POST(request: NextRequest) {
                           analysis.confidence < 0.7 ||
                           angle === 'opinionated_take';
 
-    // Create the post
-    const post = await Post.create({
+    // Build the approval token before creating the post so we can reference it after
+    const approvalTokenValue = needsApproval && autoSubmitForApproval ? generateApprovalToken() : null;
+
+    // Build the aiAnalysis sub-document without undefined optional fields
+    const aiAnalysisDoc: Record<string, unknown> = {
+      confidence: analysis.confidence,
+      riskLevel: analysis.riskLevel,
+      angle: analysis.angle,
+      estimatedEngagement: analysis.estimatedEngagement,
+    };
+    if (analysis.riskReasons !== undefined) aiAnalysisDoc.riskReasons = analysis.riskReasons;
+    if (analysis.suggestedTiming !== undefined) aiAnalysisDoc.suggestedTiming = analysis.suggestedTiming;
+    if (analysis.aiReasoning !== undefined) aiAnalysisDoc.aiReasoning = analysis.aiReasoning;
+
+    // Build the create payload without undefined optional fields
+    const createPayload: Record<string, unknown> = {
       userId: user._id,
       mode: 'blog_repurpose',
       content,
       generatedContent: content,
-      status: autoSubmitForApproval 
+      status: autoSubmitForApproval
         ? (needsApproval ? 'pending_approval' : 'scheduled')
         : 'draft',
-      scheduledFor: scheduledFor ? new Date(scheduledFor) : undefined,
-      aiAnalysis: {
-        confidence: analysis.confidence,
-        riskLevel: analysis.riskLevel,
-        riskReasons: analysis.riskReasons,
-        angle: analysis.angle,
-        estimatedEngagement: analysis.estimatedEngagement,
-        suggestedTiming: analysis.suggestedTiming,
-        aiReasoning: analysis.aiReasoning,
-      },
+      aiAnalysis: aiAnalysisDoc,
       requiresApproval: needsApproval,
       includesLink: includeLink,
       linkUrl,
@@ -89,28 +94,37 @@ export async function POST(request: NextRequest) {
         extractedInsights: [],
         generatedAngles: [angle],
       },
-      approval: needsApproval && autoSubmitForApproval ? {
+    };
+    if (scheduledFor !== undefined) createPayload.scheduledFor = new Date(scheduledFor);
+    if (approvalTokenValue !== null) {
+      createPayload.approval = {
         decision: 'pending',
-        approvalToken: generateApprovalToken(),
+        approvalToken: approvalTokenValue,
         tokenExpiresAt: getTokenExpiration(),
-      } : undefined,
-    });
+      };
+    }
+
+    // Create the post — cast because Mongoose's overloads don't resolve generics on
+    // plain-object payloads and return `never`; the document is correct at runtime.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const post = (await Post.create(createPayload)) as any;
 
     // Send approval email if needed
-    if (needsApproval && autoSubmitForApproval && post.approval?.approvalToken) {
-      await sendApprovalEmail(session.user.email, {
-        postId: post._id.toString(),
+    if (needsApproval && autoSubmitForApproval && approvalTokenValue) {
+      const emailPayload: Parameters<typeof sendApprovalEmail>[1] = {
+        postId: String(post._id),
         postContent: content,
         confidence: analysis.confidence,
         riskLevel: analysis.riskLevel,
-        riskReasons: analysis.riskReasons,
         angle: analysis.angle,
-        aiReasoning: analysis.aiReasoning,
-        scheduledFor: scheduledFor ? new Date(scheduledFor) : undefined,
         includesLink: includeLink,
         linkUrl,
-        approvalToken: post.approval.approvalToken,
-      });
+        approvalToken: approvalTokenValue,
+      };
+      if (analysis.riskReasons !== undefined) emailPayload.riskReasons = analysis.riskReasons;
+      if (analysis.aiReasoning !== undefined) emailPayload.aiReasoning = analysis.aiReasoning;
+      if (scheduledFor !== undefined) emailPayload.scheduledFor = new Date(scheduledFor);
+      await sendApprovalEmail(session.user.email, emailPayload);
     }
 
     return NextResponse.json({

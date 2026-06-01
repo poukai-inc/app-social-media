@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
+import type { ApprovalInfo } from '@/lib/models/Post';
 import Page from '@/lib/models/Page';
 import User from '@/lib/models/User';
 import { getOptimalPostingTime } from '@/lib/learning/platform-learning';
@@ -61,9 +62,11 @@ async function calculateScheduledTime(
   }
   
   // Fall back to preferred times from page settings
-  const preferredTimes = page.schedule?.preferredTimes || ['09:00'];
-  const preferredTime = preferredTimes[Math.floor(Math.random() * preferredTimes.length)];
-  const [hours, minutes] = preferredTime.split(':').map(Number);
+  const preferredTimes = page.schedule?.preferredTimes ?? ['09:00'];
+  const preferredTime = preferredTimes[Math.floor(Math.random() * preferredTimes.length)] ?? '09:00';
+  const timeParts = preferredTime.split(':').map(Number);
+  const hours = timeParts[0] ?? 9;
+  const minutes = timeParts[1] ?? 0;
   
   const scheduledFor = new Date(now);
   scheduledFor.setHours(hours, minutes, 0, 0);
@@ -154,9 +157,8 @@ export async function GET(
       post.approval.decidedBy = 'email';
     }
 
-    // Clear the token
-    post.approval.approvalToken = undefined;
-    post.approval.tokenExpiresAt = undefined;
+    // approvalToken and tokenExpiresAt are intentionally cleared here;
+    // reassigning the whole subdoc below omits them so Mongoose clears them.
 
     await post.save();
 
@@ -214,14 +216,22 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    // Build the updated approval object, omitting cleared fields so Mongoose unsets them
+    const buildApproval = (decision: 'approved' | 'rejected' | 'edited'): ApprovalInfo => ({
+      decision,
+      decidedAt: new Date(),
+      decidedBy: 'dashboard',
+      ...(feedbackNote !== undefined && { feedbackNote }),
+    });
+
     if (action === 'approve') {
       // Calculate optimal scheduled time using AI learning
       let scheduledFor: Date | undefined;
-      
+
       if (post.pageId) {
         const page = await Page.findById(post.pageId);
         if (page) {
-          const platform = post.targetPlatforms?.[0] || 'linkedin';
+          const platform = post.targetPlatforms?.[0] ?? 'linkedin';
           scheduledFor = await calculateScheduledTime(
             post.pageId.toString(),
             platform as PlatformType,
@@ -229,47 +239,23 @@ export async function POST(
           );
         }
       }
-      
+
       // If no page found, schedule for 1 hour from now
       if (!scheduledFor) {
         scheduledFor = new Date();
         scheduledFor.setHours(scheduledFor.getHours() + 1);
       }
-      
+
       post.status = 'scheduled';
       post.scheduledFor = scheduledFor;
-      post.approval = {
-        ...post.approval,
-        decision: 'approved',
-        decidedAt: new Date(),
-        decidedBy: 'dashboard',
-        feedbackNote,
-        approvalToken: undefined,
-        tokenExpiresAt: undefined,
-      };
+      post.approval = buildApproval('approved');
     } else if (action === 'reject') {
       post.status = 'rejected';
-      post.approval = {
-        ...post.approval,
-        decision: 'rejected',
-        decidedAt: new Date(),
-        decidedBy: 'dashboard',
-        feedbackNote,
-        approvalToken: undefined,
-        tokenExpiresAt: undefined,
-      };
+      post.approval = buildApproval('rejected');
     } else if (action === 'edit') {
       // Mark as edited, keep in draft for further editing
       post.status = 'draft';
-      post.approval = {
-        ...post.approval,
-        decision: 'edited',
-        decidedAt: new Date(),
-        decidedBy: 'dashboard',
-        feedbackNote,
-        approvalToken: undefined,
-        tokenExpiresAt: undefined,
-      };
+      post.approval = buildApproval('edited');
     }
 
     await post.save();

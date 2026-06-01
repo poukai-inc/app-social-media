@@ -388,7 +388,7 @@ async function getAvailableModel(preferFast: boolean = false, estimatedTokens: n
       usagePercent,
       hasCapacity: available,
       isUnlimited,
-      reason,
+      ...(reason !== undefined ? { reason } : {}),
     });
   }
   
@@ -408,8 +408,10 @@ async function getAvailableModel(preferFast: boolean = false, estimatedTokens: n
 
     // Otherwise pick lowest usage
     const sorted = [...modelStats].sort((a, b) => a.usagePercent - b.usagePercent);
-    log.info('Using lowest-usage model', { model: sorted[0].model, usagePercent: (sorted[0].usagePercent * 100).toFixed(1) });
-    return sorted[0].model;
+    const lowestUsage = sorted[0];
+    if (!lowestUsage) throw new Error('No models configured');
+    log.info('Using lowest-usage model', { model: lowestUsage.model, usagePercent: (lowestUsage.usagePercent * 100).toFixed(1) });
+    return lowestUsage.model;
   }
   
   // Split into limited and unlimited
@@ -420,20 +422,22 @@ async function getAvailableModel(preferFast: boolean = false, estimatedTokens: n
   if (limitedModels.length > 0) {
     // Sort by usage percentage (lowest first)
     limitedModels.sort((a, b) => a.usagePercent - b.usagePercent);
-    const selected = limitedModels[0];
-    
+    const selectedLimited = limitedModels[0];
+    if (!selectedLimited) throw new Error('No limited models available');
+
     // Only log if switching or notable
-    if (selected.usagePercent > 0.5) {
-      log.info('Selected model', { model: selected.model, usagePercent: (selected.usagePercent * 100).toFixed(1) });
+    if (selectedLimited.usagePercent > 0.5) {
+      log.info('Selected model', { model: selectedLimited.model, usagePercent: (selectedLimited.usagePercent * 100).toFixed(1) });
     }
 
-    return selected.model;
+    return selectedLimited.model;
   }
 
   // Only unlimited models available
-  const selected = unlimitedModels[0];
-  log.info('Using unlimited model (all limited models exhausted)', { model: selected.model });
-  return selected.model;
+  const selectedUnlimited = unlimitedModels[0];
+  if (!selectedUnlimited) throw new Error('No unlimited models available');
+  log.info('Using unlimited model (all limited models exhausted)', { model: selectedUnlimited.model });
+  return selectedUnlimited.model;
 }
 
 // ============================================
@@ -534,11 +538,13 @@ export async function createChatCompletion(
       return {
         content,
         model,
-        usage: response.usage ? {
-          promptTokens: response.usage.prompt_tokens,
-          completionTokens: response.usage.completion_tokens,
-          totalTokens: response.usage.total_tokens,
-        } : undefined,
+        ...(response.usage ? {
+          usage: {
+            promptTokens: response.usage.prompt_tokens,
+            completionTokens: response.usage.completion_tokens,
+            totalTokens: response.usage.total_tokens,
+          },
+        } : {}),
       };
     } catch (error) {
       lastError = error as Error;
@@ -746,19 +752,26 @@ export async function getSelectedModel(preferFast: boolean = false): Promise<{
   const available = modelDetails.filter(m => m.hasCapacity && m.tokensLimit !== null);
   const unlimited = modelDetails.filter(m => m.hasCapacity && m.tokensLimit === null);
   
-  let selected: typeof modelDetails[0];
+  type ModelDetail = (typeof modelDetails)[number];
+  let selected: ModelDetail;
   let reasoning: string;
-  
+
   if (available.length > 0) {
     available.sort((a, b) => a.usagePercent - b.usagePercent);
-    selected = available[0];
+    const first = available[0];
+    if (!first) throw new Error('No available models');
+    selected = first;
     reasoning = `Lowest usage among ${available.length} available limited models`;
   } else if (unlimited.length > 0) {
-    selected = unlimited[0];
+    const first = unlimited[0];
+    if (!first) throw new Error('No unlimited models');
+    selected = first;
     reasoning = 'All limited models exhausted, using unlimited model';
   } else {
     const sorted = [...modelDetails].sort((a, b) => a.usagePercent - b.usagePercent);
-    selected = sorted[0];
+    const first = sorted[0];
+    if (!first) throw new Error('No models configured');
+    selected = first;
     reasoning = 'All models at capacity, using least-used as fallback';
   }
   

@@ -31,7 +31,7 @@ const CronLockSchema = new mongoose.Schema<ICronLock>(
 );
 
 // Create model if it doesn't exist
-const CronLock = mongoose.models.CronLock || mongoose.model<ICronLock>('CronLock', CronLockSchema);
+const CronLock = (mongoose.models.CronLock || mongoose.model<ICronLock>('CronLock', CronLockSchema)) as mongoose.Model<ICronLock>;
 
 // Generate unique instance ID - stable per process (no Date.now() to avoid drift)
 const INSTANCE_ID = `${process.env.HOSTNAME || 'local'}-${process.pid}`;
@@ -74,13 +74,14 @@ export async function acquireLock(options: LockOptions): Promise<LockResult> {
           expiresAt: { $lt: now }, // Only match if expired
         },
         {
-          _id: lockId,
-          holder: INSTANCE_ID,
-          acquiredAt: now,
-          expiresAt,
-          metadata: { 
-            attemptedAt: now,
-            environment: process.env.NODE_ENV,
+          $set: {
+            holder: INSTANCE_ID,
+            acquiredAt: now,
+            expiresAt,
+            metadata: {
+              attemptedAt: now,
+              environment: process.env.NODE_ENV,
+            },
           },
         },
         { upsert: false, new: true }
@@ -108,10 +109,10 @@ export async function acquireLock(options: LockOptions): Promise<LockResult> {
       } catch (createError: unknown) {
         // Duplicate key error (11000) means another process got the lock
         if ((createError as { code?: number }).code === 11000) {
-          const existingLock = await CronLock.findById(lockId);
-          return { 
-            acquired: false, 
-            holder: existingLock?.holder,
+          const existingLock = await CronLock.findOne({ _id: lockId });
+          return {
+            acquired: false,
+            ...(existingLock?.holder !== undefined ? { holder: existingLock.holder } : {}),
             error: `Lock held by ${existingLock?.holder} (expires: ${existingLock?.expiresAt?.toISOString()})`,
           };
         }
@@ -223,8 +224,8 @@ export async function isLocked(lockName: string): Promise<{ locked: boolean; hol
   const lockId = lockName.startsWith('cron:') ? lockName : `cron:${lockName}`;
   
   try {
-    const lock = await CronLock.findById(lockId);
-    
+    const lock = await CronLock.findOne({ _id: lockId });
+
     if (!lock || lock.expiresAt < new Date()) {
       return { locked: false };
     }

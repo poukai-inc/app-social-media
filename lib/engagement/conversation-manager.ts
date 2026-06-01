@@ -218,7 +218,7 @@ Return ONLY a single decimal number between 0 and 1 (example: 0.8). No text, no 
     // Try to extract a number from the response
     const content = result.content || '';
     const numberMatch = content.match(/(\d+\.?\d*)/);
-    const score = numberMatch ? parseFloat(numberMatch[1]) : NaN;
+    const score = numberMatch?.[1] !== undefined ? parseFloat(numberMatch[1]) : NaN;
 
     if (isNaN(score)) {
       log.warn('Could not parse quality score, defaulting to 0.7');
@@ -275,7 +275,7 @@ function usageKey(pageId: string, date: string): string {
 }
 
 async function checkDailyLimits(pageId: string): Promise<{ allowed: boolean; reason?: string }> {
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0] ?? new Date().toISOString().slice(0, 10);
   const key = usageKey(pageId, today);
 
   // Check cache first
@@ -355,7 +355,7 @@ async function checkDailyLimits(pageId: string): Promise<{ allowed: boolean; rea
 }
 
 function incrementDailyUsage(pageId: string, sent: boolean = true) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0] ?? new Date().toISOString().slice(0, 10);
   const entry = dailyUsageByKey.get(usageKey(pageId, today));
   // No-op until checkDailyLimits has seeded this page's entry from the DB.
   if (entry) {
@@ -434,7 +434,7 @@ Context: This is a professional social media conversation where we initially eng
 
     // Remove markdown code blocks if present
     const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (jsonMatch) {
+    if (jsonMatch?.[1] !== undefined) {
       jsonStr = jsonMatch[1].trim();
     }
 
@@ -948,6 +948,7 @@ export async function monitorAndRespondToConversations(
 
         // Process the most recent reply
         const latestReply = newRepliesFromOthers[newRepliesFromOthers.length - 1];
+        if (!latestReply) continue; // guarded above by length === 0 check, but narrows type
 
         // Update conversation history with new messages
         const newMessages = newRepliesFromOthers.map(reply => ({
@@ -1009,7 +1010,7 @@ export async function monitorAndRespondToConversations(
         const response = await generateConversationResponse(
           {
             content: engagement.targetPost.content,
-            authorUsername: engagement.targetUser.username,
+            ...(engagement.targetUser.username !== undefined ? { authorUsername: engagement.targetUser.username } : {}),
           },
           conversationHistory,
           analysis.suggestedTone,

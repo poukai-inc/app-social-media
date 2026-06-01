@@ -73,7 +73,8 @@ export async function POST(
           style: body.style || suggestion.style,
         });
         suggestion.suggestedComment = newComment;
-        suggestion.editedComment = undefined;
+        // Clear editedComment by deleting the field (exactOptionalPropertyTypes forbids `= undefined`)
+        delete suggestion.editedComment;
         suggestion.status = 'pending';
         break;
     }
@@ -92,7 +93,7 @@ export async function POST(
 
 // GET /api/comments/suggestions/[id] - Get a single suggestion
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -127,7 +128,7 @@ export async function GET(
 
 // DELETE /api/comments/suggestions/[id] - Delete a suggestion
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

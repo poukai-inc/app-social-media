@@ -10,7 +10,7 @@ const log = logger.child('api:posts:[id]:performance');
 
 // POST /api/posts/[id]/performance - Update post performance metrics
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -89,7 +89,7 @@ export async function POST(
 
 // GET /api/posts/[id]/performance - Get post performance
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

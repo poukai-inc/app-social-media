@@ -139,8 +139,8 @@ export async function POST() {
           organizations.push({
             id: orgId,
             name: orgDetails.localizedName,
-            vanityName: orgDetails.vanityName,
-            logoUrl: orgDetails.logoV2?.original,
+            ...(orgDetails.vanityName !== undefined && { vanityName: orgDetails.vanityName }),
+            ...(orgDetails.logoV2?.original !== undefined && { logoUrl: orgDetails.logoV2.original }),
             role: element.role,
           });
         }

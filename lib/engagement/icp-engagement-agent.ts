@@ -188,8 +188,9 @@ export async function runICPEngagementAgent(
     // 4. Collect candidates from all queries
     const allCandidates: EngagementCandidate[] = [];
 
-    for (let qi = 0; qi < queriesToRun.length; qi++) {
-      const searchQuery = queriesToRun[qi];
+    let qi = -1;
+    for (const searchQuery of queriesToRun) {
+      qi++;
       try {
         // Rate limit: Twitter Free tier allows 1 search/15s, Basic allows 60/15min
         // Add a delay between queries to stay within rate limits
@@ -388,8 +389,8 @@ export async function runICPEngagementAgent(
               platform: 'twitter',
               tweet: candidate.tweet,
               reply,
-              replyId: replyResult.replyId,
-              replyUrl: replyResult.replyUrl,
+              ...(replyResult.replyId !== undefined ? { replyId: replyResult.replyId } : {}),
+              ...(replyResult.replyUrl !== undefined ? { replyUrl: replyResult.replyUrl } : {}),
               icpProfile,
               relevanceScore: candidate.relevanceScore,
             });
@@ -417,8 +418,8 @@ export async function runICPEngagementAgent(
             engagements.push({
               tweet: candidate.tweet,
               reply,
-              replyId: replyResult.replyId,
-              replyUrl: replyResult.replyUrl,
+              ...(replyResult.replyId !== undefined ? { replyId: replyResult.replyId } : {}),
+              ...(replyResult.replyUrl !== undefined ? { replyUrl: replyResult.replyUrl } : {}),
               success: true,
               engagedAt: new Date(),
             });
@@ -437,7 +438,7 @@ export async function runICPEngagementAgent(
               tweet: candidate.tweet,
               reply,
               success: false,
-              error: replyResult.error,
+              ...(replyResult.error !== undefined ? { error: replyResult.error } : {}),
               engagedAt: new Date(),
             });
           }
@@ -726,7 +727,9 @@ async function generateReply(
     ['DOLLARIZE',         'Frame your insight in their own financial or business terms — translate the pain into time lost, revenue missed, or budget wasted'],
   ];
 
-  const [formulaLabel, formulaApproach] = replyFormulas[Math.floor(Math.random() * replyFormulas.length)];
+  const selectedFormula = replyFormulas[Math.floor(Math.random() * replyFormulas.length)] ?? replyFormulas[0];
+  if (!selectedFormula) return null;
+  const [formulaLabel, formulaApproach] = selectedFormula;
 
   // Build psychographic context block for the system prompt
   const psychoContext = [
@@ -930,15 +933,15 @@ async function saveEngagement(data: {
       },
       targetUser: {
         id: data.tweet.authorId,
-        username: data.tweet.author?.username,
-        name: data.tweet.author?.name,
-        bio: data.tweet.author?.description,
-        followersCount: data.tweet.author?.followersCount,
+        ...(data.tweet.author?.username !== undefined ? { username: data.tweet.author.username } : {}),
+        ...(data.tweet.author?.name !== undefined ? { name: data.tweet.author.name } : {}),
+        ...(data.tweet.author?.description !== undefined ? { bio: data.tweet.author.description } : {}),
+        ...(data.tweet.author?.followersCount !== undefined ? { followersCount: data.tweet.author.followersCount } : {}),
       },
       ourReply: {
-        id: data.replyId,
+        ...(data.replyId !== undefined ? { id: data.replyId } : {}),
         content: data.reply,
-        url: data.replyUrl,
+        ...(data.replyUrl !== undefined ? { url: data.replyUrl } : {}),
       },
       icpMatch: {
         relevanceScore: data.relevanceScore,

@@ -11,12 +11,12 @@ const log = logger.child('api:posts:[id]:retry');
 
 // POST /api/posts/[id]/retry - Retry publishing a failed post
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -55,8 +55,8 @@ export async function POST(
     if (result.success) {
       post.status = 'published';
       post.publishedAt = new Date();
-      post.linkedinPostId = result.postId;
-      post.error = undefined;
+      if (result.postId !== undefined) post.linkedinPostId = result.postId;
+      post.set('error', undefined);
       await post.save();
 
       return NextResponse.json({
@@ -66,7 +66,7 @@ export async function POST(
       });
     } else {
       post.status = 'failed';
-      post.error = result.error;
+      if (result.error !== undefined) post.error = result.error;
       await post.save();
 
       return NextResponse.json({

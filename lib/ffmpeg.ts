@@ -64,8 +64,10 @@ export async function combineVideos(
   try {
     // Write all input buffers to temp files
     for (let i = 0; i < videos.length; i++) {
+      const video = videos[i];
+      if (!video) continue;
       const inputPath = join(tmpdir(), `input-${tempId}-${i}`);
-      await writeFile(inputPath, videos[i].buffer);
+      await writeFile(inputPath, video.buffer);
       inputPaths.push(inputPath);
     }
     
@@ -98,7 +100,8 @@ export async function combineVideos(
     // Build input args with stream_loop for shorter videos
     // -stream_loop -1 loops infinitely, we'll cut with -t at the end
     const inputArgs = inputPaths.map((p, i) => {
-      const needsLoop = metadataList[i].duration < maxDuration;
+      const meta = metadataList[i];
+      const needsLoop = meta !== undefined && meta.duration < maxDuration;
       if (needsLoop) {
         return `-stream_loop -1 -i "${p}"`;
       }

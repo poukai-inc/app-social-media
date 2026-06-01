@@ -67,11 +67,11 @@ export async function POST(
       platformId: body.platformId,
       platformUsername: body.platformUsername,
       accessToken: body.accessToken,
-      refreshToken: body.refreshToken,
-      tokenExpiresAt: body.tokenExpiresAt ? new Date(body.tokenExpiresAt) : undefined,
+      ...(body.refreshToken !== undefined && { refreshToken: body.refreshToken }),
+      ...(body.tokenExpiresAt !== undefined && { tokenExpiresAt: new Date(body.tokenExpiresAt) }),
       isActive: true,
       connectedAt: new Date(),
-      metadata: body.metadata,
+      ...(body.metadata !== undefined && { metadata: body.metadata }),
     };
 
     // Check if connection for this platform already exists
@@ -212,9 +212,14 @@ export async function PATCH(
       );
     }
 
+    const updatedConn = page.connections[connectionIndex];
+    if (!updatedConn) {
+      return NextResponse.json({ error: `No ${body.platform} connection found` }, { status: 404 });
+    }
+
     // Update the connection fields
     if (body.isActive !== undefined) {
-      page.connections[connectionIndex].isActive = body.isActive;
+      updatedConn.isActive = body.isActive;
     }
 
     await page.save();
@@ -223,9 +228,9 @@ export async function PATCH(
       success: true,
       message: `${body.platform} connection updated`,
       connection: {
-        platform: page.connections[connectionIndex].platform,
-        platformUsername: page.connections[connectionIndex].platformUsername,
-        isActive: page.connections[connectionIndex].isActive,
+        platform: updatedConn.platform,
+        platformUsername: updatedConn.platformUsername,
+        isActive: updatedConn.isActive,
       },
     });
   } catch (error) {
@@ -239,7 +244,7 @@ export async function PATCH(
 
 // GET - Get all connections for a page
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

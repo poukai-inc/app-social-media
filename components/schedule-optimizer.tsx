@@ -223,7 +223,7 @@ export default function ScheduleOptimizer({ pageId }: ScheduleOptimizerProps) {
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <div className={`w-8 h-8 ${PLATFORM_COLORS[platform.platform]} rounded flex items-center justify-center text-white text-sm`}>
-                      {platform.platform[0].toUpperCase()}
+                      {platform.platform.charAt(0).toUpperCase()}
                     </div>
                     <span className="font-medium text-white">
                       {PLATFORM_NAMES[platform.platform]}
@@ -287,7 +287,7 @@ export default function ScheduleOptimizer({ pageId }: ScheduleOptimizerProps) {
                         className={`w-6 h-6 ${PLATFORM_COLORS[p]} rounded text-xs flex items-center justify-center text-white`}
                         title={PLATFORM_NAMES[p]}
                       >
-                        {p[0].toUpperCase()}
+                        {p.charAt(0).toUpperCase()}
                       </div>
                     ))}
                   </div>
@@ -321,7 +321,7 @@ export default function ScheduleOptimizer({ pageId }: ScheduleOptimizerProps) {
                                   className={`w-4 h-4 ${PLATFORM_COLORS[p]} rounded text-[8px] flex items-center justify-center text-white`}
                                   title={PLATFORM_NAMES[p]}
                                 >
-                                  {p[0].toUpperCase()}
+                                  {p.charAt(0).toUpperCase()}
                                 </div>
                               ))}
                             </div>

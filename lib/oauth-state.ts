@@ -50,7 +50,9 @@ export function signState<T extends Record<string, unknown>>(payload: T): string
 export function verifyState<T extends Record<string, unknown>>(state: string): T | null {
   const parts = state.split('.');
   if (parts.length !== 2) return null;
-  const [encoded, signature] = parts;
+  const encoded = parts[0];
+  const signature = parts[1];
+  if (encoded === undefined || signature === undefined) return null;
   const expected = hmac(encoded);
   // Constant-time compare
   const a = Buffer.from(signature);

@@ -97,7 +97,7 @@ export async function testConnection(
       return {
         success: true,
         message: `Connected successfully in ${Date.now() - startTime}ms`,
-        serverVersion: version,
+        ...(version !== undefined ? { serverVersion: version } : {}),
         database: database || 'N/A',
       };
     } else if (type === 'mongodb') {
@@ -289,8 +289,10 @@ export async function getTables(
       await connection.end();
       
       // Extract table names from result
-      const tables = (rows as Record<string, string>[]).map(row => Object.values(row)[0]);
-      
+      const tables = (rows as Record<string, string>[])
+        .map(row => Object.values(row)[0])
+        .filter((t): t is string => t !== undefined);
+
       return { success: true, tables };
     } else if (type === 'postgresql') {
       const connection = await createMySQLConnection(connectionString);
@@ -451,8 +453,8 @@ export async function fetchContentForGeneration(
         id: idField ? String(item[idField]) : String(Math.random()),
         title: titleField ? String(item[titleField] || '') : '',
         body: bodyContent,
-        date: dateField && item[dateField] ? new Date(item[dateField] as string) : undefined,
-        category: mapping.categoryField ? String(item[mapping.categoryField] || '') : undefined,
+        ...(dateField && item[dateField] ? { date: new Date(item[dateField] as string) } : {}),
+        ...(mapping.categoryField ? { category: String(item[mapping.categoryField] || '') } : {}),
         metadata: item,
       };
     });

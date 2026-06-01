@@ -133,10 +133,10 @@ export async function GET(request: NextRequest) {
             reactions: metrics.reactions || 0,
             comments: metrics.comments || 0,
             shares: metrics.shares || 0,
-            clicks: metrics.clicks,
+            ...(metrics.clicks !== undefined && { clicks: metrics.clicks }),
             engagementRate,
             contentType,
-            contentLength: post.content?.length,
+            ...(post.content?.length !== undefined && { contentLength: post.content.length }),
           });
         }
       }
@@ -157,10 +157,10 @@ export async function GET(request: NextRequest) {
           reactions: metrics.reactions || 0,
           comments: metrics.comments || 0,
           shares: metrics.shares || 0,
-          clicks: metrics.clicks,
+          ...(metrics.clicks !== undefined && { clicks: metrics.clicks }),
           engagementRate,
           contentType,
-          contentLength: post.content?.length,
+          ...(post.content?.length !== undefined && { contentLength: post.content.length }),
         });
       }
     }
@@ -267,10 +267,11 @@ export async function POST(request: NextRequest) {
         // Convert "9:00 AM" to "09:00"
         const match = p.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
         if (match) {
-          let hour = parseInt(match[1]);
-          if (match[3].toUpperCase() === 'PM' && hour !== 12) hour += 12;
-          if (match[3].toUpperCase() === 'AM' && hour === 12) hour = 0;
-          timeSet.add(`${hour.toString().padStart(2, '0')}:${match[2]}`);
+          const [, hourStr = '0', minuteStr = '00', ampm = 'AM'] = match;
+          let hour = parseInt(hourStr);
+          if (ampm.toUpperCase() === 'PM' && hour !== 12) hour += 12;
+          if (ampm.toUpperCase() === 'AM' && hour === 12) hour = 0;
+          timeSet.add(`${hour.toString().padStart(2, '0')}:${minuteStr}`);
         } else {
           timeSet.add(p.time);
         }

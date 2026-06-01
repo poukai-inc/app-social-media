@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
         },
         3
       );
-      suggestedComment = comments[0];
+      suggestedComment = comments[0] ?? '';
       alternativeComments = comments.slice(1);
     } else {
       suggestedComment = await generateComment({
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
       linkedinPostUrl,
       linkedinPostUrn,
       suggestedComment,
-      alternativeComments,
+      ...(alternativeComments !== undefined && { alternativeComments }),
       relevanceScore,
       engagementPotential: relevanceScore >= 0.7 ? 'high' : relevanceScore >= 0.4 ? 'medium' : 'low',
       style,

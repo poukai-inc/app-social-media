@@ -144,7 +144,7 @@ export default function SchedulePage() {
 
         {/* Schedule Optimizer */}
         {!isLoading && pages.length > 0 && (
-          <ScheduleOptimizer pageId={selectedPageId || undefined} />
+          <ScheduleOptimizer {...(selectedPageId ? { pageId: selectedPageId } : {})} />
         )}
 
         {/* Tips Section */}

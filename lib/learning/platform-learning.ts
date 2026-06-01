@@ -130,13 +130,14 @@ export async function getPlatformInsights(
         (p: PlatformEngagement) => p.platform === platform
       );
       if (platformEngagement) {
-      platformData.push({
-        ...platformEngagement,
-        content: (history.postId as unknown as { content?: string })?.content,
-        postId: history.postId.toString(),
-      });
+        const rawContent = (history.postId as unknown as { content?: string })?.content;
+        platformData.push({
+          ...platformEngagement,
+          ...(rawContent !== undefined ? { content: rawContent } : {}),
+          postId: history.postId.toString(),
+        });
+      }
     }
-  }
 
   if (platformData.length === 0) {
     return getEmptyInsights(platform);
@@ -176,7 +177,7 @@ export async function getPlatformInsights(
   const bestDays = Array.from(byDay.entries())
     .map(([day, stats]) => ({
       day,
-      dayName: DAY_NAMES[day],
+      dayName: DAY_NAMES[day] ?? '',
       avgEngagement: stats.total / stats.count,
       postCount: stats.count,
     }))
@@ -195,7 +196,9 @@ export async function getPlatformInsights(
   // Optimal slots (day + hour combos)
   const optimalSlots = Array.from(byDayHour.entries())
     .map(([key, stats]) => {
-      const [day, hour] = key.split('-').map(Number);
+      const parts = key.split('-').map(Number);
+      const day = parts[0] ?? 0;
+      const hour = parts[1] ?? 0;
       return {
         day,
         hour,
@@ -303,8 +306,8 @@ export async function getPlatformInsights(
     .slice(0, 5)
     .map(p => ({
       postId: p.postId,
-      content: p.content,
-      angle: histories.find(h => h.postId.toString() === p.postId)?.contentMetadata.angle || 'unknown',
+      ...(p.content !== undefined ? { content: p.content } : {}),
+      angle: histories.find(h => h.postId.toString() === p.postId)?.contentMetadata.angle ?? 'unknown',
       performanceScore: p.performanceScore,
       metrics: {
         impressions: p.currentMetrics.impressions,
@@ -383,10 +386,12 @@ export async function getOptimalPostingTime(
   }
 
   // Return the best slot
+  const bestSlot = slots[0];
+  if (!bestSlot) return null;
   return {
-    day: slots[0].day,
-    hour: slots[0].hour,
-    confidence: slots[0].confidence,
+    day: bestSlot.day,
+    hour: bestSlot.hour,
+    confidence: bestSlot.confidence,
   };
 }
 
@@ -491,14 +496,18 @@ export async function comparePlatformPerformance(
     for (let j = i + 1; j < allInsights.length; j++) {
       const insight1 = allInsights[i];
       const insight2 = allInsights[j];
-      
+
+      if (!insight1 || !insight2) continue;
+
       if (insight1.bestHours.length > 0 && insight2.bestHours.length > 0) {
         const overlap = insight1.bestHours.some(h1 =>
           insight2.bestHours.some(h2 => Math.abs(h1.hour - h2.hour) <= 1)
         );
         if (overlap) {
-          platformStats[i].bestTimingOverlap = true;
-          platformStats[j].bestTimingOverlap = true;
+          const stat1 = platformStats[i];
+          const stat2 = platformStats[j];
+          if (stat1) stat1.bestTimingOverlap = true;
+          if (stat2) stat2.bestTimingOverlap = true;
         }
       }
     }

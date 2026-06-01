@@ -44,7 +44,9 @@ describe('GROQ_MODEL_LIMITS', () => {
   });
 
   it('local ollama model is unlimited (tokensPerDay null)', () => {
-    expect(GROQ_MODEL_LIMITS['qwen2.5:7b'].tokensPerDay).toBeNull();
+    const limits = GROQ_MODEL_LIMITS['qwen2.5:7b'];
+    expect(limits).toBeDefined();
+    expect(limits!.tokensPerDay).toBeNull();
   });
 });
 

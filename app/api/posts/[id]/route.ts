@@ -12,7 +12,7 @@ const log = logger.child('api:posts:[id]');
 
 // GET /api/posts/[id] - Get a specific post
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -90,10 +90,14 @@ export async function PUT(
       
       post.content = content || post.content;
       post.status = result.success ? 'published' : 'failed';
-      post.publishedAt = result.success ? new Date() : undefined;
-      post.linkedinPostId = result.postId;
-      post.error = result.error;
-      post.scheduledFor = undefined;
+      if (result.success) {
+        post.publishedAt = new Date();
+      } else {
+        post.set('publishedAt', undefined);
+      }
+      if (result.postId !== undefined) post.linkedinPostId = result.postId;
+      if (result.error !== undefined) post.error = result.error;
+      post.set('scheduledFor', undefined);
       
       await post.save();
       return NextResponse.json(post);
@@ -130,7 +134,7 @@ export async function PUT(
         post.status = 'scheduled';
       }
     } else if (scheduledFor === null) {
-      post.scheduledFor = undefined;
+      post.set('scheduledFor', undefined);
       // Only change to draft if it's currently scheduled
       if (post.status === 'scheduled') {
         post.status = 'draft';
@@ -147,7 +151,7 @@ export async function PUT(
 
 // DELETE /api/posts/[id] - Delete a post
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
