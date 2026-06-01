@@ -8,6 +8,13 @@
       "when": 1780276035395,
       "tag": "0000_jittery_dazzler",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780276682004,
+      "tag": "0001_rls_policies",
+      "breakpoints": true
     }
   ]
 }
