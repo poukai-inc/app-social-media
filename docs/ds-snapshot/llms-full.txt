@@ -186,11 +186,14 @@ Default `size` on `<Icon>` is `"sm"` (16px). Lucide's SVG grid is designed for 1
 - Aspect ratio locked at ~4.08:1 (viewBox 0 0 1184 290). Set only `height`; width is auto.
 - Do NOT render below height={40}. Do NOT add a second Wordmark inside SiteShell's children. Do NOT use as a watermark. Do NOT set label="" (it is the a11y name).
 - Path geometry changes require Arian's approval (ADR-0011).
+- White-label: pass `src` (a logo URL) to render `<img src alt={label} height>` instead of the bundled POUKAI mark. The image does NOT inherit currentColor (no auto dark-mode inversion — swap `src` per theme at the call site). `javascript:`/`data:` schemes are blocked and fall back to the bundled mark. `label` is required as the `<img>` alt when `src` is set.
 
 ### StatusBadge
-- Maximum 1 instance per page. Encodes consultant/service availability — not system status.
-- status="available" triggers pulse animation automatically. Do NOT add additional CSS animation.
-- prefers-reduced-motion disables the pulse at the CSS level — do NOT force-animate via JS or inline styles.
+- `tone` is the primary API: "neutral" | "info" | "success" | "warning" | "danger" | "accent" — a generic colored-dot status indicator. Multiple instances per page are allowed when using `tone` (e.g. list/table rows). Map your domain statuses (draft/scheduled/published/failed/…) onto these tones; do NOT fork the atom for app-specific statuses.
+- `status` ("available" | "idle" | "closed") is the legacy availability API and still works unchanged: it drives `data-status` with the original three colors (available blue+halo+pulse, idle muted, closed near-black). The "max 1 per page, availability only" rule applies to this pulsing availability use, not to generic `tone` badges.
+- `tone` (drives `data-tone`) takes precedence over `status` when both are set — the legacy `status` path is skipped. `pulse` is opt-in (default false); legacy `status="available"` enables it automatically. Only accent/available carry the halo.
+- info shares the neutral dot color in this pass (text carries the distinction); no `--info` token yet.
+- prefers-reduced-motion disables the pulse at the CSS level — do NOT force-animate via JS or inline styles. Do NOT add additional CSS animation.
 - Children: single short clause, 10 words or fewer.
 
 ### Button

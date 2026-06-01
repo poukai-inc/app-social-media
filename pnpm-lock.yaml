@@ -18,8 +18,8 @@ importers:
         specifier: ^3.971.0
         version: 3.1051.0(@aws-sdk/client-s3@3.1051.0)
       '@poukai-inc/ui':
-        specifier: 2.13.0
-        version: 2.13.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(cmdk@1.1.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(lucide-react@0.577.0(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: 2.14.0
+        version: 2.14.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(cmdk@1.1.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(lucide-react@0.577.0(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@radix-ui/react-checkbox':
         specifier: ^1.3.3
         version: 1.3.3(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -801,8 +801,8 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@poukai-inc/ui@2.13.0':
-    resolution: {integrity: sha512-ODTCaX1eDpryaIOVpzG9BJtATgiCea55Lk6TecBS7pb0U2UKKYnOxyhmeLMh7xcHqyGlng1AfWjIi+btyOgMsg==, tarball: https://npm.pkg.github.com/download/@poukai-inc/ui/2.13.0/2f813b6440eab8d8d3f8ad56ab510a6502d28997}
+  '@poukai-inc/ui@2.14.0':
+    resolution: {integrity: sha512-do6qK+q6h8BlXNIprNOGkHS67J1X8Oq5ek3RoIQpV9MjsE/AUsSKTI1/pZCzfAd3MDqpiwcvaZnlzVD5Gs3l2A==, tarball: https://npm.pkg.github.com/download/@poukai-inc/ui/2.14.0/4ed1d1e3d4b598cf6acf7b9fc6ede5e7f3bbe974}
     engines: {node: '>=20'}
     peerDependencies:
       cmdk: '>=1.0.0'
@@ -4603,7 +4603,7 @@ snapshots:
     dependencies:
       playwright: 1.60.0
 
-  '@poukai-inc/ui@2.13.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(cmdk@1.1.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(lucide-react@0.577.0(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+  '@poukai-inc/ui@2.14.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(cmdk@1.1.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(lucide-react@0.577.0(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
       '@radix-ui/react-accordion': 1.2.12(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@radix-ui/react-checkbox': 1.3.3(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
