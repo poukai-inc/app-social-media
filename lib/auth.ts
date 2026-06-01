@@ -1,10 +1,21 @@
 import NextAuth from 'next-auth';
 import LinkedIn from 'next-auth/providers/linkedin';
+import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import { db } from '@/db';
+import { users, accounts, sessions, verificationTokens } from '@/db/schema';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('auth');
+
+/**
+ * Drizzle/Postgres adapter for user+account persistence. OFF by default — set
+ * AUTH_ADAPTER=drizzle to enable during the cutover (see docs/cutover.md, #26).
+ * Session strategy stays JWT either way, so the existing stateless-session
+ * flow + the jwt/session callbacks are unchanged.
+ */
+const useDrizzleAdapter = process.env.AUTH_ADAPTER === 'drizzle';
 
 export const { handlers, signIn, signOut, auth } = NextAuth(() => {
   // Base scopes for personal posting
@@ -18,6 +29,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth(() => {
   return {
     ...(process.env.AUTH_SECRET !== undefined ? { secret: process.env.AUTH_SECRET } : {}),
     trustHost: true,
+    // Stateless JWT sessions (current behavior). Kept explicit so enabling the
+    // adapter below does NOT switch NextAuth to database sessions.
+    session: { strategy: 'jwt' as const },
+    ...(useDrizzleAdapter
+      ? {
+          adapter: DrizzleAdapter(db, {
+            usersTable: users,
+            accountsTable: accounts,
+            sessionsTable: sessions,
+            verificationTokensTable: verificationTokens,
+          }),
+        }
+      : {}),
     providers: [
       LinkedIn({
         clientId: process.env.LINKEDIN_CLIENT_ID!,

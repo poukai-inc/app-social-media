@@ -88,7 +88,7 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 23 | `[x]` | Repository layer: every query takes `orgId` first arg | `db/queries/*.ts` (new), `app/api/**` |
 | 24 | `[x]` | Mongo→Postgres migration script (idempotent) | `scripts/migrate-mongo-to-postgres.ts` (new) |
 | 25 | `[x]` | Dual-write window adapter + cutover plan | `lib/db/dual-write.ts` (temporary), `docs/cutover.md` |
-| 26 | `[ ]` | NextAuth `@auth/drizzle-adapter`; remove Mongo session storage | `lib/auth.ts` |
+| 26 | `[~]` | NextAuth `@auth/drizzle-adapter` — _wired + build-verified, **gated behind `AUTH_ADAPTER=drizzle` (default off)**; sessions stay JWT (explicit), so the current login path is byte-for-byte unchanged. Re-scope: there is NO Mongo session storage to remove (current strategy is stateless JWT + a manual Mongo user upsert in the signIn callback). **Remaining (live, staged): enable the flag in staging, verify a real LinkedIn OAuth round-trip + user/account persistence to Postgres, then make it default.**_ ; remove Mongo session storage | `lib/auth.ts` |
 | 27 | `[ ]` | S3 key prefixing by `org_<uuid>` | `lib/s3.ts` |
 | 28 | `[ ]` | Per-org `AIUsage` (add `organization_id`) | `db/schema.ts`, `lib/ai-client.ts` |
 | 29 | `[ ]` | Per-org OAuth credentials (BYO LinkedIn/Twitter/Facebook apps); encrypted at rest | `db/schema.ts`, `app/api/auth/**`, `app/dashboard/pages/[id]/settings/page.tsx` |
