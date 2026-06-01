@@ -27,6 +27,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@auth/drizzle-adapter": "^1.11.2",
     "@aws-sdk/client-s3": "^3.971.0",
     "@aws-sdk/lib-storage": "^3.971.0",
     "@poukai-inc/ui": "2.14.0",
