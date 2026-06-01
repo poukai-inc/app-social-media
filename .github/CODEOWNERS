@@ -1,0 +1,15 @@
+# Code owners — auto-requested for review on matching paths. BACKLOG #89.
+# Default owner for everything.
+*                       @ArianZargaran
+
+# Database / migration foundation (high-blast-radius).
+/db/                    @ArianZargaran
+/scripts/migrate-mongo-to-postgres.ts  @ArianZargaran
+
+# Auth + security-sensitive surfaces.
+/lib/auth.ts            @ArianZargaran
+/lib/oauth-state.ts     @ArianZargaran
+/app/api/auth/          @ArianZargaran
+
+# CI / release config.
+/.github/               @ArianZargaran

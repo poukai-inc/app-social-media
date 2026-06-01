@@ -56,14 +56,23 @@ export async function GET(request: NextRequest) {
     const allEnvOk = envStatus.AI_CONFIGURED && envStatus.MONGODB_URI && 
                      envStatus.NEXTAUTH_SECRET && envStatus.LINKEDIN_CLIENT_ID;
 
+    // Object storage (S3 / R2) — config presence only, no network probe. (#70)
+    const storageConfigured =
+      !!process.env.S3_ENDPOINT || !!process.env.S3_BUCKET || !!process.env.AWS_S3_BUCKET;
+
     return NextResponse.json({
       ...health,
       status: dbStatus === 'connected' && allEnvOk ? 'ok' : 'degraded',
       services: {
         database: dbStatus,
+        postgres: process.env.DATABASE_URL ? 'configured' : 'not_configured',
         ai: `${aiProvider}${aiConfigured ? ' (configured)' : ' (missing)'}`,
+        storage: storageConfigured ? 'configured' : 'not_configured',
         email: envStatus.RESEND_API_KEY ? 'configured' : 'not_configured',
         linkedin: envStatus.LINKEDIN_CLIENT_ID ? 'configured' : 'missing',
+        cron: process.env.CRON_SECRET ? 'secured' : 'open',
+        // In-app + email channels are always built in (#32); Slack/Discord are P2.
+        notifications: envStatus.RESEND_API_KEY ? 'in-app + email' : 'in-app only',
       },
       environment: process.env.NODE_ENV || 'development',
     });
