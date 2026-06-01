@@ -31,7 +31,7 @@ interface OrgShareStatisticsResponse {
 
 // GET /api/posts/[id]/analytics - Get analytics for a published post
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -82,7 +82,7 @@ export async function GET(
       totalReactions: 0,
       comments: 0,
       postAs: post.postAs || 'person',
-      organizationName: post.organizationName,
+      ...(post.organizationName !== undefined && { organizationName: post.organizationName }),
     };
 
     // Fetch social metadata (reactions and comments) - available for all posts
@@ -136,11 +136,11 @@ export async function GET(
           const shareStats = statsData.elements?.[0]?.totalShareStatistics;
           
           if (shareStats) {
-            analytics.impressions = shareStats.impressionCount;
-            analytics.uniqueImpressions = shareStats.uniqueImpressionsCount;
-            analytics.clicks = shareStats.clickCount;
-            analytics.shares = shareStats.shareCount;
-            analytics.engagement = shareStats.engagement;
+            if (shareStats.impressionCount !== undefined) analytics.impressions = shareStats.impressionCount;
+            if (shareStats.uniqueImpressionsCount !== undefined) analytics.uniqueImpressions = shareStats.uniqueImpressionsCount;
+            if (shareStats.clickCount !== undefined) analytics.clicks = shareStats.clickCount;
+            if (shareStats.shareCount !== undefined) analytics.shares = shareStats.shareCount;
+            if (shareStats.engagement !== undefined) analytics.engagement = shareStats.engagement;
           }
         } else {
           const errorText = await orgStatsResponse.text();

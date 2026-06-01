@@ -33,10 +33,10 @@ export default async function ScheduledPostsPage() {
     _id: post._id.toString(),
     content: post.content,
     status: post.status,
-    scheduledFor: post.scheduledFor?.toISOString(),
-    publishedAt: post.publishedAt?.toISOString(),
+    ...(post.scheduledFor !== undefined && { scheduledFor: post.scheduledFor.toISOString() }),
+    ...(post.publishedAt !== undefined && { publishedAt: post.publishedAt.toISOString() }),
     createdAt: post.createdAt.toISOString(),
-    error: post.error,
+    ...(post.error !== undefined && { error: post.error }),
   }));
 
   return (

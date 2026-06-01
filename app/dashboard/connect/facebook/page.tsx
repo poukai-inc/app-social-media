@@ -54,7 +54,10 @@ function ConnectFacebookPageContent() {
         if (cancelled) return;
         const data = json.payload as PageData;
         setPageData(data);
-        if (data.pages?.length === 1) setSelectedPage(data.pages[0].id);
+        if (data.pages?.length === 1) {
+          const firstPage = data.pages[0];
+          if (firstPage) setSelectedPage(firstPage.id);
+        }
         if (data.targetPageId) setTargetAppPage(data.targetPageId);
       } catch {
         if (!cancelled) setError('Failed to load connection. Please try again.');

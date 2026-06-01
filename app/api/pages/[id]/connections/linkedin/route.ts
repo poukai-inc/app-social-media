@@ -13,7 +13,7 @@ const log = logger.child('api:pages:[id]:connections:linkedin');
  * Connect the current user's LinkedIn profile to a page using session credentials
  */
 export async function POST(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -51,13 +51,13 @@ export async function POST(
     }
 
     // Create the LinkedIn connection using session credentials
+    // LinkedIn doesn't use refresh tokens in our current setup — omit the key entirely
     const connection: PlatformConnection = {
       platform: 'linkedin',
       platformId: user.linkedinId || session.user.id || '',
       platformUsername: session.user.name || 'LinkedIn Profile',
       accessToken: user.linkedinAccessToken,
-      refreshToken: undefined, // LinkedIn doesn't use refresh tokens in our current setup
-      tokenExpiresAt: user.linkedinAccessTokenExpires,
+      ...(user.linkedinAccessTokenExpires !== undefined && { tokenExpiresAt: user.linkedinAccessTokenExpires }),
       isActive: true,
       connectedAt: new Date(),
       metadata: {
@@ -85,7 +85,7 @@ export async function POST(
 
     // Also update legacy fields for backward compatibility
     page.linkedinId = connection.platformId;
-    page.type = page.type === 'manual' ? 'personal' : page.type;
+    page.type = page.type === 'manual' ? 'personal' : (page.type ?? 'personal');
 
     await page.save();
 

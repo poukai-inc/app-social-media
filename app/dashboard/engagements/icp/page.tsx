@@ -103,9 +103,16 @@ export default async function ICPEngagementsPage({ searchParams }: PageProps) {
     ourReply: e.ourReply,
     icpMatch: e.icpMatch,
     status: e.status,
-    followUp: e.followUp,
-    engagedAt: e.engagedAt?.toISOString() || new Date().toISOString(),
-    dryRun: e.dryRun,
+    ...(e.followUp !== undefined && {
+      followUp: {
+        theyReplied: e.followUp.theyReplied,
+        theyLiked: e.followUp.theyLiked,
+        theyFollowed: e.followUp.theyFollowed,
+        conversationLength: e.followUp.conversationLength,
+      },
+    }),
+    engagedAt: e.engagedAt?.toISOString() ?? new Date().toISOString(),
+    ...(e.dryRun !== undefined && { dryRun: e.dryRun }),
   }));
 
   const statusOptions = [

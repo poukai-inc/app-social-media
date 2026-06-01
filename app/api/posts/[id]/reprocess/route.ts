@@ -13,12 +13,12 @@ const log = logger.child('api:posts:[id]:reprocess');
 
 // POST /api/posts/[id]/reprocess - Reprocess media for a failed post
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -125,7 +125,7 @@ export async function POST(
     // Update the post with processed media
     post.media = processedMedia;
     post.status = 'draft'; // Reset status so it can be published again
-    post.error = undefined;
+    post.set('error', undefined);
     await post.save();
 
     return NextResponse.json({

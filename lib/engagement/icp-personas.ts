@@ -426,7 +426,7 @@ export function findMatchingPersona(signals: {
 
     for (const signal of allSignals) {
       for (const ps of personaSignals) {
-        if (ps.includes(signal) || signal.includes(ps.split(' ')[0])) {
+        if (ps.includes(signal) || signal.includes(ps.split(' ')[0] ?? ps)) {
           score++;
         }
       }

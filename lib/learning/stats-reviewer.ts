@@ -156,6 +156,19 @@ const BENCHMARKS: Record<string, PlatformBenchmark> = {
   },
 };
 
+const DEFAULT_BENCHMARK: PlatformBenchmark = {
+  engagementRate: 2.0,
+  impressionsToFollowers: 0.15,
+  commentRate: 0.5,
+  shareRate: 0.3,
+  clickRate: 0.1,
+  reactionMultiplier: { like: 1, comment: 4, share: 6, click: 2 },
+};
+
+function getBenchmarks(platform: PlatformType): PlatformBenchmark {
+  return BENCHMARKS[platform] ?? DEFAULT_BENCHMARK;
+}
+
 // ============================================
 // Metric Interpretation Functions
 // ============================================
@@ -170,8 +183,8 @@ function interpretMetric(
   totalEngagements: number,
   followers?: number
 ): MetricInterpretation {
-  const benchmarks = BENCHMARKS[platform] || BENCHMARKS.linkedin;
-  
+  const benchmarks = getBenchmarks(platform);
+
   switch (metric) {
     case 'engagementRate':
       return interpretEngagementRate(platform, value, benchmarks.engagementRate);
@@ -253,7 +266,7 @@ function interpretImpressions(
   impressions: number,
   followers?: number
 ): MetricInterpretation {
-  const benchmarks = BENCHMARKS[platform] || BENCHMARKS.linkedin;
+  const benchmarks = getBenchmarks(platform);
   const expectedReach = followers ? followers * (benchmarks.impressionsToFollowers || 0.15) : null;
   
   let status: MetricInterpretation['status'];
@@ -302,7 +315,7 @@ function interpretImpressions(
 }
 
 function interpretLikes(
-  platform: PlatformType,
+  _platform: PlatformType,
   likes: number,
   totalEngagements: number
 ): MetricInterpretation {
@@ -347,7 +360,7 @@ function interpretComments(
   totalEngagements: number
 ): MetricInterpretation {
   const commentRatio = totalEngagements > 0 ? (comments / totalEngagements) * 100 : 0;
-  const benchmarks = BENCHMARKS[platform] || BENCHMARKS.linkedin;
+  const benchmarks = getBenchmarks(platform);
   const expectedRatio = (benchmarks.commentRate || 0.3) * 100;
   
   let status: MetricInterpretation['status'];
@@ -399,7 +412,7 @@ function interpretShares(
   totalEngagements: number
 ): MetricInterpretation {
   const shareRatio = totalEngagements > 0 ? (shares / totalEngagements) * 100 : 0;
-  const benchmarks = BENCHMARKS[platform] || BENCHMARKS.linkedin;
+  const benchmarks = getBenchmarks(platform);
   const expectedRatio = (benchmarks.shareRate || 0.2) * 100;
   
   let status: MetricInterpretation['status'];
@@ -448,7 +461,7 @@ function interpretShares(
 }
 
 function interpretClicks(
-  platform: PlatformType,
+  _platform: PlatformType,
   clicks: number,
   totalEngagements: number
 ): MetricInterpretation {
@@ -688,7 +701,7 @@ export function analyzePostMetrics(
   const patterns = detectEngagementPatterns(platform, metrics);
   
   // Calculate overall performance score
-  const statusScores = { excellent: 100, good: 75, average: 50, below_average: 25, poor: 0 };
+  const statusScores: Record<MetricInterpretation['status'], number> = { excellent: 100, good: 75, average: 50, below_average: 25, poor: 0 };
   const avgScore = interpretations.reduce((sum, i) => sum + statusScores[i.status], 0) / interpretations.length;
   
   // Determine overall performance category
@@ -713,12 +726,13 @@ export function analyzePostMetrics(
     statusScores[b.status] - statusScores[a.status]
   );
   
-  if (sortedInterp[0].status === 'excellent' || sortedInterp[0].status === 'good') {
-    keyInsights.push(`Strongest metric: ${sortedInterp[0].metric} - ${sortedInterp[0].meaning}`);
+  const best = sortedInterp[0];
+  if (best && (best.status === 'excellent' || best.status === 'good')) {
+    keyInsights.push(`Strongest metric: ${best.metric} - ${best.meaning}`);
   }
-  
+
   const worst = sortedInterp[sortedInterp.length - 1];
-  if (worst.status === 'poor' || worst.status === 'below_average') {
+  if (worst && (worst.status === 'poor' || worst.status === 'below_average')) {
     keyInsights.push(`Weakest metric: ${worst.metric} - ${worst.meaning}`);
   }
   
@@ -840,12 +854,16 @@ export function comparePosts(
     content: p.content,
     analysis: analyzePostMetrics(platform, p.metrics, undefined, p.content),
   }));
-  
+
   // Sort by performance score
   analyses.sort((a, b) => b.analysis.performanceScore - a.analysis.performanceScore);
-  
+
   const bestPerformer = analyses[0];
   const worstPerformer = analyses[analyses.length - 1];
+
+  if (!bestPerformer || !worstPerformer) {
+    throw new Error('comparePosts requires at least one post');
+  }
   
   // Find common success factors from top performers
   const topPerformers = analyses.slice(0, Math.ceil(analyses.length / 3));

@@ -5,7 +5,7 @@ import type { DatabaseSource } from '@/lib/models/Page';
 import Page from '@/lib/models/Page';
 import Post from '@/lib/models/Post';
 import User from '@/lib/models/User';
-import type { PostAngle } from '@/lib/models/Post';
+import type { IPost, PostAngle } from '@/lib/models/Post';
 import type { PageContentStrategy } from '@/lib/openai';
 import { generatePostWithStrategy } from '@/lib/openai';
 import { getNextOccurrenceInTz, getNextWallTimeInTz, safeTimeZone } from '@/lib/timezone';
@@ -169,7 +169,7 @@ async function executeAutoGenerate() {
 
         // Try to get content from data sources for inspiration
         let inspiration = '';
-        let sourceContentItem: ContentItem | null = null;
+        let sourceContentItem: ContentItem | undefined;
         
         // Fetch page with dataSources using native MongoDB
         const pageWithDataSources = await mongoose.connection.db?.collection('pages').findOne({
@@ -199,17 +199,18 @@ async function executeAutoGenerate() {
               usedIds,
             });
             
-            if (fetchResult.success && fetchResult.items && fetchResult.items.length > 0) {
-              sourceContentItem = fetchResult.items[0];
-              
+            const firstItem = fetchResult.items?.[0];
+            if (fetchResult.success && firstItem) {
+              sourceContentItem = firstItem;
+
               // Build inspiration from the content item
               inspiration = `
 ## Source Blog Post to Repurpose:
 
-**Title:** ${sourceContentItem.title}
+**Title:** ${firstItem.title}
 
 **Content:**
-${sourceContentItem.body.slice(0, 3000)}
+${firstItem.body.slice(0, 3000)}
 
 ---
 Transform this blog post into an engaging LinkedIn post. Extract the key insight or takeaway and present it in a way that's valuable for a LinkedIn audience. Don't just summarize - find the most interesting angle and lead with that.
@@ -296,10 +297,12 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
                 attemptInspiration += `\n\n## IMPORTANT - YOUR PREVIOUS ATTEMPT WAS REJECTED:\n${rejectionFeedback}\n\nWrite something COMPLETELY DIFFERENT this time. Do NOT repeat the same patterns. Be more authentic, more opinionated, and avoid fabricated statistics.`;
               }
 
+              const topicForGeneration = sourceContentItem?.title ? `Repurposing: ${sourceContentItem.title}` : undefined;
+              const angleForGeneration = attempt > 1 ? undefined : recommendedAngle;
               generatedResult = await generatePostWithStrategy({
                 strategy: strategyWithPageType,
-                topic: sourceContentItem?.title ? `Repurposing: ${sourceContentItem.title}` : undefined,
-                angle: attempt > 1 ? undefined : recommendedAngle, // Try different angle on retry
+                ...(topicForGeneration !== undefined && { topic: topicForGeneration }),
+                ...(angleForGeneration !== undefined && { angle: angleForGeneration }),
                 inspiration: attemptInspiration,
                 pageId: page._id.toString(),
                 platform: platform as 'linkedin' | 'facebook' | 'twitter' | 'instagram',
@@ -312,17 +315,21 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
                 content: generatedResult.content,
                 platform,
                 strategy: strategyWithPageType,
-                topic: sourceContentItem?.title,
-                angle: recommendedAngle,
-                sourceContent: sourceContentItem ? {
-                  title: sourceContentItem.title,
-                  summary: sourceContentItem.body.slice(0, 500),
-                } : undefined,
-                recentPerformance: learningContext.hasEnoughData ? {
-                  avgEngagement: learningContext.timingConfidence,
-                  topPerformingAngles: learningContext.topAngles,
-                  audiencePreferences: learningContext.platformTips,
-                } : undefined,
+                ...(sourceContentItem?.title !== undefined && { topic: sourceContentItem.title }),
+                ...(recommendedAngle !== undefined && { angle: recommendedAngle }),
+                ...(sourceContentItem && {
+                  sourceContent: {
+                    title: sourceContentItem.title,
+                    summary: sourceContentItem.body.slice(0, 500),
+                  },
+                }),
+                ...(learningContext.hasEnoughData && {
+                  recentPerformance: {
+                    avgEngagement: learningContext.timingConfidence,
+                    topPerformingAngles: learningContext.topAngles,
+                    audiencePreferences: learningContext.platformTips,
+                  },
+                }),
               });
 
               log.info('AI review result', { platform, attempt, decision: reviewDecision.decision, score: reviewDecision.criteria.overallScore, confidence: reviewDecision.confidence });
@@ -392,8 +399,10 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
                 // Use preferred times from settings, interpreted in the page's
                 // own timezone (today if still future, else tomorrow). (issue #21)
                 const preferredTimes = page.schedule?.preferredTimes || ['09:00'];
-                const preferredTime = preferredTimes[Math.floor(Math.random() * preferredTimes.length)];
-                const [hours, minutes] = preferredTime.split(':').map(Number);
+                const preferredTime = preferredTimes[Math.floor(Math.random() * preferredTimes.length)] ?? '09:00';
+                const parts = preferredTime.split(':').map(Number);
+                const hours = parts[0] ?? 9;
+                const minutes = parts[1] ?? 0;
 
                 scheduledFor = getNextWallTimeInTz(
                   hours,
@@ -410,16 +419,44 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
             }
 
             // Create the post with platform-specific targeting
-            const post = await Post.create({
+            const aiReviewData = {
+              decision: reviewDecision.decision,
+              overallScore: reviewDecision.criteria.overallScore,
+              confidence: reviewDecision.confidence,
+              criteria: {
+                contentQuality: reviewDecision.criteria.contentQuality.score,
+                brandAlignment: reviewDecision.criteria.brandAlignment.score,
+                riskLevel: reviewDecision.criteria.riskAssessment.level,
+                riskConcerns: reviewDecision.criteria.riskAssessment.concerns,
+                engagementPotential: reviewDecision.criteria.engagementPotential.score,
+                platformFit: reviewDecision.criteria.platformFit.score,
+              },
+              reasoning: reviewDecision.reasoning,
+              reviewedAt: new Date(),
+              ...(reviewDecision.suggestedRevisions !== undefined && {
+                suggestedRevisions: reviewDecision.suggestedRevisions,
+              }),
+            };
+
+            const learningMetadataData = {
+              usedLearning: learningContext.hasEnoughData,
+              platform,
+              ...(recommendedAngle !== undefined && { recommendedAngle }),
+              ...(scheduledFor !== undefined && {
+                timingSource: learningContext.hasEnoughData ? 'learned' as const : 'default' as const,
+              }),
+            };
+
+            const post = (await Post.create({
               userId: page.userId,
               pageId: page._id,
               content: generatedResult.content,
               status,
               mode: 'ai',
               postAs: page.type === 'organization' ? 'organization' : 'person',
-              organizationId: page.organizationId,
+              ...(page.organizationId !== undefined && { organizationId: page.organizationId }),
               targetPlatforms: [platform], // Single platform per post for optimization
-              scheduledFor,
+              ...(scheduledFor !== undefined && { scheduledFor }),
               aiAnalysis,
               requiresApproval: status === 'pending_approval',
               approval: status === 'scheduled' ? {
@@ -434,49 +471,25 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
               } : {
                 decision: 'pending',
               },
-              // AI Review details
-              aiReview: {
-                decision: reviewDecision.decision,
-                overallScore: reviewDecision.criteria.overallScore,
-                confidence: reviewDecision.confidence,
-                criteria: {
-                  contentQuality: reviewDecision.criteria.contentQuality.score,
-                  brandAlignment: reviewDecision.criteria.brandAlignment.score,
-                  riskLevel: reviewDecision.criteria.riskAssessment.level,
-                  riskConcerns: reviewDecision.criteria.riskAssessment.concerns,
-                  engagementPotential: reviewDecision.criteria.engagementPotential.score,
-                  platformFit: reviewDecision.criteria.platformFit.score,
-                },
-                reasoning: reviewDecision.reasoning,
-                suggestedRevisions: reviewDecision.suggestedRevisions,
-                reviewedAt: new Date(),
-              },
+              aiReview: aiReviewData,
               // Store source content reference if from data source
               ...(sourceContentItem && {
                 sourceContent: {
                   id: sourceContentItem.id,
                   title: sourceContentItem.title,
-                  type: 'database',
-                  sourceId: activeSource?.id,
+                  type: 'database' as const,
+                  ...(activeSource?.id !== undefined && { sourceId: activeSource.id }),
                   fetchedAt: new Date(),
                 },
               }),
-              // Store learning metadata
-              learningMetadata: {
-                usedLearning: learningContext.hasEnoughData,
-                platform,
-                recommendedAngle,
-                timingSource: scheduledFor ? (
-                  learningContext.hasEnoughData ? 'learned' : 'default'
-                ) : undefined,
-              },
-            });
+              learningMetadata: learningMetadataData,
+            })) as IPost;
 
             platformResults.push({
               platform,
-              status: reviewDecision.decision === 'publish' && status === 'scheduled' ? 'generated' : 'generated',
+              status: 'generated',
               postId: post._id.toString(),
-              scheduledFor,
+              ...(scheduledFor !== undefined && { scheduledFor }),
               usedLearning: learningContext.hasEnoughData,
               aiReview: {
                 decision: reviewDecision.decision,
@@ -498,6 +511,7 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
                 });
                 
                 // Send the email
+                const linkUrl = generatedResult.content.match(/https?:\/\/[^\s]+/)?.[0];
                 await sendApprovalEmail(user.email, {
                   postId: post._id.toString(),
                   postContent: generatedResult.content,
@@ -507,9 +521,9 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
                   riskReasons: reviewDecision.criteria.riskAssessment.concerns,
                   angle: generatedResult.angle,
                   aiReasoning: reviewDecision.reasoning,
-                  scheduledFor,
+                  ...(scheduledFor !== undefined && { scheduledFor }),
                   includesLink: /https?:\/\//.test(generatedResult.content),
-                  linkUrl: generatedResult.content.match(/https?:\/\/[^\s]+/)?.[0],
+                  ...(linkUrl !== undefined && { linkUrl }),
                   approvalToken,
                 });
                 

@@ -23,7 +23,7 @@ function getFromEmail(): string {
 }
 
 const config: EmailConfig = {
-  apiKey: process.env.RESEND_API_KEY,
+  ...(process.env.RESEND_API_KEY !== undefined ? { apiKey: process.env.RESEND_API_KEY } : {}),
   // Resolved lazily so the module can be imported in code paths that never send.
   get fromEmail() {
     return getFromEmail();

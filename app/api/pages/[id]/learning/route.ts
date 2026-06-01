@@ -24,7 +24,7 @@ import type { PlatformType } from '@/lib/platforms/types';
  * - AI generation recommendations
  */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

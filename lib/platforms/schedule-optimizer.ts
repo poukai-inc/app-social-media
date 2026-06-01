@@ -142,7 +142,7 @@ function generatePlatformRecommendation(
   const bestDays = Array.from(byDay.entries())
     .map(([day, stats]) => ({
       day,
-      dayName: DAY_NAMES[day],
+      dayName: DAY_NAMES[day] ?? '',
       score: stats.avgEngagement,
       avgEngagement: stats.avgEngagement,
     }))
@@ -161,10 +161,12 @@ function generatePlatformRecommendation(
   // Find optimal day+hour slots
   const optimalSlots = Array.from(byDayHour.entries())
     .map(([key, stats]) => {
-      const [day, hour] = key.split('-').map(Number);
+      const parts = key.split('-').map(Number);
+      const day = parts[0] ?? 0;
+      const hour = parts[1] ?? 0;
       return {
         day,
-        dayName: DAY_NAMES[day],
+        dayName: DAY_NAMES[day] ?? '',
         hour,
         hourFormatted: formatHour(hour),
         predictedEngagement: stats.avgEngagement,
@@ -177,12 +179,14 @@ function generatePlatformRecommendation(
   // Generate insights
   const insights: string[] = [];
   
-  if (bestDays.length > 0) {
-    insights.push(`Best performing day is ${bestDays[0].dayName} with ${(bestDays[0].avgEngagement * 100).toFixed(1)}% avg engagement`);
+  const topDay = bestDays[0];
+  if (topDay) {
+    insights.push(`Best performing day is ${topDay.dayName} with ${(topDay.avgEngagement * 100).toFixed(1)}% avg engagement`);
   }
-  
-  if (bestHours.length > 0) {
-    insights.push(`Peak engagement hour is ${bestHours[0].hourFormatted}`);
+
+  const topHour = bestHours[0];
+  if (topHour) {
+    insights.push(`Peak engagement hour is ${topHour.hourFormatted}`);
   }
   
   // Platform-specific insights based on config
@@ -280,7 +284,7 @@ function generateWeeklySchedule(
   for (let i = 0; i < 7; i++) {
     schedule.push({
       day: i,
-      dayName: DAY_NAMES[i],
+      dayName: DAY_NAMES[i] ?? '',
       posts: [],
     });
   }
@@ -413,7 +417,7 @@ export function getDefaultTimingRecommendations(
       platform,
       bestDays: config.bestDays.map((day, i) => ({
         day,
-        dayName: DAY_NAMES[day],
+        dayName: DAY_NAMES[day] ?? '',
         score: 1 - (i * 0.1), // Decreasing score
         avgEngagement: 0,
       })),
@@ -426,7 +430,7 @@ export function getDefaultTimingRecommendations(
       optimalSlots: config.bestDays.flatMap((day, _dayIdx) =>
         config.bestHours.slice(0, 2).map((hour, _hourIdx) => ({
           day,
-          dayName: DAY_NAMES[day],
+          dayName: DAY_NAMES[day] ?? '',
           hour,
           hourFormatted: formatHour(hour),
           predictedEngagement: 0,

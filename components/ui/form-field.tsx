@@ -45,7 +45,7 @@ export function FormField({
   const describedBy = [helperId, errorId].filter(Boolean).join(' ') || undefined;
 
   return (
-    <FormFieldContext.Provider value={{ id, describedBy, invalid: Boolean(error) }}>
+    <FormFieldContext.Provider value={{ id, ...(describedBy !== undefined && { describedBy }), invalid: Boolean(error) }}>
       <div className={cn('flex flex-col gap-1.5', className)} {...rest}>
         {label && (
           <Label htmlFor={id}>

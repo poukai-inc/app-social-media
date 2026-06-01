@@ -71,13 +71,13 @@ export async function scrapeLinkedInPost(postUrl: string): Promise<{ success: bo
     const ogDescriptionMatch = html.match(/<meta[^>]*property="og:description"[^>]*content="([^"]*)"[^>]*>/i)
       || html.match(/<meta[^>]*content="([^"]*)"[^>]*property="og:description"[^>]*>/i);
     if (ogDescriptionMatch) {
-      data.content = decodeHTMLEntities(ogDescriptionMatch[1]);
+      data.content = decodeHTMLEntities(ogDescriptionMatch[1] ?? '');
     }
 
     const ogTitleMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]*)"[^>]*>/i)
       || html.match(/<meta[^>]*content="([^"]*)"[^>]*property="og:title"[^>]*>/i);
     if (ogTitleMatch) {
-      data.title = decodeHTMLEntities(ogTitleMatch[1]);
+      data.title = decodeHTMLEntities(ogTitleMatch[1] ?? '');
     }
 
     // Try to extract author from title or URL
@@ -85,14 +85,14 @@ export async function scrapeLinkedInPost(postUrl: string): Promise<{ success: bo
     if (data.title) {
       const authorFromTitle = data.title.match(/^([^|]+?)(?:\s+on\s+LinkedIn|\s*\|)/i);
       if (authorFromTitle) {
-        data.authorName = authorFromTitle[1].trim();
+        data.authorName = (authorFromTitle[1] ?? '').trim();
       }
     }
 
     // Extract author username from URL
     const authorFromUrl = postUrl.match(/linkedin\.com\/posts\/([^_\/]+)/);
     if (authorFromUrl) {
-      data.author = authorFromUrl[1];
+      data.author = authorFromUrl[1] ?? '';
     }
 
     // Try to find JSON-LD data which has richer content
@@ -123,7 +123,7 @@ export async function scrapeLinkedInPost(postUrl: string): Promise<{ success: bo
     const commentaryMatch = html.match(/data-test-id="main-feed-activity-card__commentary"[^>]*>([^<]+)</i)
       || html.match(/<span[^>]*class="[^"]*break-words[^"]*"[^>]*>([^<]{50,})</i);
     if (commentaryMatch && !data.content) {
-      data.content = decodeHTMLEntities(commentaryMatch[1]);
+      data.content = decodeHTMLEntities(commentaryMatch[1] ?? '');
     }
 
     if (!data.content && !data.title) {
@@ -615,6 +615,6 @@ export async function engageWithPost(
   return {
     success,
     ...results,
-    error: errors.length > 0 ? errors.join('; ') : undefined,
+    ...(errors.length > 0 ? { error: errors.join('; ') } : {}),
   };
 }

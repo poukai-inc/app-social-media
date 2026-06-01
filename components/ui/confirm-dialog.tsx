@@ -33,7 +33,7 @@ export function ConfirmDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={title}
-      description={description}
+      {...(description !== undefined && { description })}
       footer={
         <>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isConfirming}>

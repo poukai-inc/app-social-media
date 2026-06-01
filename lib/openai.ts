@@ -159,9 +159,9 @@ export async function generateLinkedInPost(options: GeneratePostOptions): Promis
   let userPrompt = '';
 
   if (mode === 'structured' && structuredInput) {
-    userPrompt = buildStructuredPrompt(structuredInput, { tone, includeEmojis, includeHashtags, targetAudience });
+    userPrompt = buildStructuredPrompt(structuredInput, { tone, includeEmojis, includeHashtags, ...(targetAudience !== undefined ? { targetAudience } : {}) });
   } else if (mode === 'ai' && aiPrompt) {
-    userPrompt = buildAIPrompt(aiPrompt, { tone, includeEmojis, includeHashtags, targetAudience });
+    userPrompt = buildAIPrompt(aiPrompt, { tone, includeEmojis, includeHashtags, ...(targetAudience !== undefined ? { targetAudience } : {}) });
   } else {
     throw new Error('Invalid options: provide structuredInput for structured mode or aiPrompt for ai mode');
   }
@@ -372,14 +372,14 @@ export async function generatePostWithStrategy(options: GenerateWithStrategyOpti
   const preferredAngles = strategy.preferredAngles || ['war_story', 'insight', 'how_to', 'opinionated_take', 'case_study'];
 
   // Pick a random topic if not specified
-  const selectedTopic = topic || (topics.length > 0 
-    ? topics[Math.floor(Math.random() * topics.length)] 
+  const selectedTopic = topic ?? (topics.length > 0
+    ? (topics[Math.floor(Math.random() * topics.length)] ?? 'general industry insights')
     : 'general industry insights');
 
   // Pick a random angle if not specified
-  const selectedAngle = angle && preferredAngles.includes(angle) 
-    ? angle 
-    : preferredAngles[Math.floor(Math.random() * preferredAngles.length)];
+  const selectedAngle = (angle && preferredAngles.includes(angle))
+    ? angle
+    : (preferredAngles[Math.floor(Math.random() * preferredAngles.length)] ?? 'insight');
 
   const angleDescription = getAngleDescription(selectedAngle, pageType);
 
@@ -502,8 +502,8 @@ export async function generatePostWithStrategy(options: GenerateWithStrategyOpti
       cleanedContent = cleanedContent.replace(/<think>[\s\S]*/gi, '').trim();
       
       // Strip meta-commentary that AI sometimes adds (everything after --- or similar)
-      cleanedContent = cleanedContent.split(/\n---+\n/)[0].trim();
-      cleanedContent = cleanedContent.split(/\n={3,}\n/)[0].trim();
+      cleanedContent = (cleanedContent.split(/\n---+\n/)[0] ?? cleanedContent).trim();
+      cleanedContent = (cleanedContent.split(/\n={3,}\n/)[0] ?? cleanedContent).trim();
       
       // Remove introductory phrases AI adds (safety net only)
       cleanedContent = cleanedContent.replace(/^Here's (a|the|an|my) (LinkedIn|Facebook|Twitter|Instagram) (post|tweet|caption).*?:\s*\n*/i, '');
@@ -1378,8 +1378,8 @@ export async function adaptContentForMultiplePlatforms(
       adaptContentForPlatform({
         originalContent,
         targetPlatform: platform,
-        preserveHashtags: options?.preserveHashtags,
-        customInstructions: options?.customInstructions?.[platform],
+        ...(options?.preserveHashtags !== undefined ? { preserveHashtags: options.preserveHashtags } : {}),
+        ...(options?.customInstructions?.[platform] !== undefined ? { customInstructions: options.customInstructions[platform] } : {}),
       })
     )
   );
@@ -1421,11 +1421,11 @@ export async function generateMultiPlatformPost(
   // Generate the primary content (default to LinkedIn style)
   const primary = await generatePostWithStrategy({
     strategy,
-    topic,
-    angle,
-    inspiration,
-    pageId,
-    platform: platform || primaryPlatform,
+    ...(topic !== undefined ? { topic } : {}),
+    ...(angle !== undefined ? { angle } : {}),
+    ...(inspiration !== undefined ? { inspiration } : {}),
+    ...(pageId !== undefined ? { pageId } : {}),
+    platform: platform ?? primaryPlatform,
   });
   
   // If we only have one platform or don't want to adapt, return early

@@ -22,7 +22,9 @@ const makePage = () => ({
 describe('sanitize-page', () => {
   it('strips every secret field from connections', () => {
     const out = stripPageSecrets(makePage());
-    const conn = out.connections[0] as Record<string, unknown>;
+    const firstConn = out.connections[0];
+    expect(firstConn).toBeDefined();
+    const conn = firstConn as Record<string, unknown>;
     for (const field of SECRETS) expect(field in conn).toBe(false);
     expect(conn.platformUsername).toBe('x');
   });
@@ -30,12 +32,19 @@ describe('sanitize-page', () => {
   it('does not mutate the input', () => {
     const page = makePage();
     stripPageSecrets(page);
-    expect(page.connections[0].accessToken).toBe('AT');
+    const [conn] = page.connections;
+    expect(conn).toBeDefined();
+    expect(conn!.accessToken).toBe('AT');
   });
 
   it('strips across a list of pages', () => {
     const out = stripPagesSecrets([makePage()]);
-    expect('accessToken' in (out[0].connections[0] as object)).toBe(false);
+    const firstPage = out[0];
+    expect(firstPage).toBeDefined();
+    const firstConn = firstPage!.connections[0];
+    expect(firstConn).toBeDefined();
+    // firstConn is provably defined — asserted above
+    expect('accessToken' in (firstConn! as object)).toBe(false);
   });
 
   it('passes through null and connection-less inputs', () => {

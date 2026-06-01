@@ -47,12 +47,19 @@ async function tryRefreshToken(
     const refreshed = await adapter.refreshToken(connection);
     log.info('Successfully refreshed token', { platform });
     
-    return {
+    const refreshedConnection: PlatformConnection = {
       ...connection,
       accessToken: refreshed.accessToken,
-      refreshToken: refreshed.refreshToken || connection.refreshToken,
-      tokenExpiresAt: refreshed.expiresAt,
     };
+    if (refreshed.refreshToken !== undefined) {
+      refreshedConnection.refreshToken = refreshed.refreshToken;
+    } else if (connection.refreshToken !== undefined) {
+      refreshedConnection.refreshToken = connection.refreshToken;
+    }
+    if (refreshed.expiresAt !== undefined) {
+      refreshedConnection.tokenExpiresAt = refreshed.expiresAt;
+    }
+    return refreshedConnection;
   } catch (error) {
     log.error('Failed to refresh token', { platform, error: error instanceof Error ? error.message : String(error) });
     return null;
@@ -164,34 +171,36 @@ async function publishToPlatform(
     const result = await adapter.publish(connection, adaptedContent, mediaResults);
     
     if (result.success) {
-      return {
+      const publishedResult: PlatformPublishResult = {
         platform,
         status: 'published',
-        postId: result.postId,
-        postUrl: result.postUrl,
         publishedAt: new Date(),
         retryCount,
       };
+      if (result.postId !== undefined) publishedResult.postId = result.postId;
+      if (result.postUrl !== undefined) publishedResult.postUrl = result.postUrl;
+      return publishedResult;
     }
-    
+
     // Check if we should retry
-    const isRetryable = result.error?.includes('rate limit') || 
+    const isRetryable = result.error?.includes('rate limit') ||
                         result.error?.includes('timeout') ||
                         result.error?.includes('503') ||
                         result.error?.includes('502');
-    
+
     if (isRetryable && retryCount < MAX_RETRIES) {
       log.info('Retrying publish', { platform, attempt: retryCount + 1, maxRetries: MAX_RETRIES });
       await delay(RETRY_DELAY_MS[retryCount] || 30000);
       return publishToPlatform(context, platform, content, retryCount + 1);
     }
-    
-    return {
+
+    const failedResult: PlatformPublishResult = {
       platform,
       status: 'failed',
-      error: result.error,
       retryCount,
     };
+    if (result.error !== undefined) failedResult.error = result.error;
+    return failedResult;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     
@@ -363,7 +372,7 @@ async function executePublish() {
         if (!user) {
           post.status = 'failed';
           post.error = 'User not found';
-          post.publishStartedAt = undefined;
+          post.set('publishStartedAt', undefined);
           await post.save();
           results.push({ postId: post._id, status: 'failed', error: 'User not found' });
           continue;
@@ -379,7 +388,7 @@ async function executePublish() {
           if (!page) {
             post.status = 'failed';
             post.error = 'Page not found';
-            post.publishStartedAt = undefined;
+            post.set('publishStartedAt', undefined);
             await post.save();
             results.push({ postId: post._id, status: 'failed', error: 'Page not found' });
             continue;
@@ -400,8 +409,12 @@ async function executePublish() {
           // Update post with results
           post.status = overallStatus;
           post.platformResults = platformResults;
-          post.publishedAt = overallStatus !== 'failed' ? new Date() : undefined;
-          post.publishStartedAt = undefined;
+          if (overallStatus !== 'failed') {
+            post.publishedAt = new Date();
+          } else {
+            post.set('publishedAt', undefined);
+          }
+          post.set('publishStartedAt', undefined);
           
           // For backward compatibility, set linkedinPostId if LinkedIn was successful
           const linkedinResult = platformResults.find(r => r.platform === 'linkedin');
@@ -417,7 +430,7 @@ async function executePublish() {
           if (errors.length > 0) {
             post.error = errors.join('; ');
           } else {
-            post.error = undefined;
+            post.set('error', undefined);
           }
           
           await post.save();
@@ -440,31 +453,35 @@ async function executePublish() {
           if (result.success) {
             post.status = 'published';
             post.publishedAt = new Date();
-            post.linkedinPostId = result.postId;
-            post.error = undefined;
-            
+            if (result.postId !== undefined) post.linkedinPostId = result.postId;
+            post.set('error', undefined);
+
             // Also populate platformResults for consistency
-            post.platformResults = [{
+            const successPlatformResult: PlatformPublishResult = {
               platform: 'linkedin',
               status: 'published',
-              postId: result.postId,
-              postUrl: result.postUrl,
               publishedAt: new Date(),
               retryCount: 0,
-            }];
+            };
+            if (result.postId !== undefined) successPlatformResult.postId = result.postId;
+            if (result.postUrl !== undefined) successPlatformResult.postUrl = result.postUrl;
+            post.platformResults = [successPlatformResult];
           } else {
             post.status = 'failed';
-            post.error = result.error;
-            
-            post.platformResults = [{
+            if (result.error !== undefined) {
+              post.error = result.error;
+            }
+
+            const failedPlatformResult: PlatformPublishResult = {
               platform: 'linkedin',
               status: 'failed',
-              error: result.error,
               retryCount: 0,
-            }];
+            };
+            if (result.error !== undefined) failedPlatformResult.error = result.error;
+            post.platformResults = [failedPlatformResult];
           }
 
-          post.publishStartedAt = undefined;
+          post.set('publishStartedAt', undefined);
           await post.save();
           results.push({
             postId: post._id,
@@ -475,7 +492,7 @@ async function executePublish() {
       } catch (error) {
         post.status = 'failed';
         post.error = error instanceof Error ? error.message : 'Unknown error';
-        post.publishStartedAt = undefined;
+        post.set('publishStartedAt', undefined);
         await post.save();
         results.push({
           postId: post._id,

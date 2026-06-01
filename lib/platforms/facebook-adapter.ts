@@ -81,10 +81,11 @@ export class FacebookAdapter extends BasePlatformAdapter {
         const validMedia = media!.filter(m => m.success && m.mediaId);
         
         if (validMedia.length === 1) {
-          // Single photo post
+          // Single photo post — validMedia.length === 1 guarantees index 0 is present
+          const singleMedia = validMedia[0]!;
           endpoint = `${FACEBOOK_GRAPH_API}/${pageId}/photos`;
           postBody = {
-            photo_id: validMedia[0].mediaId,
+            photo_id: singleMedia.mediaId,
             caption: content.content,
             access_token: connection.accessToken,
           };
@@ -133,7 +134,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
         connectionId: connection.platformId,
         success: true,
         postId,
-        postUrl: postId ? `https://www.facebook.com/${postId}` : undefined,
+        ...(postId ? { postUrl: `https://www.facebook.com/${postId}` } : {}),
         publishedAt: new Date(),
       };
     } catch (error) {
@@ -149,7 +150,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
   /**
    * Upload media to Facebook
    */
-  async uploadMedia(
+  override async uploadMedia(
     connection: IPlatformConnection,
     mediaUrl: string,
     mediaType: 'image' | 'video'
@@ -201,7 +202,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
   /**
    * Fetch post metrics from Facebook
    */
-  async fetchMetrics(
+  override async fetchMetrics(
     connection: IPlatformConnection,
     postId: string
   ): Promise<PlatformMetrics> {
@@ -268,7 +269,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
   /**
    * Refresh Facebook access token
    */
-  async refreshToken(connection: IPlatformConnection): Promise<{
+  override async refreshToken(connection: IPlatformConnection): Promise<{
     accessToken: string;
     refreshToken?: string;
     expiresAt?: Date;
@@ -299,9 +300,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
     
     return {
       accessToken: data.access_token,
-      expiresAt: data.expires_in 
-        ? new Date(Date.now() + data.expires_in * 1000)
-        : undefined,
+      ...(data.expires_in ? { expiresAt: new Date(Date.now() + data.expires_in * 1000) } : {}),
     };
   }
 

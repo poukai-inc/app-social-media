@@ -65,6 +65,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "dist/**",
     "node_modules/**",
+    "coverage/**",
+    "playwright-report/**",
+    "test-results/**",
+    "blob-report/**",
   ]),
 ]);
 

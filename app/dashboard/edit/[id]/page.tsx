@@ -52,15 +52,15 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
       <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
         <PostForm
           initialContent={post.content}
-          initialScheduledFor={post.scheduledFor?.toISOString().slice(0, 16)}
+          {...(post.scheduledFor !== undefined && { initialScheduledFor: post.scheduledFor.toISOString().slice(0, 16) })}
           initialMode={post.mode || 'manual'}
           initialMedia={post.media || []}
-          initialStructuredInput={post.structuredInput}
-          initialAiPrompt={post.aiPrompt}
+          {...(post.structuredInput !== undefined && { initialStructuredInput: post.structuredInput })}
+          {...(post.aiPrompt !== undefined && { initialAiPrompt: post.aiPrompt })}
           initialPostAs={post.postAs || 'person'}
-          initialOrganizationId={post.organizationId}
-          initialPageId={post.pageId?.toString()}
-          initialTargetPlatforms={post.targetPlatforms}
+          {...(post.organizationId !== undefined && { initialOrganizationId: post.organizationId })}
+          {...(post.pageId !== undefined && { initialPageId: post.pageId.toString() })}
+          {...(post.targetPlatforms !== undefined && { initialTargetPlatforms: post.targetPlatforms })}
           postId={post._id.toString()}
           editMode={true}
         />

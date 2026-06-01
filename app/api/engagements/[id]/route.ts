@@ -16,7 +16,7 @@ interface RouteContext {
 }
 
 // GET /api/engagements/[id] - Get single engagement
-export async function GET(request: NextRequest, context: RouteContext) {
+export async function GET(_request: NextRequest, context: RouteContext) {
   try {
     const session = await auth();
     if (!session?.user?.email) {
@@ -112,7 +112,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         const contentForAI = engagement.postContent || `LinkedIn post from ${engagement.postAuthor || 'a professional'}`;
         engagement.aiGeneratedComment = await generateComment({
           postContent: contentForAI,
-          postAuthor: engagement.postAuthor,
+          ...(engagement.postAuthor !== undefined && { postAuthor: engagement.postAuthor }),
           style: 'professional',
         });
       } catch (aiError) {
@@ -153,7 +153,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 }
 
 // POST /api/engagements/[id] - Execute engagement NOW
-export async function POST(request: NextRequest, context: RouteContext) {
+export async function POST(_request: NextRequest, context: RouteContext) {
   try {
     const session = await auth();
     if (!session?.user?.email) {
@@ -198,7 +198,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         const contentForAI = engagement.postContent || `LinkedIn post from ${engagement.postAuthor || 'a professional'}`;
         commentToPost = await generateComment({
           postContent: contentForAI,
-          postAuthor: engagement.postAuthor,
+          ...(engagement.postAuthor !== undefined && { postAuthor: engagement.postAuthor }),
           style: 'professional',
         });
         // Save the generated comment
@@ -214,17 +214,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
     // Execute engagement
     const result = await engageWithPost(session.user.email, engagement.postUrn, {
       like: engagement.engagementType === 'like' || engagement.engagementType === 'both',
-      comment: needsComment ? commentToPost : undefined,
+      ...(needsComment && commentToPost !== undefined && { comment: commentToPost }),
     });
 
     // Mark as engaged if at least one action succeeded (partial success is still success)
     if (result.success || result.liked || result.commented) {
       engagement.status = 'engaged';
       engagement.engagedAt = new Date();
-      engagement.error = result.error; // May have partial error (e.g., like failed but comment worked)
+      // May have partial error (e.g., like failed but comment worked)
+      if (result.error !== undefined) engagement.error = result.error;
     } else {
       engagement.status = 'failed';
-      engagement.error = result.error;
+      if (result.error !== undefined) engagement.error = result.error;
     }
 
     await engagement.save();
@@ -248,7 +249,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 }
 
 // DELETE /api/engagements/[id] - Delete engagement
-export async function DELETE(request: NextRequest, context: RouteContext) {
+export async function DELETE(_request: NextRequest, context: RouteContext) {
   try {
     const session = await auth();
     if (!session?.user?.email) {

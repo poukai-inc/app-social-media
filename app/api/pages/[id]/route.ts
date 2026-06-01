@@ -11,7 +11,7 @@ const log = logger.child('api:pages:[id]');
 
 // GET /api/pages/[id] - Get a single page with full details
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

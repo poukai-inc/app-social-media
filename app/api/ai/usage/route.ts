@@ -48,11 +48,11 @@ export async function GET(_request: Request) {
     // Group by date
     const byDate: Record<string, Record<string, unknown>> = {};
     for (const record of historicalData) {
-      const dateStr = record.date.toISOString().split('T')[0];
-      if (!byDate[dateStr]) {
-        byDate[dateStr] = {};
-      }
-      byDate[dateStr][record.modelName] = {
+      const dateStr = record.date.toISOString().split('T')[0] ?? record.date.toISOString();
+      const existingEntry = byDate[dateStr];
+      const dateEntry: Record<string, unknown> = existingEntry ?? {};
+      byDate[dateStr] = dateEntry;
+      dateEntry[record.modelName] = {
         tokensUsed: record.tokensUsed,
         requestCount: record.requestCount,
         rateLimitHits: record.rateLimitHits,

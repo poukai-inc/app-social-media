@@ -90,8 +90,8 @@ export async function getPlatformLearningContext(
   let recommendedHour: number | undefined;
   let timingConfidence = 0;
   
-  if (insights.optimalSlots && insights.optimalSlots.length > 0) {
-    const bestSlot = insights.optimalSlots[0];
+  const bestSlot = insights.optimalSlots?.[0];
+  if (bestSlot) {
     recommendedDay = bestSlot.day;
     recommendedHour = bestSlot.hour;
     timingConfidence = bestSlot.confidence;
@@ -119,11 +119,16 @@ export async function getPlatformLearningContext(
     whyItWorked: analyzeWhyPostWorked(post, insights),
   }));
   
+  const recommendedMediaType =
+    shouldIncludeMedia && insights.mediaPerformance.bestMediaType !== 'none'
+      ? (insights.mediaPerformance.bestMediaType as 'image' | 'video')
+      : undefined;
+
   return {
     platform,
     hasEnoughData,
-    recommendedDay,
-    recommendedHour,
+    ...(recommendedDay !== undefined ? { recommendedDay } : {}),
+    ...(recommendedHour !== undefined ? { recommendedHour } : {}),
     timingConfidence,
     topAngles,
     recommendedHashtags,
@@ -132,9 +137,7 @@ export async function getPlatformLearningContext(
       max: insights.optimalContentLength.max,
     },
     shouldIncludeMedia,
-    recommendedMediaType: shouldIncludeMedia && insights.mediaPerformance.bestMediaType !== 'none' 
-      ? insights.mediaPerformance.bestMediaType as 'image' | 'video'
-      : undefined,
+    ...(recommendedMediaType !== undefined ? { recommendedMediaType } : {}),
     topPostExamples,
     platformTips: PLATFORM_CONTENT_GUIDELINES[platform],
   };
@@ -173,7 +176,7 @@ function analyzeWhyPostWorked(
   }
   
   // Check hook
-  const firstLine = post.content.split('\n')[0];
+  const firstLine = post.content.split('\n')[0] ?? '';
   if (firstLine.length < 100 && (firstLine.includes('?') || !firstLine.endsWith('.'))) {
     reasons.push('Strong hook that grabs attention');
   }
@@ -351,16 +354,16 @@ export async function getRecommendedAngle(
   
   if (!context.hasEnoughData || !context.topAngles || context.topAngles.length === 0) {
     // Random from available
-    return angles[Math.floor(Math.random() * angles.length)];
+    return angles[Math.floor(Math.random() * angles.length)] ?? angles[0] ?? 'insight';
   }
-  
+
   // Find the best performing angle that's in available angles
   for (const topAngle of context.topAngles) {
     if (angles.includes(topAngle)) {
       return topAngle;
     }
   }
-  
+
   // Fallback to random
-  return angles[Math.floor(Math.random() * angles.length)];
+  return angles[Math.floor(Math.random() * angles.length)] ?? angles[0] ?? 'insight';
 }

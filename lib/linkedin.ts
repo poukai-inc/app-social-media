@@ -137,7 +137,7 @@ async function waitForAssetReady(
 
     if (status === 'FAILED') {
       log.error('Asset processing failed', { asset, details });
-      return { ready: false, error: details };
+      return { ready: false, ...(details !== undefined ? { error: details } : {}) };
     }
 
     log.info('Asset still processing', { asset, elapsedSeconds: Math.round((Date.now() - startTime) / 1000) });
@@ -273,14 +273,18 @@ export async function postToLinkedIn(
         } catch (combineError) {
           log.error('Failed to combine videos', { error: combineError instanceof Error ? combineError.message : String(combineError) });
           log.warn('Falling back to first video only');
-          mediaToUpload = [videos[0]];
+          // videos.length > 0 is guaranteed by the outer if-block
+          const [firstVideo] = videos;
+          if (firstVideo) mediaToUpload = [firstVideo];
         }
       } else {
         // Single video or ffmpeg not available
         if (videos.length > 1 && !ffmpegAvailable) {
           log.warn('Multiple videos provided but ffmpeg not available to combine them - using first video only');
         }
-        mediaToUpload = [videos[0]];
+        // videos.length > 0 is guaranteed by the outer if-block
+        const [firstVideo] = videos;
+        if (firstVideo) mediaToUpload = [firstVideo];
       }
     } else if (images.length > 0) {
       // Use all images (up to 20 per LinkedIn MultiImage API docs)
@@ -461,8 +465,11 @@ export async function postToLinkedIn(
     }
 
     const data: LinkedInPostResponse = await response.json();
-    const postUrl = data.id ? `https://www.linkedin.com/feed/update/${data.id}` : undefined;
-    return { success: true, postId: data.id, postUrl };
+    return {
+      success: true,
+      postId: data.id,
+      ...(data.id ? { postUrl: `https://www.linkedin.com/feed/update/${data.id}` } : {}),
+    };
   } catch (error) {
     log.error('Error posting to LinkedIn', { error: error instanceof Error ? error.message : String(error) });
     const errorMessage = error instanceof Error ? error.message : 'Failed to post to LinkedIn';

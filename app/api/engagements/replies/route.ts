@@ -134,9 +134,9 @@ export async function POST(_request: NextRequest) {
             linkedinPostUrn: post.linkedinPostId,
             commentUrn: comment.urn,
             commenterName: comment.actorName,
-            commenterProfileUrl: comment.actorProfileUrl,
+            ...(comment.actorProfileUrl !== undefined && { commenterProfileUrl: comment.actorProfileUrl }),
             commentText: comment.message,
-            aiGeneratedReply: aiReply,
+            ...(aiReply !== undefined && { aiGeneratedReply: aiReply }),
             status: 'pending',
           });
 
@@ -238,10 +238,10 @@ export async function PUT(request: NextRequest) {
       if (result.success) {
         reply.status = 'replied';
         reply.repliedAt = new Date();
-        reply.error = undefined;
+        reply.set('error', undefined);
       } else {
         reply.status = 'failed';
-        reply.error = result.error;
+        if (result.error !== undefined) reply.error = result.error;
       }
     }
 

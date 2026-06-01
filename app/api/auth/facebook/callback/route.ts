@@ -197,6 +197,9 @@ export async function GET(request: Request) {
         // If there's only one Facebook page, connect it automatically
         if (allPages.length === 1) {
           const fbPage = allPages[0];
+          if (!fbPage) {
+            return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?error=no_pages_found`);
+          }
           const connection: PlatformConnection = {
             platform: 'facebook',
             platformId: fbPage.id,

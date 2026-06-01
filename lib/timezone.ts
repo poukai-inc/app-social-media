@@ -62,16 +62,16 @@ export function getZonedParts(date: Date, timeZone: string): ZonedParts {
   for (const part of dtf.formatToParts(date)) {
     map[part.type] = part.value;
   }
-  let hour = parseInt(map.hour, 10);
+  let hour = parseInt(map['hour'] ?? '0', 10);
   if (hour === 24) hour = 0; // some engines emit "24" for midnight
   return {
-    year: parseInt(map.year, 10),
-    month: parseInt(map.month, 10),
-    day: parseInt(map.day, 10),
+    year: parseInt(map['year'] ?? '0', 10),
+    month: parseInt(map['month'] ?? '1', 10),
+    day: parseInt(map['day'] ?? '1', 10),
     hour,
-    minute: parseInt(map.minute, 10),
-    second: parseInt(map.second, 10),
-    weekday: WEEKDAY_INDEX[map.weekday] ?? date.getUTCDay(),
+    minute: parseInt(map['minute'] ?? '0', 10),
+    second: parseInt(map['second'] ?? '0', 10),
+    weekday: WEEKDAY_INDEX[map['weekday'] ?? ''] ?? date.getUTCDay(),
   };
 }
 

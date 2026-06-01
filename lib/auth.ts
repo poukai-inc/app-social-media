@@ -16,7 +16,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth(() => {
     : '';
 
   return {
-    secret: process.env.AUTH_SECRET,
+    ...(process.env.AUTH_SECRET !== undefined ? { secret: process.env.AUTH_SECRET } : {}),
     trustHost: true,
     providers: [
       LinkedIn({
@@ -51,6 +51,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth(() => {
           try {
             await connectToDatabase();
 
+            if (!user.email) return false;
             const existingUser = await User.findOne({ email: user.email });
 
             if (existingUser) {
@@ -68,13 +69,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth(() => {
               // Create new user
               await User.create({
                 name: user.name || 'LinkedIn User',
-                email: user.email!,
-                image: user.image ?? undefined,
-                linkedinId: profile?.sub ?? undefined,
-                linkedinAccessToken: account.access_token ?? undefined,
-                linkedinAccessTokenExpires: account.expires_at
-                  ? new Date(account.expires_at * 1000)
-                  : undefined,
+                email: user.email,
+                ...(user.image != null ? { image: user.image } : {}),
+                ...(profile?.sub != null ? { linkedinId: profile.sub } : {}),
+                ...(account.access_token != null ? { linkedinAccessToken: account.access_token } : {}),
+                ...(account.expires_at != null ? { linkedinAccessTokenExpires: new Date(account.expires_at * 1000) } : {}),
               });
             }
             return true;

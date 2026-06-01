@@ -148,7 +148,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
         connectionId: connection.platformId,
         success: true,
         postId,
-        postUrl: postId ? `https://www.linkedin.com/feed/update/${postId}` : undefined,
+        ...(postId ? { postUrl: `https://www.linkedin.com/feed/update/${postId}` } : {}),
         publishedAt: new Date(),
       };
     } catch (error) {
@@ -164,7 +164,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
   /**
    * Upload media to LinkedIn
    */
-  async uploadMedia(
+  override async uploadMedia(
     connection: IPlatformConnection,
     mediaUrl: string,
     mediaType: 'image' | 'video'
@@ -304,7 +304,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
   /**
    * Fetch post metrics from LinkedIn
    */
-  async fetchMetrics(
+  override async fetchMetrics(
     connection: IPlatformConnection,
     postId: string
   ): Promise<PlatformMetrics> {
