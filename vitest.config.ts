@@ -26,6 +26,7 @@ export default defineConfig({
         'lib/oauth-state.ts',
         'lib/timezone.ts',
         'lib/sanitize-page.ts',
+        'lib/db/dual-write.ts',
       ],
       thresholds: {
         lines: 80,
