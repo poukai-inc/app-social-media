@@ -30,4 +30,11 @@ describe('oauth-state', () => {
     process.env.NEXTAUTH_SECRET = 'a-different-secret';
     expect(verifyState(signed)).toBeNull();
   });
+
+  it('throws when NEXTAUTH_SECRET is not configured', () => {
+    const prev = process.env.NEXTAUTH_SECRET;
+    delete process.env.NEXTAUTH_SECRET;
+    expect(() => signState({ email: 'a@b.com' })).toThrow();
+    process.env.NEXTAUTH_SECRET = prev;
+  });
 });

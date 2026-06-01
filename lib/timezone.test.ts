@@ -55,4 +55,11 @@ describe('timezone', () => {
       '2026-07-02T13:00:00.000Z'
     );
   });
+
+  it('keeps the next wall time today when it is still in the future', () => {
+    const from = new Date('2026-07-01T10:00:00Z'); // NY 06:00 EDT — before 09:00 NY (13:00Z)
+    expect(getNextWallTimeInTz(9, 0, 'America/New_York', from).toISOString()).toBe(
+      '2026-07-01T13:00:00.000Z'
+    );
+  });
 });
