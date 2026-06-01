@@ -1,0 +1,6 @@
+# Security contact for autopost (poukai-inc). BACKLOG #88.
+Contact: mailto:security@pouk.ai
+Contact: https://github.com/poukai-inc/app-social-media/security/advisories/new
+Expires: 2027-06-01T00:00:00.000Z
+Preferred-Languages: en, es
+Canonical: https://pouk.ai/.well-known/security.txt

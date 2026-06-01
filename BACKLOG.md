@@ -167,7 +167,7 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 |---|---|---|---|
 | 68 | `[ ]` | Wire Bugsink (server + browser); PII scrub | `app/layout.tsx`, `lib/**` |
 | 69 | `[ ]` | Wire Matomo on dashboard routes (env-gated) | `app/dashboard/**`, `app/layout.tsx` |
-| 70 | `[ ]` | Health endpoint expansion (db/storage/ai/cron/notifications status) | `app/api/health/route.ts` |
+| 70 | `[x]` | Health endpoint expansion (db/postgres/ai/storage/email/linkedin/cron/notifications status; presence-based, behind the gated detailed branch) | `app/api/health/route.ts` |
 
 #### Phase 6 — Tests, validation, platform cleanup (1-1.5 wks)
 
@@ -207,9 +207,9 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 |---|---|---|---|
 | 86 | `[ ]` | Conventional Commits enforcement (commitlint + husky) | `commitlint.config.mjs`, `.husky/` |
 | 87 | `[x]` | Renovate/Dependabot (auto minor/patch) — `.github/renovate.json` added (auto-merge minor/patch+lockfile; major/next-auth/React/DS/lucide/Next manual). _Maintainer must install the Renovate GitHub App on the org to activate._ | `.github/renovate.json` |
-| 88 | `[ ]` | `.well-known/security.txt` once `security@pouk.ai` lives | `public/.well-known/security.txt` |
-| 89 | `[ ]` | `CODEOWNERS` if multi-contributor | `.github/CODEOWNERS` |
-| 90 | `[ ]` | Branch protection rules on `main` | GitHub settings |
+| 88 | `[x]` | `.well-known/security.txt` once `security@pouk.ai` lives | `public/.well-known/security.txt` |
+| 89 | `[x]` | `CODEOWNERS` if multi-contributor | `.github/CODEOWNERS` |
+| 90 | `[x]` | Branch protection rules on `main` — strict + 10 required checks (install/lint/typecheck/build/audit/license/secret-scan/unit/integration/db). Reviews not required + admins not enforced (solo workflow) | GitHub settings |
 | 91 | `[ ]` | Stripe billing scaffolding (hosted only, flagged) | `lib/billing/`, `app/dashboard/billing/` |
 | 92 | `[ ]` | Per-org Resend domain verification (per-org sender) | `lib/email.ts`, new dashboard page |
 | 93 | `[ ]` | Per-org plan tier feature flags | `lib/feature-flags.ts` |
