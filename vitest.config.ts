@@ -27,6 +27,7 @@ export default defineConfig({
         'lib/timezone.ts',
         'lib/sanitize-page.ts',
         'lib/db/dual-write.ts',
+        'lib/notifications/events.ts',
       ],
       thresholds: {
         lines: 80,

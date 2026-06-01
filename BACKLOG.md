@@ -94,7 +94,7 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 29 | `[ ]` | Per-org OAuth credentials (BYO LinkedIn/Twitter/Facebook apps); encrypted at rest | `db/schema.ts`, `app/api/auth/**`, `app/dashboard/pages/[id]/settings/page.tsx` |
 | 30 | `[ ]` | First-boot wizard (zero orgs → create Org #1 + owner) | `app/setup/page.tsx` (new), middleware redirect |
 | 31 | `[ ]` | Multi-tenant isolation test harness (org A can't see org B) | `tests/isolation/*.test.ts` (new) |
-| 32 | `[ ]` | Notification abstraction `lib/notifications/` (dispatcher + channels + events) | `lib/notifications/` (new) |
+| 32 | `[x]` | Notification abstraction `lib/notifications/` — `notify(ctx, msg)` dispatcher (Promise.allSettled, per-channel isolation, failures logged not thrown) + channel contract + **in-app** (Postgres `notifications` repo, RLS-scoped) + **email** (Resend) channels + typed event builders (post.published/failed, approval.needed, token.expiring). MVP = in-app + email (Slack→P2 per ADR-0007). 8 unit tests. _Follow-ups: #33 migrate email call sites onto `notify()`; #34 in-app feed UI; #35 Slack adapter._ | `lib/notifications/` (new) |
 | 33 | `[ ]` | Migrate email call sites → `notify(orgId, event, data)` | `app/api/blog/generate/route.ts`, `app/api/cron/auto-generate/route.ts`, `app/api/cron/token-refresh/route.ts` |
 | 34 | `[ ]` | In-app notification feed (DB + dashboard bell + read/unread) | `db/schema.ts`, `app/dashboard/notifications/`, `components/ui/notification-bell.tsx` |
 | 35 | `[ ]` | Slack webhook channel adapter — **moved to P2** (ADR-0007 rev 2026-05-31: MVP = email + in-app only) | `lib/notifications/channels/slack.ts` (new) |
