@@ -44,7 +44,9 @@ All tokens live in `src/tokens/tokens.css` on `:root`. Owned exclusively by `pou
 
 ### Dark mode
 
-Dark mode is implemented as a `@media (prefers-color-scheme: dark)` block appended to `src/tokens/tokens.css`. It overrides every color token on `:root`. No component CSS changes — every component that consumes `var(--token)` references gains dark mode automatically. Full rationale in `meta/design/dark-mode.md`.
+Dark mode is implemented as a token tier in `src/tokens/tokens.css` that overrides every color token on `:root`. No component CSS changes — every component that consumes `var(--token)` references gains dark mode automatically. Full rationale in `meta/design/dark-mode.md`.
+
+**Activation (two paths).** (1) OS preference via `@media (prefers-color-scheme: dark)` — zero config. (2) Manual toggle: set `class="dark"` or `data-theme="dark"` on `<html>`/`:root` to force dark regardless of OS; `class="light"` / `data-theme="light"` forces light. **Explicit wins over OS** (the media block is scoped `:root:not(.light):not([data-theme="light"])`). The DS sets `color-scheme` per mode so native controls match. For no-flash SSR, set the class in a blocking `<head>` script before stylesheets load. Dark values are duplicated between the `@media` block and the explicit `:root.dark` block — update both together.
 
 **Philosophy.** Dark mode is not an inversion of the light palette. It is a parallel surface stack: backgrounds darken progressively toward black (the floor); foregrounds brighten toward near-white (never pure). The elevation rhythm inverts direction — surfaces RISE through lighter grays as they elevate, rather than toward white. `html { color-scheme: light dark }` is declared so browser-native controls (scrollbars, form inputs, selection) match the token-driven scheme.
 
@@ -333,6 +335,7 @@ Default `size` on `<Icon>` is `"sm"` (16px). Lucide's SVG grid is designed for 1
 - Requires a caption — numeral alone is not self-explanatory.
 - value must be a numeral or numeral+unit string. source should be citation only.
 - Maximum 4 Stats per section. Maximum 1 size="lg" per section.
+- Optional `icon` (ReactNode) renders above the numeral in an `aria-hidden` wrapper — decorative only; the caption must still carry the meaning. Pass a sized SVG/icon element; it inherits no size from Stat.
 
 ### NumberFormat
 - Pure presentational formatter backed by native `Intl.NumberFormat`. Renders a `number` as a locale-correct string and nothing else. NEVER use as a layout or visual primitive — it owns no CSS.
@@ -1378,9 +1381,68 @@ import { Icon } from "@poukai-inc/ui";
 - Do NOT add onClick-only handlers — items are `<a>` anchors, not `<button>` elements.
 
 ### SiteShell
-- Do NOT nest SiteShell inside another SiteShell. It is min-height: 100dvh.
-- Emits plain <a href> tags — framework-router consumers intercept at app level.
-- navLabel (default: "Primary") is the aria-label for the nav element.
+
+Full-page chrome organism: sticky-capable header (wordmark + primary nav + optional end slot), main content slot, and hairline footer. Supports nested dropdown nav items (desktop Radix DropdownMenu) and a hamburger mobile panel (below 768px). No router awareness, no auth logic — purely compositional.
+
+**Props**
+- `currentRoute` (string, optional) — matched against `routes[i].href` to set `aria-current="page"` on the active flat link.
+- `routes` (SiteShellRoute[], optional) — primary nav items. Each item: `{ href?: string; label: ReactNode; items?: SiteShellRoute[] }`. A route with `items` renders as a Radix dropdown trigger on desktop and an inline disclosure on mobile. A route with no `href` and an `items` array is a group label (e.g. "More"). One level of nesting only.
+- `footer` (ReactNode, optional) — footer slot. Rendered beneath a hairline rule. Pass a `<Footer as="div">` for the canonical composition.
+- `homeHref` (string, default `"/"`) — href for the wordmark link.
+- `navLabel` (string, default `"Primary"`) — `aria-label` for the `<nav>` landmark.
+- `sticky` (boolean, default `false`) — makes the header `position: sticky; top: 0` with a hairline `border-bottom` and compact block padding (`--space-4`). Non-sticky behavior is identical to the original.
+- `end` (ReactNode, optional) — right-edge slot for consumer-supplied controls (avatar, sign-out, theme toggle). SiteShell provides the layout container; the consumer owns the contents. On desktop it appears at the trailing edge of the header; on mobile it appears at the bottom of the mobile panel.
+- `mobileMenuLabel` (string, default `"Open navigation"`) — accessible label for the hamburger button when closed. Exposed for i18n.
+- `mobileCloseLabel` (string, default `"Close navigation"`) — accessible label for the close button when open. Exposed for i18n.
+- `children` (ReactNode, required) — page content, rendered in `<main>`.
+
+**Behaviour**
+- Desktop (≥768px): nav items render inline. Items with `items` use `DropdownMenu.Root modal={false}` + `Trigger asChild` + `Content align="start"` + `Item` per child.
+- Mobile (<768px): nav collapses to hamburger button. Panel slides in with `translateY(-8px→0)` + opacity at `--dur-mid`/`--easing`. Focus moves to first panel item on open; returns to hamburger on close/Escape. NOT modal — no focus trap.
+- Nested items on mobile render as inline disclosures (plain `<button aria-expanded>` toggles child list). No Radix on mobile.
+- Auth composition: pass different `routes` and `end` for logged-in vs marketing. SiteShell has no auth prop.
+
+**Do NOT**
+- Nest SiteShell inside another SiteShell. It is `min-height: 100dvh`.
+- Pass auth state as a prop — compose via `routes` and `end`.
+- Use `as="footer"` on `<Footer>` inside SiteShell — this nests two `<footer>` landmarks. Use default `as="div"`.
+- Add `import { ... } from "lucide-react"` inside SiteShell — icons are inline SVG per spec §6.
+
+**Tokens consumed**: `--bg`, `--bg-elevated`, `--fg`, `--fg-muted`, `--hairline`, `--hairline-w`, `--accent`, `--radius-1`, `--radius-2`, `--font-sans`, `--fs-meta`, `--dur-fast`, `--dur-mid`, `--easing`, `--space-2`, `--space-4`, `--space-6`, `--space-8`, `--space-12`, `--space-24`, `--page-pad`, `--content-max`. Z-index `100` is a documented raw-value exception (see DS z-index informal scale).
+
+```tsx
+// Marketing shell (unchanged pattern)
+<SiteShell
+  currentRoute="/why-ai"
+  routes={[
+    { href: "/why-ai", label: "Why AI" },
+    { href: "/roles", label: "Roles" },
+  ]}
+  footer={<Footer copyright="© Pouk AI INC 2026" email="hello@pouk.ai" />}
+>
+  {pageContent}
+</SiteShell>
+
+// App shell — sticky, end slot, nested "More" group
+<SiteShell
+  sticky
+  currentRoute="/dashboard"
+  routes={[
+    { href: "/dashboard", label: "Dashboard" },
+    { href: "/posts", label: "Posts" },
+    {
+      label: "More",
+      items: [
+        { href: "/settings", label: "Settings" },
+        { href: "/billing", label: "Billing" },
+      ],
+    },
+  ]}
+  end={<Avatar name="Arian" />}
+>
+  {appContent}
+</SiteShell>
+```
 
 ### TimelineItem
 - Single entry in a sequential chronological list. Renders a date, title, and optional body copy with a left-rail marker dot and optional connector line to the next item.
@@ -3621,5 +3683,60 @@ useEffect(() => {
     { label: "Home", href: "/" },
     { label: "Overview", href: "/dashboard/overview" },
   ]}
+/>
+```
+
+### FileUploader
+- Drag-and-drop file selection molecule with per-file progress, validation, and removal. Provides a visually-styled drop zone, a hidden `<input type="file">`, and a file list with optional `<ProgressBar>` per entry. No remote upload logic — the component collects local `File` objects only; the caller owns the upload transport.
+- Root element: `<div>`. `forwardRef<HTMLDivElement, FileUploaderProps>`. `...rest` spread to root div. `displayName = "FileUploader"`.
+- Uncontrolled by default (manages its own `FileEntry[]` state). Becomes controlled when `files` prop is supplied — caller must update it in response to `onFilesAdded` / `onFileRemoved`. Both modes fire all callbacks.
+- `FileEntry` interface: `{ id: string; file: File; progress?: number; error?: string }`. IDs are auto-generated via `crypto.randomUUID()` (or a module counter fallback); stable for the entry's lifetime.
+- `accept` (string, optional) — forwarded to `<input accept>` and used for drop-event client-side validation. Supports MIME types (`image/*`, `application/pdf`) and extensions (`.pdf`, `.jpg`).
+- `maxSizeBytes` (number, optional) — files exceeding this are rejected with a human-readable error message (e.g. "File exceeds maximum size of 10.0 MB").
+- `multiple` (boolean, default `true`) — forwarded to `<input multiple>`. When `false`, dropping more than one file shows a zone-level error and only the first file is accepted.
+- `disabled` (boolean, default `false`) — entire component is inert: no drag, no dialog, no remove. `opacity: 0.5`, `pointer-events: none`.
+- `files` (FileEntry[], optional) — controlled file list. Omit for uncontrolled mode.
+- `onFilesAdded` ((entries: FileEntry[]) => void, optional) — called with newly accepted entries after validation passes.
+- `onFileRemoved` ((id: string) => void, optional) — called when user removes a file via the × button.
+- `onFileRejected` ((entry: FileEntry) => void, optional) — called for every file that fails `accept` or `maxSizeBytes` validation. Entry has `error` set; entry is NOT added to the file list.
+- `dropZoneLabel` (string, default `"Drag files here, or click to browse"`) — overrides the primary instruction line in the drop zone.
+- `className` (string, optional) — merged onto the root `<div>`.
+- Field integration: accepts `id`, `aria-describedby`, `aria-invalid`, `required` props injected by `<Field>` and forwards them to the hidden `<input>`.
+- Drop zone states: idle (`--bg` background, dashed `--hairline` border), drag-over-valid (`--accent-glow` bg, `--accent` border/text), drag-over-invalid (`--bg-danger` bg, `--danger` border/text), focus-visible (2px solid `--accent` outline), disabled (opacity 0.5).
+- File row states: default (`--bg-elevated` bg, `--hairline` border), error (border `--danger`), with-progress (`<ProgressBar size="sm">` below filename row).
+- A11y: drop zone has `role="button"` + `tabIndex={0}`. Enter/Space opens file dialog. Hidden input uses visually-hidden CSS (not `display:none`) to remain in the accessibility tree. Polite live region announces add/remove/reject events. Assertive live region announces drag-state changes. Remove buttons have `aria-label="Remove {filename}"`. Focus management on remove: moves to next/previous remove button, or drop zone when list empties.
+- No lucide-react. All three glyphs (upload arrow, file page, remove ×) are inline SVG with `aria-hidden="true"` and `currentColor` stroke.
+- Tokens: `--surface`, `--bg-elevated`, `--bg-danger`, `--accent`, `--accent-glow`, `--danger`, `--fg`, `--fg-muted`, `--hairline`, `--hairline-w`, `--radius-2`, `--radius-3`, `--font-sans`, `--fs-meta`, `--lh-meta`, `--space-1`, `--space-2`, `--space-3`, `--space-4`, `--space-6`, `--dur-fast`, `--dur-press`, `--easing`, `--icon-lg`, `--icon-sm`, `--btn-h-sm`.
+
+```tsx
+// (a) Zero-config uncontrolled:
+<FileUploader />
+
+// (b) With constraints:
+<FileUploader accept="image/*,application/pdf" maxSizeBytes={10485760} />
+
+// (c) Single-file mode:
+<FileUploader multiple={false} accept=".pdf" />
+
+// (d) Inside Field (canonical):
+<Field label="Attach media" helper="JPEG, PNG · max 5 MB" id="media-upload">
+  <FileUploader accept="image/*" maxSizeBytes={5242880} />
+</Field>
+
+// (e) Controlled (React Hook Form):
+<FileUploader
+  files={files}
+  onFilesAdded={(entries) => setFiles((prev) => [...prev, ...entries])}
+  onFileRemoved={(id) => setFiles((prev) => prev.filter((f) => f.id !== id))}
+  onFileRejected={(entry) => toast.error(entry.error ?? "File rejected")}
+  accept="image/*,application/pdf"
+  maxSizeBytes={26214400}
+/>
+
+// (f) With progress (caller drives progress updates):
+<FileUploader
+  files={files.map((f) => ({ ...f, progress: uploadProgress[f.id] }))}
+  onFilesAdded={(entries) => setFiles((prev) => [...prev, ...entries])}
+  onFileRemoved={(id) => setFiles((prev) => prev.filter((f) => f.id !== id))}
 />
 ```
