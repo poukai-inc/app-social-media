@@ -217,8 +217,8 @@ Sort: within each priority bucket, sorted by severity (C → H → M → L), the
 | 95 | `[ ]` | Split `lib/openai.ts` (1.4k lines) per-platform | `lib/prompts/{linkedin,twitter,facebook,instagram}.ts` |
 | 96 | `[ ]` | Split `Post` table types (focused Zod schemas per concern) | `lib/types/post/`, `db/schema.ts` |
 | 97 | `[ ]` | Replace `MONGODB_URI` legacy env reference with `DATABASE_URL` | `.env.example`, docs |
-| 98 | `[ ]` | `CHANGELOG.md` (this `BACKLOG.md` + matches `poukai-ui`) | repo root |
-| 99 | `[ ]` | `docs/architecture.md` (compose topology, RLS model, cron split, S3 layout, notification flow) | `docs/architecture.md` (new) |
+| 98 | `[x]` | `CHANGELOG.md` (this `BACKLOG.md` + matches `poukai-ui`) | repo root |
+| 99 | `[x]` | `docs/architecture.md` (compose topology, RLS model, cron split, S3 layout, notification flow) | `docs/architecture.md` (new) |
 | 100 | `[ ]` | Admin surface for hosted SaaS: super-admin org list, impersonation audit log | `app/admin/` (new) |
 | 101 | `[ ]` | Telemetry opt-in for self-host (anonymized version + feature usage; env-gated default-off) | `lib/telemetry.ts` (new) |
 | 102 | `[ ]` | i18n scaffolding (en first, then es/pt) | `next-intl` or equivalent |
