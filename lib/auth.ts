@@ -66,6 +66,33 @@ export const { handlers, signIn, signOut, auth } = NextAuth(() => {
               clientId: process.env.POUK_CLIENT_ID,
               clientSecret: process.env.POUK_CLIENT_SECRET ?? '',
               checks: ['pkce', 'state'] as ('pkce' | 'state')[],
+              // pouk-auth's id_token is minimal (sub/iss only) — email/name live
+              // on the userinfo endpoint (/me). next-auth's default OIDC profile
+              // reads the id_token, so fetch /me explicitly to populate email
+              // (required: the signIn callback rejects sign-in without it).
+              async profile(claims: Record<string, unknown>, tokens: { access_token?: string }) {
+                let merged: Record<string, unknown> = claims;
+                try {
+                  const base = process.env.POUK_ISSUER ?? 'https://id.pouk.ai';
+                  const res = await fetch(`${base}/me`, {
+                    headers: { Authorization: `Bearer ${tokens.access_token ?? ''}` },
+                  });
+                  if (res.ok) {
+                    merged = { ...claims, ...(await res.json() as Record<string, unknown>) };
+                  } else {
+                    log.warn('pouk userinfo fetch failed', { status: res.status });
+                  }
+                } catch (error) {
+                  log.error('pouk userinfo error', { error: error instanceof Error ? error.message : String(error) });
+                }
+                const picture = merged.picture;
+                return {
+                  id: String(merged.sub ?? ''),
+                  email: (merged.email as string | undefined) ?? null,
+                  name: (merged.name as string | undefined) ?? (merged.preferred_username as string | undefined) ?? null,
+                  ...(typeof picture === 'string' ? { image: picture } : {}),
+                };
+              },
             },
           ]
         : []),
