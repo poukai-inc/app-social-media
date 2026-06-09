@@ -966,6 +966,35 @@ import { Icon } from "@poukai-inc/ui";
 <Input id="search" type="search" />
 ```
 
+### PasswordInput
+**Atomic layer: atom.** Import from `@poukai-inc/ui/atoms/PasswordInput` or `@poukai-inc/ui`.
+- Password input with a built-in show/hide reveal toggle. Composes the `Input` atom (field) + a ghost `IconButton` atom (toggle, Lucide `Eye` / `EyeOff`). `"use client"` — holds reveal state with `useState`. Ref forwarded to the underlying `HTMLInputElement` (not the wrapper).
+- No `type` prop — the field is always `type="password"`; the toggle flips it to `type="text"` transiently while revealed. For non-password types use `<Input>`.
+- `size` (`"sm"` | `"md"` | `"lg"`, default `"md"`) — forwarded to the underlying `Input`; field height via shared `--btn-h-*` ladder. The reveal toggle stays `IconButton size="sm"` (32px) at every field size.
+- `invalid` (optional boolean) — forwarded to the underlying `Input`; sets `data-invalid="true"` and `aria-invalid="true"`; border → `--danger`. Prefer wiring through `<Field error="…">`.
+- `revealLabel` (string, default `"Show password"`) and `hideLabel` (string, default `"Hide password"`) — accessible labels for the toggle in masked / revealed states. Overridable for localization.
+- `Omit<ComponentPropsWithoutRef<"input">, "size" | "type">` spread onto the input. Native HTML `size` attribute intentionally shadowed by DS `size` prop.
+- `clsx` className merge via `className` prop — merged onto the root `<div>` wrapper.
+- Toggle is a real `<button type="button">` (never submits the form), keyboard-reachable, carries `aria-pressed` (false when masked, true when revealed) and the active `aria-label`. `IconButton` requires `aria-label` at the type level, so the toggle always has an accessible name.
+- States: all field states (rest, hover, focus-visible, disabled, readonly, invalid) inherited unchanged from `Input`. Reveal dimension: masked (Lucide `Eye`, `aria-pressed="false"`) ↔ revealed (Lucide `EyeOff`, `aria-pressed="true"`).
+- Tokens: inherits all visual tokens via the composed `Input` + `IconButton`; uses only `--btn-h-sm`, `--space-1`, `--space-2` for its own layout (toggle inset + inline-end padding reservation). No new tokens. No new runtime dependency — `lucide-react` is already a peer of the `Icon` atom.
+- Idiomatic usage wraps PasswordInput in `<Field>`. Standalone usage is valid; consumer owns label association.
+- Do NOT pass `type` — the field is always a password field.
+- Do NOT use for a strength meter or generate-password affordance — separate concerns.
+- In v1 `disabled` / `readOnly` reach only the underlying input; the toggle is not auto-disabled.
+
+```tsx
+// Inside Field (recommended):
+<Field label="Password" id="password">
+  <PasswordInput autoComplete="current-password" />
+</Field>
+
+// Localized toggle labels:
+<Field label="Contraseña" id="pw-es">
+  <PasswordInput revealLabel="Mostrar contraseña" hideLabel="Ocultar contraseña" />
+</Field>
+```
+
 ### Textarea
 - **Atom layer.** Multi-line textarea primitive. Root is always `<textarea>`. Non-polymorphic. Ref forwarded to `HTMLTextAreaElement`. Label/helper/error are NOT owned by Textarea — they live in `<Field>`.
 - Import from `@poukai-inc/ui` (root) or `@poukai-inc/ui/atoms/Textarea`. The legacy `@poukai-inc/ui/molecules/Textarea` path is a `@deprecated` re-export shim and will be removed in v2.0.

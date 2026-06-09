@@ -4,7 +4,7 @@
 
 Poukai is a React component library organised by Atomic Design (tokens → atoms → molecules → organisms).
 
-Version: `2.16.0`
+Version: `2.17.0`
 
 ## LLM context
 
@@ -63,6 +63,7 @@ Authoritative source: `src/tokens/tokens.css`. All values on `:root` — color, 
 - `@poukai-inc/ui/atoms/Checkbox`
 - `@poukai-inc/ui/atoms/Switch`
 - `@poukai-inc/ui/atoms/Input`
+- `@poukai-inc/ui/atoms/PasswordInput`
 - `@poukai-inc/ui/atoms/Radio`
 - `@poukai-inc/ui/atoms/Tooltip`
 - `@poukai-inc/ui/atoms/TimePicker`
