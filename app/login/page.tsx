@@ -2,6 +2,7 @@
 
 import { signIn } from 'next-auth/react';
 import { Linkedin } from 'lucide-react';
+import { Button } from '@poukai-inc/ui/atoms/Button';
 
 export default function LoginPage() {
   return (
@@ -20,6 +21,14 @@ export default function LoginPage() {
         </div>
 
         <div className="space-y-4">
+          <Button
+            variant="primary"
+            className="w-full justify-center"
+            onClick={() => signIn('pouk', { callbackUrl: '/dashboard' })}
+          >
+            Sign in with Pouk
+          </Button>
+
           <button
             onClick={() => signIn('linkedin', { callbackUrl: '/dashboard' })}
             className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#0077B5] px-6 py-4 text-lg font-medium text-white transition-colors hover:bg-[#006097]"

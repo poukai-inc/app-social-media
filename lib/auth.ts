@@ -53,10 +53,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth(() => {
           },
         },
       }),
+      // pouk-auth (id.pouk.ai) OIDC identity provider (ADR-0008). Additive
+      // alongside LinkedIn login — only registered when POUK_CLIENT_ID is set,
+      // so the build/login still works without the pouk env configured.
+      ...(process.env.POUK_CLIENT_ID
+        ? [
+            {
+              id: 'pouk',
+              name: 'Pouk',
+              type: 'oidc' as const,
+              issuer: process.env.POUK_ISSUER ?? 'https://id.pouk.ai',
+              clientId: process.env.POUK_CLIENT_ID,
+              clientSecret: process.env.POUK_CLIENT_SECRET ?? '',
+              checks: ['pkce', 'state'] as ('pkce' | 'state')[],
+            },
+          ]
+        : []),
     ],
     callbacks: {
       async jwt({ token, account, profile }) {
-        if (account && profile) {
+        // Only the LinkedIn login grant carries the posting token / linkedinId.
+        // A pouk (OIDC identity) login has no LinkedIn account, so guard this
+        // block to avoid overwriting/clearing linkedinId on pouk sign-in (ADR-0008).
+        if (account?.provider === 'linkedin' && profile) {
           token.accessToken = account.access_token;
           token.accessTokenExpires = account.expires_at ? account.expires_at * 1000 : undefined;
           token.linkedinId = profile.sub;
@@ -107,6 +126,36 @@ export const { handlers, signIn, signOut, auth } = NextAuth(() => {
             return false;
           }
         }
+
+        // pouk-auth (OIDC identity) sign-in (ADR-0008). Establishes identity
+        // only — the LinkedIn posting token is captured separately via the
+        // standalone connect flow. Do NOT touch linkedin* fields here.
+        if (account?.provider === 'pouk') {
+          try {
+            await connectToDatabase();
+
+            if (!user.email) return false;
+            const existingUser = await User.findOne({ email: user.email });
+
+            if (existingUser) {
+              await User.findByIdAndUpdate(existingUser._id, {
+                name: user.name || existingUser.name,
+                image: user.image || existingUser.image,
+              });
+            } else {
+              await User.create({
+                name: user.name || 'Pouk User',
+                email: user.email,
+                ...(user.image != null ? { image: user.image } : {}),
+              });
+            }
+            return true;
+          } catch (error) {
+            log.error('Error during pouk sign in', { error: error instanceof Error ? error.message : String(error) });
+            return false;
+          }
+        }
+
         return true;
       },
     },
