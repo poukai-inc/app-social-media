@@ -10,6 +10,8 @@ declare module 'next-auth' {
     };
     accessToken?: string;
     linkedinId?: string;
+    // pouk-auth id_token, used as id_token_hint for RP-initiated logout (ADR-0008).
+    idToken?: string;
   }
 }
 
@@ -18,5 +20,6 @@ declare module 'next-auth/jwt' {
     accessToken?: string;
     accessTokenExpires?: number;
     linkedinId?: string;
+    idToken?: string;
   }
 }

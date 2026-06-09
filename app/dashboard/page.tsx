@@ -58,6 +58,8 @@ export default async function DashboardPage() {
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Button asChild variant="secondary">
+            {/* Server-side OAuth redirect endpoint, not a Next page — must be a real navigation. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a href="/api/auth/linkedin/connect">
               <Linkedin className="h-4 w-4" />
               Connect LinkedIn
