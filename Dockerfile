@@ -11,12 +11,13 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml .npmrc ./
 
 # Install dependencies — frozen lockfile enforces R-066
-# SECURITY: when @poukai-inc registry auth becomes required at build time, pass
-# NPM_TOKEN via a BuildKit secret mount, NOT an ARG/ENV — an ARG bakes the token
-# into image history. e.g.:
-#   RUN --mount=type=secret,id=npm_token \
-#       NPM_TOKEN="$(cat /run/secrets/npm_token)" pnpm install --frozen-lockfile
-RUN pnpm install --frozen-lockfile
+# SECURITY: @poukai-inc registry auth (for @poukai-inc/ui) is passed via a
+# BuildKit secret mount, NOT an ARG/ENV — an ARG would bake the token into image
+# history. required=false keeps public-only builds working; the private dep just
+# fails to resolve without a token. .npmrc resolves ${NPM_TOKEN} at install time.
+RUN --mount=type=secret,id=npm_token,required=false \
+    NPM_TOKEN="$(cat /run/secrets/npm_token 2>/dev/null || echo '')" \
+    pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .

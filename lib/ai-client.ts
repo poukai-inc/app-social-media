@@ -33,15 +33,17 @@ const log = logger.child('ai-client');
 // Provider Configuration (lazy-loaded)
 // ============================================
 
+type AiProvider = 'ollama' | 'groq' | 'anthropic';
+
 let _aiClient: OpenAI | null = null;
-let _aiProvider: 'ollama' | 'groq' | null = null;
+let _aiProvider: AiProvider | null = null;
 let _ollamaModel: string | null = null;
 
-function getAiConfig(): { client: OpenAI; provider: 'ollama' | 'groq'; model: string } {
+function getAiConfig(): { client: OpenAI; provider: AiProvider; model: string } {
   if (_aiClient && _aiProvider && _ollamaModel !== null) {
     return { client: _aiClient, provider: _aiProvider, model: _ollamaModel };
   }
-  const provider = (process.env.AI_PROVIDER || 'ollama') as 'ollama' | 'groq';
+  const provider = (process.env.AI_PROVIDER || 'ollama') as AiProvider;
   if (provider === 'ollama') {
     const baseURL = process.env.OLLAMA_BASE_URL;
     if (!baseURL) {
@@ -52,6 +54,20 @@ function getAiConfig(): { client: OpenAI; provider: 'ollama' | 'groq'; model: st
     _aiProvider = 'ollama';
     _ollamaModel = model;
     log.info('Provider configured', { provider: 'ollama', model, url: baseURL });
+  } else if (provider === 'anthropic') {
+    // Anthropic via its OpenAI-compatible endpoint. Single-model mode (no
+    // Groq-style rotation): the model is fixed from ANTHROPIC_MODEL. Usage is
+    // still recorded, but capacity/rotation logic is bypassed (see
+    // getAvailableModel / getSelectedModel single-model branches).
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      throw new Error('ANTHROPIC_API_KEY is required when AI_PROVIDER=anthropic');
+    }
+    const model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5';
+    _aiClient = new OpenAI({ apiKey, baseURL: 'https://api.anthropic.com/v1/' });
+    _aiProvider = 'anthropic';
+    _ollamaModel = model;
+    log.info('Provider configured', { provider: 'anthropic', model });
   } else {
     _aiClient = new OpenAI({
       apiKey: process.env.GROQ_API_KEY,
@@ -65,7 +81,7 @@ function getAiConfig(): { client: OpenAI; provider: 'ollama' | 'groq'; model: st
 }
 
 // Convenience accessors (lazy)
-function getAiProvider(): 'ollama' | 'groq' { return getAiConfig().provider; }
+function getAiProvider(): AiProvider { return getAiConfig().provider; }
 function getOllamaModel(): string { return getAiConfig().model; }
 function getOllamaBaseUrl(): string | undefined { return process.env.OLLAMA_BASE_URL; }
 
@@ -360,9 +376,9 @@ async function getUsagePercent(model: string): Promise<number> {
  * but we prefer "real" models when they have capacity.
  */
 async function getAvailableModel(preferFast: boolean = false, estimatedTokens: number = 2000): Promise<string> {
-  // Ollama mode: always use the configured model (no rotation needed)
+  // Single-model providers (Ollama, Anthropic): use the configured model, no rotation
   const { provider, model: ollamaModel } = getAiConfig();
-  if (provider === 'ollama') {
+  if (provider === 'ollama' || provider === 'anthropic') {
     return ollamaModel;
   }
 
@@ -625,9 +641,9 @@ export async function getUsageStatus(): Promise<Record<string, {
   await refreshDailyCache();
   const status: Record<string, { tokensUsed: number; tokensLimit: number | null; requestsUsed: number; requestsLimit: number; percentUsed: number | null; available: boolean; rateLimitHits: number }> = {};
   
-  // In Ollama mode, just show the Ollama model
+  // Single-model providers (Ollama, Anthropic): just show the configured model
   const { provider, model: ollamaModel } = getAiConfig();
-  const modelsToCheck = provider === 'ollama' ? [ollamaModel] : MODEL_PRIORITY;
+  const modelsToCheck = provider === 'ollama' || provider === 'anthropic' ? [ollamaModel] : MODEL_PRIORITY;
   
   for (const model of modelsToCheck) {
     const limits = GROQ_MODEL_LIMITS[model];
@@ -704,14 +720,16 @@ export async function getSelectedModel(preferFast: boolean = false): Promise<{
     tokensLimit: number | null;
   }>;
 }> {
-  // In Ollama mode, return the single configured model
+  // Single-model providers (Ollama, Anthropic): return the configured model
   const { provider: selectedProvider, model: ollamaModel } = getAiConfig();
-  if (selectedProvider === 'ollama') {
+  if (selectedProvider === 'ollama' || selectedProvider === 'anthropic') {
     const usage = await getDailyUsage(ollamaModel);
     return {
       model: ollamaModel,
       usagePercent: 0,
-      reasoning: `Ollama local model (${process.env.OLLAMA_BASE_URL})`,
+      reasoning: selectedProvider === 'anthropic'
+        ? `Anthropic model (${ollamaModel})`
+        : `Ollama local model (${process.env.OLLAMA_BASE_URL})`,
       allModels: [{
         model: ollamaModel,
         usagePercent: 0,

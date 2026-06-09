@@ -5,7 +5,7 @@ import Post from '@/lib/models/Post';
 import User from '@/lib/models/User';
 import { PostCard } from '@/components/post-card';
 import Link from 'next/link';
-import { Plus, FileText } from 'lucide-react';
+import { Plus, FileText, Linkedin } from 'lucide-react';
 import { Button } from '@poukai-inc/ui/atoms/Button';
 import { Stat } from '@poukai-inc/ui/atoms/Stat';
 import { NumberFormat } from '@poukai-inc/ui/atoms/NumberFormat';
@@ -56,12 +56,22 @@ export default async function DashboardPage() {
           <Heading as="h1">Dashboard</Heading>
           <Text size="caption" tone="muted">Manage your LinkedIn posts</Text>
         </div>
-        <Button asChild variant="primary">
-          <Link href="/dashboard/create">
-            <Plus className="h-4 w-4" />
-            Create Post
-          </Link>
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Button asChild variant="secondary">
+            {/* Server-side OAuth redirect endpoint, not a Next page — must be a real navigation. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+            <a href="/api/auth/linkedin/connect">
+              <Linkedin className="h-4 w-4" />
+              Connect LinkedIn
+            </a>
+          </Button>
+          <Button asChild variant="primary">
+            <Link href="/dashboard/create">
+              <Plus className="h-4 w-4" />
+              Create Post
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <dl className="mb-10 grid grid-cols-2 gap-6 sm:grid-cols-5">

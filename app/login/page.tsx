@@ -2,6 +2,7 @@
 
 import { signIn } from 'next-auth/react';
 import { Linkedin } from 'lucide-react';
+import { Button } from '@poukai-inc/ui/atoms/Button';
 
 export default function LoginPage() {
   return (
@@ -20,16 +21,17 @@ export default function LoginPage() {
         </div>
 
         <div className="space-y-4">
-          <button
-            onClick={() => signIn('linkedin', { callbackUrl: '/dashboard' })}
-            className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#0077B5] px-6 py-4 text-lg font-medium text-white transition-colors hover:bg-[#006097]"
+          <Button
+            variant="primary"
+            className="w-full justify-center"
+            onClick={() => signIn('pouk', { callbackUrl: '/dashboard' })}
           >
-            <Linkedin className="h-6 w-6" />
-            Sign in with LinkedIn
-          </button>
+            Sign in with Pouk
+          </Button>
 
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            By signing in, you agree to allow AutoPost to post on your behalf
+            Sign in with your pouk.ai account. Connect LinkedIn from the dashboard
+            to publish.
           </p>
         </div>
 
