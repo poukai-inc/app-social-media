@@ -29,6 +29,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth(() => {
   return {
     ...(process.env.AUTH_SECRET !== undefined ? { secret: process.env.AUTH_SECRET } : {}),
     trustHost: true,
+    debug: process.env.AUTH_DEBUG === 'true',
     // Stateless JWT sessions (current behavior). Kept explicit so enabling the
     // adapter below does NOT switch NextAuth to database sessions.
     session: { strategy: 'jwt' as const },
