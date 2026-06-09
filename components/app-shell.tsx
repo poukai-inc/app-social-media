@@ -1,9 +1,10 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { SiteShell, type SiteShellRoute } from '@poukai-inc/ui/organisms/SiteShell';
 import { Footer } from '@poukai-inc/ui/organisms/Footer';
+import { Button } from '@poukai-inc/ui/atoms/Button';
 
 const AUTH_ROUTES: SiteShellRoute[] = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -31,15 +32,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const footer = (
     <Footer
-      as="footer"
+      as="div"
       copyright="© 2026 AutoPost"
       email="hello@autopost.app"
       links={session ? [] : PUBLIC_LINKS}
     />
   );
 
+  const end = session ? (
+    <Button
+      size="sm"
+      variant="secondary"
+      onClick={() => signOut({ callbackUrl: '/login' })}
+    >
+      Sign out
+    </Button>
+  ) : undefined;
+
   return (
-    <SiteShell currentRoute={pathname} routes={routes} footer={footer}>
+    <SiteShell currentRoute={pathname} routes={routes} footer={footer} end={end}>
       {children}
     </SiteShell>
   );
