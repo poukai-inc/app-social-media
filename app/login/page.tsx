@@ -29,16 +29,9 @@ export default function LoginPage() {
             Sign in with Pouk
           </Button>
 
-          <button
-            onClick={() => signIn('linkedin', { callbackUrl: '/dashboard' })}
-            className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#0077B5] px-6 py-4 text-lg font-medium text-white transition-colors hover:bg-[#006097]"
-          >
-            <Linkedin className="h-6 w-6" />
-            Sign in with LinkedIn
-          </button>
-
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            By signing in, you agree to allow AutoPost to post on your behalf
+            Sign in with your pouk.ai account. Connect LinkedIn from the dashboard
+            to publish.
           </p>
         </div>
 

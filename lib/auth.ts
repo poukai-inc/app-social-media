@@ -1,5 +1,4 @@
 import NextAuth from 'next-auth';
-import LinkedIn from 'next-auth/providers/linkedin';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
@@ -18,14 +17,6 @@ const log = logger.child('auth');
 const useDrizzleAdapter = process.env.AUTH_ADAPTER === 'drizzle';
 
 export const { handlers, signIn, signOut, auth } = NextAuth(() => {
-  // Base scopes for personal posting
-  const baseScopes = 'openid profile email w_member_social';
-  // Organization scopes require Marketing Developer Platform access
-  // Set LINKEDIN_ORG_ENABLED=true once your app is approved
-  const orgScopes = process.env.LINKEDIN_ORG_ENABLED === 'true'
-    ? ' w_organization_social r_organization_social'
-    : '';
-
   return {
     ...(process.env.AUTH_SECRET !== undefined ? { secret: process.env.AUTH_SECRET } : {}),
     trustHost: true,
@@ -44,18 +35,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth(() => {
         }
       : {}),
     providers: [
-      LinkedIn({
-        clientId: process.env.LINKEDIN_CLIENT_ID!,
-        clientSecret: process.env.LINKEDIN_CLIENT_SECRET!,
-        authorization: {
-          params: {
-            scope: baseScopes + orgScopes,
-          },
-        },
-      }),
-      // pouk-auth (id.pouk.ai) OIDC identity provider (ADR-0008). Additive
-      // alongside LinkedIn login — only registered when POUK_CLIENT_ID is set,
-      // so the build/login still works without the pouk env configured.
+      // pouk-auth (id.pouk.ai) OIDC is the sole login provider (ADR-0008
+      // Phase 6 cutover). LinkedIn is no longer a login option — it is connected
+      // separately for posting via /api/auth/linkedin/connect. Registered only
+      // when POUK_CLIENT_ID is set.
       ...(process.env.POUK_CLIENT_ID
         ? [
             {
@@ -107,6 +90,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth(() => {
           token.accessTokenExpires = account.expires_at ? account.expires_at * 1000 : undefined;
           token.linkedinId = profile.sub;
         }
+        // Keep the pouk id_token for RP-initiated logout (id_token_hint).
+        if (account?.provider === 'pouk' && account.id_token) {
+          token.idToken = account.id_token;
+        }
         return token;
       },
       async session({ session, token }) {
@@ -114,6 +101,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth(() => {
           session.user.id = token.sub as string;
           session.accessToken = token.accessToken as string;
           session.linkedinId = token.linkedinId as string;
+          if (token.idToken) session.idToken = token.idToken as string;
         }
         return session;
       },
