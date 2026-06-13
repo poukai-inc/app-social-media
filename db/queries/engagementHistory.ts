@@ -17,13 +17,14 @@ export const engagementHistoryRepo = {
       return row ?? null;
     }),
 
-  listByPage: (orgId: string, pageId: string): Promise<EngagementHistory[]> =>
+  listByPage: (orgId: string, pageId: string, opts: { limit?: number } = {}): Promise<EngagementHistory[]> =>
     withOrg(orgId, (tx) =>
       tx
         .select()
         .from(engagementHistory)
         .where(eq(engagementHistory.pageId, pageId))
-        .orderBy(desc(engagementHistory.createdAt)),
+        .orderBy(desc(engagementHistory.createdAt))
+        .limit(opts.limit ?? 500), // bounded (review M3)
     ),
 
   create: (orgId: string, data: NewEngagementHistory): Promise<EngagementHistory> =>

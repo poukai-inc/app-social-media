@@ -87,6 +87,31 @@ export async function dualRead<T>(ops: {
 }
 
 /**
+ * Normalize a value for cross-store comparison: Dates -> ISO strings, Mongo
+ * ObjectId -> hex string, object keys sorted. This avoids the false mismatches
+ * that a raw JSON.stringify produces for Date vs ISO, ObjectId vs string, and
+ * differing key order. (review M13)
+ */
+function normalizeForCompare(value: unknown): unknown {
+  if (value === null || value === undefined) return value;
+  if (value instanceof Date) return value.toISOString();
+  if (Array.isArray(value)) return value.map(normalizeForCompare);
+  if (typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    const toHex = (obj as { toHexString?: unknown }).toHexString;
+    if (typeof toHex === 'function') return (toHex as () => string).call(obj);
+    const out: Record<string, unknown> = {};
+    for (const key of Object.keys(obj).sort()) out[key] = normalizeForCompare(obj[key]);
+    return out;
+  }
+  return value;
+}
+
+function defaultEquals(a: unknown, b: unknown): boolean {
+  return JSON.stringify(normalizeForCompare(a)) === JSON.stringify(normalizeForCompare(b));
+}
+
+/**
  * Shadow-read verification: read both stores and report whether they agree.
  * Mismatches are logged (with `label`) for investigation; returns the boolean.
  * Never throws on mismatch — it is a diagnostic, not a gate.
@@ -100,7 +125,7 @@ export async function verifyParity<T>(
   },
 ): Promise<boolean> {
   const [m, p] = await Promise.all([ops.mongo(), ops.postgres()]);
-  const equal = ops.equals ? ops.equals(m, p) : JSON.stringify(m) === JSON.stringify(p);
+  const equal = ops.equals ? ops.equals(m, p) : defaultEquals(m, p);
   if (!equal) {
     log.warn('parity mismatch between mongo and postgres', { label });
   }

@@ -11,12 +11,14 @@ export const commentSuggestionsRepo = {
     orgId: string,
     userId: string,
     status: CommentSuggestion['status'],
+    opts: { limit?: number } = {},
   ): Promise<CommentSuggestion[]> =>
     withOrg(orgId, (tx) =>
       tx
         .select()
         .from(commentSuggestions)
-        .where(and(eq(commentSuggestions.userId, userId), eq(commentSuggestions.status, status))),
+        .where(and(eq(commentSuggestions.userId, userId), eq(commentSuggestions.status, status)))
+        .limit(opts.limit ?? 200), // bounded (review M3)
     ),
 
   findById: (orgId: string, id: string): Promise<CommentSuggestion | null> =>

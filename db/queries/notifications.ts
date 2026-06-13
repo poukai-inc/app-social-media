@@ -16,13 +16,14 @@ export const notificationsRepo = {
         .limit(opts.limit ?? 100),
     ),
 
-  listUnreadForUser: (orgId: string, userId: string): Promise<Notification[]> =>
+  listUnreadForUser: (orgId: string, userId: string, opts: { limit?: number } = {}): Promise<Notification[]> =>
     withOrg(orgId, (tx) =>
       tx
         .select()
         .from(notifications)
         .where(and(eq(notifications.userId, userId), isNull(notifications.readAt)))
-        .orderBy(desc(notifications.createdAt)),
+        .orderBy(desc(notifications.createdAt))
+        .limit(opts.limit ?? 200), // bounded (review M3)
     ),
 
   create: (orgId: string, data: NewNotification): Promise<Notification> =>
