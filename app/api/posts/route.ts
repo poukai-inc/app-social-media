@@ -121,6 +121,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(post, { status: 201 });
     }
 
+    // Validate scheduledFor: must be a parseable, future date so the publish
+    // cron does not fire immediately on a bad/past value. (review L4)
+    if (scheduledFor !== undefined && scheduledFor !== null) {
+      const when = new Date(scheduledFor);
+      if (isNaN(when.getTime()) || when.getTime() <= Date.now()) {
+        return NextResponse.json(
+          { error: 'scheduledFor must be a valid future date' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Create scheduled or draft post
     const post = await Post.create({
       userId: user._id,

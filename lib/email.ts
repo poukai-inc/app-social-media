@@ -46,10 +46,10 @@ export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
 
   if (!config.apiKey) {
     // Dev mode - log to structured logger
+    // Do not log the body — it can contain approval tokens / user content. (review L7)
     log.info('Email would be sent (no RESEND_API_KEY configured)', {
       to,
       subject,
-      bodyPreview: `${text || html.slice(0, 200)}...`,
     });
     return true;
   }

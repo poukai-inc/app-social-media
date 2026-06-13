@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const postId = searchParams.get('postId');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50', 10) || 50, 1), 200); // clamp (review M2)
 
     const ALLOWED_REPLY_STATUSES: ReadonlyArray<ReplyStatus> = ['pending', 'approved', 'replied', 'skipped', 'failed'];
     const query: { userId: typeof user._id; status?: ReplyStatus; postId?: string } = {

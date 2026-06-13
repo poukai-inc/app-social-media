@@ -11,6 +11,12 @@ const log = logger.child('api:engagements:debug');
 // Debug endpoint to check engagement data
 export async function GET() {
   try {
+    // Debug endpoint exposes internal engagement state — disable in production
+    // unless explicitly opted in. (review L3)
+    if (process.env.NODE_ENV === 'production' && process.env.ENABLE_DEBUG_ENDPOINTS !== 'true') {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
     const session = await auth();
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

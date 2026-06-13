@@ -24,17 +24,17 @@ Each task: ID — severity — file(s) — problem → fix.
 - [x] **H2** — NoSQL operator injection — `app/api/pages/[id]/posts/route.ts:42` raw `query.status=status`. → allowlist.
 - [x] **H3** — error leak in 500s — `posts/[id]/retry:83`, `posts/[id]/reprocess:142`, `ai/usage:96` return `details:error.message`. → drop `details`.
 - [x] **H4** — `POUK_CLIENT_SECRET` empty fallback — `lib/auth.ts:50` `?? ''`. → throw on missing.
-- [ ] **H5** — plaintext tokens at rest — `db/schema.ts:117,157,200`, `lib/models/User.ts:57`, data-source connection strings. → AES-256-GCM envelope encrypt.
-- [ ] **H6** — lockless crons — `icp-engage`, `collect-metrics`, `token-refresh` lack `withLock()`. → wrap.
+- [x] **H5** — plaintext tokens at rest — `db/schema.ts:117,157,200`, `lib/models/User.ts:57`, data-source connection strings. → AES-256-GCM envelope encrypt.
+- [x] **H6** — lockless crons — `icp-engage`, `collect-metrics`, `token-refresh` lack `withLock()`. → wrap.
 - [x] **H7** — `.save()` on POJO — `app/api/pages/[id]/data-sources/test/route.ts:131` page from native `findOne` (POJO), `.save()` throws. → `Page.findOne` or native `updateOne`.
-- [ ] **H8** — RLS bypass — `db/queries/pendingConnections.ts:11-22` raw `db` not `withUser()`. → use `withUser` / explicit GUC.
+- [-] **H8 (deferred — unused scaffold; org-based RLS, needs schema design not withUser)** — RLS bypass — `db/queries/pendingConnections.ts:11-22` raw `db` not `withUser()`. → use `withUser` / explicit GUC.
 
 ## MEDIUM
 
 - [ ] **M1** — no Zod boundary validation — all routes cast `request.json()`. → add Zod, priority nested bodies (`pages POST`, `generate POST`, `data-sources POST`).
 - [~] **M2** — unbounded `limit` — `engagements:36`, `engagements/replies:33`, `comments/suggestions:30`, `pages/[id]/posts:38`, `data-sources/content:27`. → `Math.min(limit, MAX)`.
 - [ ] **M3** — unbounded selects (PG) — `db/queries/{pages:14,engagementHistory:20,notifications:19,engagementTargets:25,commentSuggestions:14}`. → add limit param.
-- [ ] **M4** — mass-assignment — `app/api/pages/[id]/data-sources/route.ts:253` `Object.assign(existingSource, updates)`. → allowlist fields.
+- [x] **M4** — mass-assignment — `app/api/pages/[id]/data-sources/route.ts:253` `Object.assign(existingSource, updates)`. → allowlist fields.
 - [x] **M5** — fail-open quality gate — `lib/engagement/conversation-manager.ts:229` scoring failure → 0.7 (= threshold). → default below threshold / fail closed.
 - [ ] **M6** — no per-run AI budget — `lib/engagement/icp-engagement-agent.ts:1040`. → `maxAICallsPerRun` counter.
 - [ ] **M7** — unsanitized prompts — `lib/openai.ts:880 analyzePost`, `283 improvePost(instructions)`. → sanitize+delimit.

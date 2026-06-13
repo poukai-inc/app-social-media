@@ -128,7 +128,15 @@ export async function PUT(
     if ('targetPlatforms' in body) post.targetPlatforms = body.targetPlatforms;
     
     if (scheduledFor) {
-      post.scheduledFor = new Date(scheduledFor);
+      // Reject invalid/past dates so the publish cron does not fire immediately. (review L4)
+      const when = new Date(scheduledFor);
+      if (isNaN(when.getTime()) || when.getTime() <= Date.now()) {
+        return NextResponse.json(
+          { error: 'scheduledFor must be a valid future date' },
+          { status: 400 }
+        );
+      }
+      post.scheduledFor = when;
       // Only change status to scheduled if it's currently draft
       if (post.status === 'draft') {
         post.status = 'scheduled';
