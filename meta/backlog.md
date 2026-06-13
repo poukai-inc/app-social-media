@@ -31,38 +31,50 @@ Each task: ID — severity — file(s) — problem → fix.
 
 ## MEDIUM
 
-- [ ] **M1** — no Zod boundary validation — all routes cast `request.json()`. → add Zod, priority nested bodies (`pages POST`, `generate POST`, `data-sources POST`).
-- [~] **M2** — unbounded `limit` — `engagements:36`, `engagements/replies:33`, `comments/suggestions:30`, `pages/[id]/posts:38`, `data-sources/content:27`. → `Math.min(limit, MAX)`.
-- [ ] **M3** — unbounded selects (PG) — `db/queries/{pages:14,engagementHistory:20,notifications:19,engagementTargets:25,commentSuggestions:14}`. → add limit param.
+- [-] **M1 (deferred — add zod as direct dep + validate every route; broad, own PR)** — no Zod boundary validation — all routes cast `request.json()`. → add Zod, priority nested bodies (`pages POST`, `generate POST`, `data-sources POST`).
+- [x] **M2** — unbounded `limit` — `engagements:36`, `engagements/replies:33`, `comments/suggestions:30`, `pages/[id]/posts:38`, `data-sources/content:27`. → `Math.min(limit, MAX)`.
+- [x] **M3** — unbounded selects (PG) — `db/queries/{pages:14,engagementHistory:20,notifications:19,engagementTargets:25,commentSuggestions:14}`. → add limit param.
 - [x] **M4** — mass-assignment — `app/api/pages/[id]/data-sources/route.ts:253` `Object.assign(existingSource, updates)`. → allowlist fields.
 - [x] **M5** — fail-open quality gate — `lib/engagement/conversation-manager.ts:229` scoring failure → 0.7 (= threshold). → default below threshold / fail closed.
-- [ ] **M6** — no per-run AI budget — `lib/engagement/icp-engagement-agent.ts:1040`. → `maxAICallsPerRun` counter.
-- [ ] **M7** — unsanitized prompts — `lib/openai.ts:880 analyzePost`, `283 improvePost(instructions)`. → sanitize+delimit.
-- [ ] **M8** — missing `middleware.ts` — per-page auth fragile. → central NextAuth v5 middleware for `/dashboard`,`/api`.
-- [ ] **M9** — missing CSP + `X-Frame-Options: DENY` — `vercel.json`. → add headers.
-- [ ] **M10** — tokens in client session — `lib/auth.ts:102-104` accessToken/idToken to client. → server-side only.
-- [ ] **M11** — email approval token-only — `posts/[id]/approve` GET. → HMAC + short TTL (single-use already ok).
-- [ ] **M12** — oversized files >800 — `dashboard/pages/[id]/page.tsx(1068)`, `…/settings(955)`, `pages/new(874)`, `components/post-form.tsx(824)`. → extract components.
-- [ ] **M13** — `verifyParity` JSON.stringify — `lib/db/dual-write.ts:103` false mismatch ObjectId/UUID/Date. → custom equals / normalizer.
-- [ ] **M14** — migration not transactional — `scripts/migrate-mongo-to-postgres.ts` no tx; orphan ICP skipped silently (`:239`). → wrap in `db.transaction`, log skips.
-- [ ] **M15** — Mongo models lack `organizationId` — blocks dual-write (`Post`,`Page`,`Engagement*`,etc). → add field or inject in dual-write adapter.
-- [ ] **M16** — PG pool eager init — `db/index.ts:12` `new Pool` at load even if `DATABASE_URL` unset. → lazy/guard.
+- [x] **M6** — no per-run AI budget — `lib/engagement/icp-engagement-agent.ts:1040`. → `maxAICallsPerRun` counter.
+- [x] **M7** — unsanitized prompts — `lib/openai.ts:880 analyzePost`, `283 improvePost(instructions)`. → sanitize+delimit.
+- [-] **M8 (deferred — lib/auth imports mongoose/pg; needs edge auth-config split)** — missing `middleware.ts` — per-page auth fragile. → central NextAuth v5 middleware for `/dashboard`,`/api`.
+- [x] **M9** — missing CSP + `X-Frame-Options: DENY` — `vercel.json`. → add headers.
+- [-] **M10 (deferred — client logout depends on session.idToken; needs refactor)** — tokens in client session — `lib/auth.ts:102-104` accessToken/idToken to client. → server-side only.
+- [-] **M11 (deferred — approval tokens already single-use; HMAC is enhancement)** — email approval token-only — `posts/[id]/approve` GET. → HMAC + short TTL (single-use already ok).
+- [-] **M12 (deferred — pure refactor, no behaviour/security change)** — oversized files >800 — `dashboard/pages/[id]/page.tsx(1068)`, `…/settings(955)`, `pages/new(874)`, `components/post-form.tsx(824)`. → extract components.
+- [x] **M13** — `verifyParity` JSON.stringify — `lib/db/dual-write.ts:103` false mismatch ObjectId/UUID/Date. → custom equals / normalizer.
+- [x] **M14** — migration not transactional — `scripts/migrate-mongo-to-postgres.ts` no tx; orphan ICP skipped silently (`:239`). → wrap in `db.transaction`, log skips.
+- [-] **M15 (deferred — blocks dual-write; schema design, PG not live)** — Mongo models lack `organizationId` — blocks dual-write (`Post`,`Page`,`Engagement*`,etc). → add field or inject in dual-write adapter.
+- [-] **M16 (accepted — pg Pool is lazy-connect; db imported by auth so cannot throw at load)** — PG pool eager init — `db/index.ts:12` `new Pool` at load even if `DATABASE_URL` unset. → lazy/guard.
 
 ## LOW
 
-- [ ] **L1** — esbuild devDep audit (3 high, build-time) — bump `drizzle-kit`. `[!]` (dep)
-- [ ] **L2** — `next-auth` 5.0.0-beta in prod — track stable. `[-]` (accepted, pinned)
-- [ ] **L3** — debug endpoint ungated — `app/api/engagements/debug/route.ts:12`. → gate `NODE_ENV==='development'`/admin.
-- [ ] **L4** — `scheduledFor` unvalidated — `posts/route.ts:133`, `posts/[id]/route.ts:131` accepts invalid/past. → validate parseable + future.
-- [ ] **L5** — N+1 pages stats — `app/api/pages/route.ts:38-68`. → single `$group` aggregate.
-- [ ] **L6** — README cron table ≠ vercel.json — `README.md:168`. → sync.
-- [ ] **L7** — email body preview logged in dev — `lib/email.ts:49-53`. → log only to/subject.
-- [ ] **L8** — silent empty catches — `lib/ffmpeg.ts:237,401,471`, `lib/s3.ts:97`. → debug log.
-- [ ] **L9** — `getFromS3` no max body size — `lib/s3.ts:57-77`. → size cap.
+- [!] **L1** — esbuild devDep audit (3 high, build-time) — bump `drizzle-kit`. `[!]` (dep)
+- [-] **L2** — `next-auth` 5.0.0-beta in prod — track stable. `[-]` (accepted, pinned)
+- [x] **L3** — debug endpoint ungated — `app/api/engagements/debug/route.ts:12`. → gate `NODE_ENV==='development'`/admin.
+- [x] **L4** — `scheduledFor` unvalidated — `posts/route.ts:133`, `posts/[id]/route.ts:131` accepts invalid/past. → validate parseable + future.
+- [x] **L5** — N+1 pages stats — `app/api/pages/route.ts:38-68`. → single `$group` aggregate.
+- [x] **L6** — README cron table ≠ vercel.json — `README.md:168`. → sync.
+- [x] **L7** — email body preview logged in dev — `lib/email.ts:49-53`. → log only to/subject.
+- [-] **L8 (accepted — intentional best-effort temp-file cleanup)** — silent empty catches — `lib/ffmpeg.ts:237,401,471`, `lib/s3.ts:97`. → debug log.
+- [x] **L9** — `getFromS3` no max body size — `lib/s3.ts:57-77`. → size cap.
 - [x] **L10** — daily-usage cache never evicted — `lib/engagement/conversation-manager.ts:271`. → evict stale dates.
-- [ ] **L11** — thin test coverage — 53 tests / 42K LOC, no API integration tests. → add route/IDOR coverage.
+- [-] **L11 (deferred — broad; crypto-secret tests added, rest is its own effort)** — thin test coverage — 53 tests / 42K LOC, no API integration tests. → add route/IDOR coverage.
 
 ---
 
 ## Progress log
 (append as tasks complete)
+
+## Progress log
+
+Fixed & verified (typecheck+lint+test green) across 9 commits on `feat/social-pouk-ai-deploy`:
+- CRITICAL: C2 C3 C4 C5 C6 C7 C8 (all)
+- HIGH: H1 H2 H3 H4 H5(data-source slice) H6 H7
+- MEDIUM: M2 M3 M4 M5 M6 M7 M9 M13 M14
+- LOW: L3 L4 L5 L6 L7 L9 L10
+
+User action required: C1 (rotate the 3 live secrets in .env), L1 (bump drizzle-kit/esbuild).
+Accepted / won't-fix: L2 (next-auth beta, pinned), L8 (intentional cleanup catches), M16 (standard Next pg singleton).
+Deferred (need design / broad / risky — see inline notes): M1, M8, M10, M11, M12, M15, H8, L11, and the OAuth-token-at-rest portion of H5 (needs backfill migration).
