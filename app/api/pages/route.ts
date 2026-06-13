@@ -33,39 +33,55 @@ export async function GET(request: NextRequest) {
       await Page.find({ userId: user._id }).sort({ createdAt: -1 }).lean()
     );
 
-    // If stats requested, fetch post counts for each page
+    // If stats requested, fetch counts + recent posts for all pages in two
+    // grouped aggregates rather than 2 queries per page (avoids N+1). (review L5)
     if (includeStats) {
-      const pagesWithStats = await Promise.all(
-        pages.map(async (page: typeof pages[number]) => {
-          const [postStats, recentPosts] = await Promise.all([
-            Post.aggregate([
-              { $match: { pageId: page._id } },
-              {
-                $group: {
-                  _id: '$status',
-                  count: { $sum: 1 },
+      const pageIds = pages.map((p: typeof pages[number]) => p._id);
+
+      const [statusAgg, recentAgg] = await Promise.all([
+        Post.aggregate([
+          { $match: { pageId: { $in: pageIds } } },
+          { $group: { _id: { pageId: '$pageId', status: '$status' }, count: { $sum: 1 } } },
+        ]),
+        Post.aggregate([
+          { $match: { pageId: { $in: pageIds } } },
+          { $sort: { createdAt: -1 } },
+          {
+            $group: {
+              _id: '$pageId',
+              posts: {
+                $push: {
+                  _id: '$_id',
+                  content: '$content',
+                  status: '$status',
+                  scheduledFor: '$scheduledFor',
+                  publishedAt: '$publishedAt',
                 },
               },
-            ]),
-            Post.find({ pageId: page._id })
-              .sort({ createdAt: -1 })
-              .limit(3)
-              .select('content status scheduledFor publishedAt')
-              .lean(),
-          ]);
+            },
+          },
+          { $project: { posts: { $slice: ['$posts', 3] } } },
+        ]),
+      ]);
 
-          const statusCounts = postStats.reduce(
-            (acc, { _id, count }) => ({ ...acc, [_id]: count }),
-            {} as Record<string, number>
-          );
+      const statsByPage = new Map<string, Record<string, number>>();
+      for (const row of statusAgg) {
+        const pid = String(row._id.pageId);
+        const entry = statsByPage.get(pid) ?? {};
+        entry[row._id.status] = row.count;
+        statsByPage.set(pid, entry);
+      }
 
-          return {
-            ...page,
-            postStats: statusCounts,
-            recentPosts,
-          };
-        })
-      );
+      const recentByPage = new Map<string, unknown[]>();
+      for (const row of recentAgg) {
+        recentByPage.set(String(row._id), row.posts);
+      }
+
+      const pagesWithStats = pages.map((page: typeof pages[number]) => ({
+        ...page,
+        postStats: statsByPage.get(String(page._id)) ?? {},
+        recentPosts: recentByPage.get(String(page._id)) ?? [],
+      }));
       return NextResponse.json({ pages: pagesWithStats });
     }
 

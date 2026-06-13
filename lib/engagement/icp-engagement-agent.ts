@@ -96,6 +96,7 @@ export interface AgentConfig {
   cooldownMinutes: number;         // Min time between replies to same user
   dryRun: boolean;                 // If true, don't actually post replies
   testQueries?: string[];          // Override ICP queries with test queries
+  maxAICalls: number;              // Hard cap on AI/LLM calls per run (cost guard)
 }
 
 const DEFAULT_CONFIG: AgentConfig = {
@@ -108,7 +109,30 @@ const DEFAULT_CONFIG: AgentConfig = {
   skipVerified: true,
   cooldownMinutes: 60 * 24,        // Don't reply to same user twice in 24h
   dryRun: false,
+  maxAICalls: 80,
 };
+
+// Per-run AI-call budget (review M6). A run is serialized by the icp-engage
+// distributed lock, so a module-level counter is safe. budgetedChatCompletion
+// throws once the cap is hit; loop guards stop scheduling new AI work.
+let aiCallsRemaining = Number.POSITIVE_INFINITY;
+
+class AiBudgetExceededError extends Error {
+  constructor() {
+    super('AI_BUDGET_EXCEEDED');
+    this.name = 'AiBudgetExceededError';
+  }
+}
+
+function budgetedChatCompletion(
+  ...args: Parameters<typeof createChatCompletion>
+): ReturnType<typeof createChatCompletion> {
+  if (aiCallsRemaining <= 0) {
+    throw new AiBudgetExceededError();
+  }
+  aiCallsRemaining -= 1;
+  return createChatCompletion(...args);
+}
 
 // ============================================
 // Agent Core
@@ -123,6 +147,7 @@ export async function runICPEngagementAgent(
 ): Promise<AgentRunResult> {
   const startedAt = new Date();
   const config = { ...DEFAULT_CONFIG, ...configOverrides };
+  aiCallsRemaining = config.maxAICalls; // reset per-run AI budget (review M6)
   const errors: string[] = [];
   const engagements: EngagementResult[] = [];
 
@@ -277,6 +302,7 @@ export async function runICPEngagementAgent(
 
         // Filter and evaluate tweets
         for (const tweet of tweets) {
+          if (aiCallsRemaining <= 0) break; // AI budget exhausted (review M6)
           tweetsEvaluated++;
 
           // Basic filters
@@ -345,6 +371,10 @@ export async function runICPEngagementAgent(
     const candidatesToEngage = allCandidates.slice(0, config.maxRepliesToSend);
 
     for (const candidate of candidatesToEngage) {
+      if (aiCallsRemaining <= 0) {
+        errors.push('AI call budget exhausted; stopping before remaining replies');
+        break;
+      }
       try {
         // Generate contextual reply with quality validation
         const reply = await generateAndValidateReply(candidate.tweet, icpProfile);
@@ -651,7 +681,7 @@ Output this exact JSON structure:
 {"relevanceScore": 0, "engagementPotential": 0, "reasons": ["specific reason based on tweet content"], "replyAngle": "what unique value we can add to this specific tweet"}`;
 
   try {
-    const response = await createChatCompletion({
+    const response = await budgetedChatCompletion({
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
       maxTokens: 500,
@@ -794,7 +824,7 @@ Rules:
 
   try {
     log.info('Generating reply', { username: tweet.author?.username, formula: formulaLabel });
-    const response = await createChatCompletion({
+    const response = await budgetedChatCompletion({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -996,7 +1026,7 @@ Output this exact JSON structure (no placeholder values — use your actual scor
 {"scores": {"specificity": 0, "valueAdd": 0, "conversationStarter": 0, "authenticity": 0, "profileClickPotential": 0}, "overallScore": 0, "issues": ["specific issue"], "passesQuality": false}`;
 
   try {
-    const response = await createChatCompletion({
+    const response = await budgetedChatCompletion({
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.2,
       maxTokens: 300,
