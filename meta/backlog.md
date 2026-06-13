@@ -13,10 +13,10 @@ Each task: ID — severity — file(s) — problem → fix.
 - [x] **C2** — cron fail-open ×7 — `app/api/cron/{collect-metrics:140,engage:34,auto-generate:62,publish:272,token-refresh:212}` use `if (cronSecret){…}`; `{icp-engage:29,conversation-monitor:28}` use `if(!cronSecret) return true`. Unset secret ⇒ public. → fail closed (reject when `CRON_SECRET` unset).
 - [x] **C3** — IDOR `generate` — `app/api/generate/route.ts:63` native `collection('pages').findOne({_id})` no userId. → use `findOwnedPage(session, pageId)`.
 - [x] **C4** — IDOR `ai/usage` — `app/api/ai/usage/route.ts:42` `AIUsage.find({date})` no userId scope. → filter by userId or gate admin-only.
-- [ ] **C5** — ffmpeg command injection — `lib/ffmpeg.ts:212,370,457` `execAsync(exec)` with interpolated metadata/filename. → `execFile` with args array.
-- [ ] **C6** — prompt injection `conversation-manager` — `lib/engagement/conversation-manager.ts:405,476` raw external content into LLM, no `sanitizeExternalContent()`/`<UNTRUSTED_EXTERNAL>`. → apply pattern from `icp-engagement-agent.ts`.
+- [x] **C5** — ffmpeg command injection — `lib/ffmpeg.ts:212,370,457` `execAsync(exec)` with interpolated metadata/filename. → `execFile` with args array.
+- [x] **C6** — prompt injection `conversation-manager` — `lib/engagement/conversation-manager.ts:405,476` raw external content into LLM, no `sanitizeExternalContent()`/`<UNTRUSTED_EXTERNAL>`. → apply pattern from `icp-engagement-agent.ts`.
 - [x] **C7** — SSRF data-sources — `app/api/pages/[id]/data-sources/test/route.ts:33` user connectionString, no host allowlist. → block RFC1918/link-local/loopback; allowlist.
-- [ ] **C8** — destructive migration — `db/migrations/0003_fix_enums.sql:1-16` enum recreate, `USING ::enum` throws on removed values. → add `UPDATE … CASE` value remap before swap.
+- [x] **C8** — destructive migration — `db/migrations/0003_fix_enums.sql:1-16` enum recreate, `USING ::enum` throws on removed values. → add `UPDATE … CASE` value remap before swap.
 
 ## HIGH
 
@@ -35,7 +35,7 @@ Each task: ID — severity — file(s) — problem → fix.
 - [~] **M2** — unbounded `limit` — `engagements:36`, `engagements/replies:33`, `comments/suggestions:30`, `pages/[id]/posts:38`, `data-sources/content:27`. → `Math.min(limit, MAX)`.
 - [ ] **M3** — unbounded selects (PG) — `db/queries/{pages:14,engagementHistory:20,notifications:19,engagementTargets:25,commentSuggestions:14}`. → add limit param.
 - [ ] **M4** — mass-assignment — `app/api/pages/[id]/data-sources/route.ts:253` `Object.assign(existingSource, updates)`. → allowlist fields.
-- [ ] **M5** — fail-open quality gate — `lib/engagement/conversation-manager.ts:229` scoring failure → 0.7 (= threshold). → default below threshold / fail closed.
+- [x] **M5** — fail-open quality gate — `lib/engagement/conversation-manager.ts:229` scoring failure → 0.7 (= threshold). → default below threshold / fail closed.
 - [ ] **M6** — no per-run AI budget — `lib/engagement/icp-engagement-agent.ts:1040`. → `maxAICallsPerRun` counter.
 - [ ] **M7** — unsanitized prompts — `lib/openai.ts:880 analyzePost`, `283 improvePost(instructions)`. → sanitize+delimit.
 - [ ] **M8** — missing `middleware.ts` — per-page auth fragile. → central NextAuth v5 middleware for `/dashboard`,`/api`.
@@ -59,7 +59,7 @@ Each task: ID — severity — file(s) — problem → fix.
 - [ ] **L7** — email body preview logged in dev — `lib/email.ts:49-53`. → log only to/subject.
 - [ ] **L8** — silent empty catches — `lib/ffmpeg.ts:237,401,471`, `lib/s3.ts:97`. → debug log.
 - [ ] **L9** — `getFromS3` no max body size — `lib/s3.ts:57-77`. → size cap.
-- [ ] **L10** — daily-usage cache never evicted — `lib/engagement/conversation-manager.ts:271`. → evict stale dates.
+- [x] **L10** — daily-usage cache never evicted — `lib/engagement/conversation-manager.ts:271`. → evict stale dates.
 - [ ] **L11** — thin test coverage — 53 tests / 42K LOC, no API integration tests. → add route/IDOR coverage.
 
 ---

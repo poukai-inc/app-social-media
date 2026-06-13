@@ -17,6 +17,9 @@ import Page from '@/lib/models/Page';
 import TokenAlert from '@/lib/models/TokenAlert';
 import { sendEmail } from '@/lib/email';
 import { cronAuthError } from '@/lib/cron-auth';
+import { acquireLock, releaseLock } from '@/lib/distributed-lock';
+
+const LOCK_NAME = 'cron:token-refresh';
 import { twitterAdapter } from '@/lib/platforms/twitter-adapter';
 import { facebookAdapter } from '@/lib/platforms/facebook-adapter';
 import { logger } from '@/lib/logger';
@@ -207,6 +210,7 @@ Scheduled posts to ${platformName} will fail to publish, and auto-engagement fea
 }
 
 export async function GET(request: Request) {
+  let acquired = false;
   try {
     // Verify cron secret (fail closed if CRON_SECRET unset)
     const cronError = cronAuthError(request);
@@ -216,6 +220,15 @@ export async function GET(request: Request) {
         { status: cronError === 'misconfigured' ? 500 : 401 },
       );
     }
+
+    // Distributed lock prevents concurrent runs from racing on single-use OAuth
+    // refresh tokens (a losing race can invalidate a connection). (review H6)
+    const lock = await acquireLock({ lockName: LOCK_NAME, ttlSeconds: 600 });
+    if (!lock.acquired) {
+      log.info('Skipped — another token-refresh run holds the lock');
+      return NextResponse.json({ success: true, skipped: true, reason: 'Another run in progress' });
+    }
+    acquired = true;
 
     await connectToDatabase();
     
@@ -463,11 +476,13 @@ export async function GET(request: Request) {
   } catch (error) {
     log.error('Token refresh cron error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );
+  } finally {
+    if (acquired) await releaseLock(LOCK_NAME);
   }
 }
