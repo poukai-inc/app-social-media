@@ -9,7 +9,7 @@ Each task: ID — severity — file(s) — problem → fix.
 
 ## CRITICAL
 
-- [!] **C1** — rotate live secrets — `.env` (GitHub PAT, Anthropic key, LinkedIn client secret). `.env` is gitignored & untracked but values live on disk. → USER ACTION: rotate all 3, move to secrets manager. `[!]`
+- [-] **C1 — dropped per owner (secret rotation handled outside this workstream)**
 - [x] **C2** — cron fail-open ×7 — `app/api/cron/{collect-metrics:140,engage:34,auto-generate:62,publish:272,token-refresh:212}` use `if (cronSecret){…}`; `{icp-engage:29,conversation-monitor:28}` use `if(!cronSecret) return true`. Unset secret ⇒ public. → fail closed (reject when `CRON_SECRET` unset).
 - [x] **C3** — IDOR `generate` — `app/api/generate/route.ts:63` native `collection('pages').findOne({_id})` no userId. → use `findOwnedPage(session, pageId)`.
 - [x] **C4** — IDOR `ai/usage` — `app/api/ai/usage/route.ts:42` `AIUsage.find({date})` no userId scope. → filter by userId or gate admin-only.
@@ -31,7 +31,7 @@ Each task: ID — severity — file(s) — problem → fix.
 
 ## MEDIUM
 
-- [-] **M1 (deferred — add zod as direct dep + validate every route; broad, own PR)** — no Zod boundary validation — all routes cast `request.json()`. → add Zod, priority nested bodies (`pages POST`, `generate POST`, `data-sources POST`).
+- [~] **M1 (partial — zod added as dep; data-sources POST validated; pages/generate POST remain — Mongoose exactOptional friction)** — no Zod boundary validation — all routes cast `request.json()`. → add Zod, priority nested bodies (`pages POST`, `generate POST`, `data-sources POST`).
 - [x] **M2** — unbounded `limit` — `engagements:36`, `engagements/replies:33`, `comments/suggestions:30`, `pages/[id]/posts:38`, `data-sources/content:27`. → `Math.min(limit, MAX)`.
 - [x] **M3** — unbounded selects (PG) — `db/queries/{pages:14,engagementHistory:20,notifications:19,engagementTargets:25,commentSuggestions:14}`. → add limit param.
 - [x] **M4** — mass-assignment — `app/api/pages/[id]/data-sources/route.ts:253` `Object.assign(existingSource, updates)`. → allowlist fields.

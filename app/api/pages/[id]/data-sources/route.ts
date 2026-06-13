@@ -10,9 +10,21 @@ import {
 } from '@/lib/data-sources/database';
 import { encryptSecret } from '@/lib/crypto-secret';
 import { v4 as uuidv4 } from 'uuid';
+import { z } from 'zod';
+import { parseOr400 } from '@/lib/validation';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('api:pages:[id]:data-sources');
+
+const dataSourceCreateSchema = z.object({
+  name: z.string().min(1),
+  type: z.enum(['mysql', 'postgresql', 'mongodb']),
+  connectionString: z.string().min(1),
+  query: z.string().min(1),
+  description: z.string().optional(),
+  refreshInterval: z.number().int().min(0).optional(),
+  fieldMapping: z.any().optional(),
+});
 
 // GET /api/pages/[id]/data-sources - List all data sources
 export async function GET(
@@ -84,31 +96,9 @@ export async function POST(
     }
 
     const { id } = await params;
-    const body = await request.json();
-    const {
-      name,
-      type,
-      connectionString,
-      query,
-      description,
-      refreshInterval,
-      fieldMapping,
-    } = body;
-
-    if (!name || !type || !connectionString || !query) {
-      return NextResponse.json(
-        { error: 'Missing required fields: name, type, connectionString, query' },
-        { status: 400 }
-      );
-    }
-
-    // Validate type
-    if (!['mysql', 'postgresql', 'mongodb'].includes(type)) {
-      return NextResponse.json(
-        { error: 'Invalid database type. Supported: mysql, postgresql, mongodb' },
-        { status: 400 }
-      );
-    }
+    const parsed = parseOr400(dataSourceCreateSchema, await request.json());
+    if (!parsed.ok) return parsed.response;
+    const { name, type, connectionString, query, description, refreshInterval, fieldMapping } = parsed.data;
 
     await connectToDatabase();
     const user = await User.findOne({ email: session.user.email });
@@ -138,10 +128,10 @@ export async function POST(
       type,
       connectionString: encryptSecret(connectionString),
       query,
-      description,
       refreshInterval: refreshInterval || 0,
       isActive: true,
-      fieldMapping,
+      ...(description !== undefined && { description }),
+      ...(fieldMapping !== undefined && { fieldMapping }),
     };
 
     // Use native MongoDB updateOne for reliable nested updates
