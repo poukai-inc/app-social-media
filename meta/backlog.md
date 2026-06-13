@@ -60,7 +60,7 @@ Each task: ID — severity — file(s) — problem → fix.
 - [-] **L8 (accepted — intentional best-effort temp-file cleanup)** — silent empty catches — `lib/ffmpeg.ts:237,401,471`, `lib/s3.ts:97`. → debug log.
 - [x] **L9** — `getFromS3` no max body size — `lib/s3.ts:57-77`. → size cap.
 - [x] **L10** — daily-usage cache never evicted — `lib/engagement/conversation-manager.ts:271`. → evict stale dates.
-- [-] **L11 (deferred — broad; crypto-secret tests added, rest is its own effort)** — thin test coverage — 53 tests / 42K LOC, no API integration tests. → add route/IDOR coverage.
+- [~] **L11 (partial — unit tests for cron-auth, upload-owner, prompt-safety, crypto-secret added (75 tests); route/integration coverage still TODO)** — thin test coverage — 53 tests / 42K LOC, no API integration tests. → add route/IDOR coverage.
 
 ---
 
