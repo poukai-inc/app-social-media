@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise';
 import type { DatabaseSource, DatabaseType } from '../models/Page';
+import { decryptSecret } from '@/lib/crypto-secret';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('data-source:database');
@@ -77,6 +78,10 @@ function assertSafeDbHost(url: URL): void {
  * TiDB Cloud, PlanetScale, AWS RDS, etc. require SSL
  */
 async function createMySQLConnection(connectionString: string) {
+  // Decrypt at the single connect chokepoint so every caller (test, preview,
+  // tables, columns, fetch) transparently handles encrypted-at-rest secrets.
+  // Legacy plaintext passes through unchanged. (review H5)
+  connectionString = decryptSecret(connectionString);
   // Parse the connection string to add SSL options
   const url = new URL(connectionString);
   assertSafeDbHost(url);

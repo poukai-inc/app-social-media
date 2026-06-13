@@ -8,6 +8,7 @@ import Page from '@/lib/models/Page';
 import {
   testConnection,
 } from '@/lib/data-sources/database';
+import { encryptSecret } from '@/lib/crypto-secret';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/lib/logger';
 
@@ -129,12 +130,13 @@ export async function POST(
       );
     }
 
-    // Create new data source
+    // Create new data source. Connection string is encrypted at rest (the
+    // connect path decrypts at the driver chokepoint). (review H5)
     const newSource: DatabaseSource = {
       id: uuidv4(),
       name,
       type,
-      connectionString,
+      connectionString: encryptSecret(connectionString),
       query,
       description,
       refreshInterval: refreshInterval || 0,
@@ -249,8 +251,18 @@ export async function PUT(
       }
     }
 
-    // Update the source
-    Object.assign(existingSource, updates);
+    // Update only allowlisted fields — never spread the raw body, which could
+    // carry internal keys (id, _id, __proto__, userId). (review M4)
+    // Connection string is re-encrypted at rest. (review H5)
+    const ALLOWED_FIELDS = ['name', 'type', 'query', 'description', 'refreshInterval', 'isActive', 'fieldMapping'] as const;
+    for (const field of ALLOWED_FIELDS) {
+      if (updates[field] !== undefined) {
+        (existingSource as unknown as Record<string, unknown>)[field] = updates[field];
+      }
+    }
+    if (updates.connectionString !== undefined) {
+      existingSource.connectionString = encryptSecret(updates.connectionString);
+    }
     page.markModified('dataSources');
     await page.save();
 
