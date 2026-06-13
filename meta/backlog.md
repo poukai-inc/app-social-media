@@ -9,30 +9,30 @@ Each task: ID — severity — file(s) — problem → fix.
 
 ## CRITICAL
 
-- [ ] **C1** — rotate live secrets — `.env` (GitHub PAT, Anthropic key, LinkedIn client secret). `.env` is gitignored & untracked but values live on disk. → USER ACTION: rotate all 3, move to secrets manager. `[!]`
-- [ ] **C2** — cron fail-open ×7 — `app/api/cron/{collect-metrics:140,engage:34,auto-generate:62,publish:272,token-refresh:212}` use `if (cronSecret){…}`; `{icp-engage:29,conversation-monitor:28}` use `if(!cronSecret) return true`. Unset secret ⇒ public. → fail closed (reject when `CRON_SECRET` unset).
-- [ ] **C3** — IDOR `generate` — `app/api/generate/route.ts:63` native `collection('pages').findOne({_id})` no userId. → use `findOwnedPage(session, pageId)`.
-- [ ] **C4** — IDOR `ai/usage` — `app/api/ai/usage/route.ts:42` `AIUsage.find({date})` no userId scope. → filter by userId or gate admin-only.
+- [!] **C1** — rotate live secrets — `.env` (GitHub PAT, Anthropic key, LinkedIn client secret). `.env` is gitignored & untracked but values live on disk. → USER ACTION: rotate all 3, move to secrets manager. `[!]`
+- [x] **C2** — cron fail-open ×7 — `app/api/cron/{collect-metrics:140,engage:34,auto-generate:62,publish:272,token-refresh:212}` use `if (cronSecret){…}`; `{icp-engage:29,conversation-monitor:28}` use `if(!cronSecret) return true`. Unset secret ⇒ public. → fail closed (reject when `CRON_SECRET` unset).
+- [x] **C3** — IDOR `generate` — `app/api/generate/route.ts:63` native `collection('pages').findOne({_id})` no userId. → use `findOwnedPage(session, pageId)`.
+- [x] **C4** — IDOR `ai/usage` — `app/api/ai/usage/route.ts:42` `AIUsage.find({date})` no userId scope. → filter by userId or gate admin-only.
 - [ ] **C5** — ffmpeg command injection — `lib/ffmpeg.ts:212,370,457` `execAsync(exec)` with interpolated metadata/filename. → `execFile` with args array.
 - [ ] **C6** — prompt injection `conversation-manager` — `lib/engagement/conversation-manager.ts:405,476` raw external content into LLM, no `sanitizeExternalContent()`/`<UNTRUSTED_EXTERNAL>`. → apply pattern from `icp-engagement-agent.ts`.
-- [ ] **C7** — SSRF data-sources — `app/api/pages/[id]/data-sources/test/route.ts:33` user connectionString, no host allowlist. → block RFC1918/link-local/loopback; allowlist.
+- [x] **C7** — SSRF data-sources — `app/api/pages/[id]/data-sources/test/route.ts:33` user connectionString, no host allowlist. → block RFC1918/link-local/loopback; allowlist.
 - [ ] **C8** — destructive migration — `db/migrations/0003_fix_enums.sql:1-16` enum recreate, `USING ::enum` throws on removed values. → add `UPDATE … CASE` value remap before swap.
 
 ## HIGH
 
-- [ ] **H1** — IDOR upload DELETE — `app/api/upload/[id]/route.ts:36` only `key.includes(id)`. → persist `{userId,s3Key}`, verify owner.
-- [ ] **H2** — NoSQL operator injection — `app/api/pages/[id]/posts/route.ts:42` raw `query.status=status`. → allowlist.
-- [ ] **H3** — error leak in 500s — `posts/[id]/retry:83`, `posts/[id]/reprocess:142`, `ai/usage:96` return `details:error.message`. → drop `details`.
-- [ ] **H4** — `POUK_CLIENT_SECRET` empty fallback — `lib/auth.ts:50` `?? ''`. → throw on missing.
+- [x] **H1** — IDOR upload DELETE — `app/api/upload/[id]/route.ts:36` only `key.includes(id)`. → persist `{userId,s3Key}`, verify owner.
+- [x] **H2** — NoSQL operator injection — `app/api/pages/[id]/posts/route.ts:42` raw `query.status=status`. → allowlist.
+- [x] **H3** — error leak in 500s — `posts/[id]/retry:83`, `posts/[id]/reprocess:142`, `ai/usage:96` return `details:error.message`. → drop `details`.
+- [x] **H4** — `POUK_CLIENT_SECRET` empty fallback — `lib/auth.ts:50` `?? ''`. → throw on missing.
 - [ ] **H5** — plaintext tokens at rest — `db/schema.ts:117,157,200`, `lib/models/User.ts:57`, data-source connection strings. → AES-256-GCM envelope encrypt.
 - [ ] **H6** — lockless crons — `icp-engage`, `collect-metrics`, `token-refresh` lack `withLock()`. → wrap.
-- [ ] **H7** — `.save()` on POJO — `app/api/pages/[id]/data-sources/test/route.ts:131` page from native `findOne` (POJO), `.save()` throws. → `Page.findOne` or native `updateOne`.
+- [x] **H7** — `.save()` on POJO — `app/api/pages/[id]/data-sources/test/route.ts:131` page from native `findOne` (POJO), `.save()` throws. → `Page.findOne` or native `updateOne`.
 - [ ] **H8** — RLS bypass — `db/queries/pendingConnections.ts:11-22` raw `db` not `withUser()`. → use `withUser` / explicit GUC.
 
 ## MEDIUM
 
 - [ ] **M1** — no Zod boundary validation — all routes cast `request.json()`. → add Zod, priority nested bodies (`pages POST`, `generate POST`, `data-sources POST`).
-- [ ] **M2** — unbounded `limit` — `engagements:36`, `engagements/replies:33`, `comments/suggestions:30`, `pages/[id]/posts:38`, `data-sources/content:27`. → `Math.min(limit, MAX)`.
+- [~] **M2** — unbounded `limit` — `engagements:36`, `engagements/replies:33`, `comments/suggestions:30`, `pages/[id]/posts:38`, `data-sources/content:27`. → `Math.min(limit, MAX)`.
 - [ ] **M3** — unbounded selects (PG) — `db/queries/{pages:14,engagementHistory:20,notifications:19,engagementTargets:25,commentSuggestions:14}`. → add limit param.
 - [ ] **M4** — mass-assignment — `app/api/pages/[id]/data-sources/route.ts:253` `Object.assign(existingSource, updates)`. → allowlist fields.
 - [ ] **M5** — fail-open quality gate — `lib/engagement/conversation-manager.ts:229` scoring failure → 0.7 (= threshold). → default below threshold / fail closed.

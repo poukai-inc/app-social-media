@@ -1,30 +1,13 @@
 import type { StructuredInput } from './models/Post';
 import { getPerformanceInsightsForAI } from './learning/platform-learning';
 import { createChatCompletion } from './ai-client';
+import { sanitizeExternalContent } from './prompt-safety';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('openai');
 
-// ============================================
-// Prompt Injection Sanitizer (AUDIT-C3)
-// ============================================
-
-/**
- * Strip common prompt-injection patterns from external/untrusted content
- * before it is embedded in LLM prompts.
- * Acts as a pre-filter; primary defence is the <UNTRUSTED_EXTERNAL> delimiter.
- */
-function sanitizeExternalContent(content: string): string {
-  return content
-    .replace(/ignore\s+(all\s+)?(?:previous\s+)?instructions?/gi, '[filtered]')
-    .replace(/disregard\s+(all\s+)?(?:previous\s+)?instructions?/gi, '[filtered]')
-    .replace(/you\s+are\s+now\s+(?:a?\s*new?\s*)?/gi, '[filtered] ')
-    .replace(/new\s+instructions?\s*:/gi, '[filtered]:')
-    .replace(/system\s*(?:prompt)?\s*:/gi, '[filtered]:')
-    .replace(/\bact\s+as\b/gi, '[filtered]')
-    .replace(/\bpretend\s+(?:to\s+be|you\s+are)\b/gi, '[filtered]')
-    .replace(/<\/?(?:system|assistant|instructions?)>/gi, '[filtered]');
-}
+// Prompt-injection sanitizer moved to lib/prompt-safety.ts (shared with the
+// engagement modules). See AUDIT-C3 / review C6.
 
 // NOTE: The ai-client handles model selection automatically (Ollama or Groq)
 

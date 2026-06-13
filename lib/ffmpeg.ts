@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { writeFile, unlink, readFile } from 'fs/promises';
 import { tmpdir } from 'os';
@@ -8,7 +8,20 @@ import { logger } from '@/lib/logger';
 
 const log = logger.child('ffmpeg');
 
-const execAsync = promisify(exec);
+// execFile (not exec) — arguments are passed as an array directly to the
+// binary, never through a shell, so no value can be interpreted as a shell
+// command regardless of its contents. (review C5)
+const execFileAsync = promisify(execFile);
+
+type ExecFileOpts = { maxBuffer?: number; timeout?: number };
+
+function runFfmpeg(args: string[], opts: ExecFileOpts = {}) {
+  return execFileAsync('ffmpeg', args, opts);
+}
+
+function runFfprobe(args: string[], opts: ExecFileOpts = {}) {
+  return execFileAsync('ffprobe', args, opts);
+}
 
 interface VideoMetadata {
   duration: number;
@@ -99,17 +112,18 @@ export async function combineVideos(
     
     // Build input args with stream_loop for shorter videos
     // -stream_loop -1 loops infinitely, we'll cut with -t at the end
-    const inputArgs = inputPaths.map((p, i) => {
+    const inputArgs: string[] = [];
+    inputPaths.forEach((p, i) => {
       const meta = metadataList[i];
       const needsLoop = meta !== undefined && meta.duration < maxDuration;
       if (needsLoop) {
-        return `-stream_loop -1 -i "${p}"`;
+        inputArgs.push('-stream_loop', '-1');
       }
-      return `-i "${p}"`;
-    }).join(' ');
-    
-    // Add silent audio input for videos without audio (LinkedIn requires audio track)
-    const silentAudioInput = `-f lavfi -t ${maxDuration} -i anullsrc=channel_layout=stereo:sample_rate=44100`;
+      inputArgs.push('-i', p);
+    });
+
+    // Silent audio input for videos without audio (LinkedIn requires audio track)
+    const silentAudioArgs = ['-f', 'lavfi', '-t', String(maxDuration), '-i', 'anullsrc=channel_layout=stereo:sample_rate=44100'];
     const silentAudioIndex = inputPaths.length; // Index of the silent audio input
     
     if (videos.length === 2) {
@@ -196,20 +210,21 @@ export async function combineVideos(
       }
     }
     
-    // Build ffmpeg command
-    // If no audio, add silent audio track (LinkedIn requires audio)
-    let command: string;
-    if (hasAnyAudio) {
-      command = `ffmpeg ${inputArgs} -filter_complex "${filterComplex}" -map "[outv]" -map "[outa]" -c:v libx264 -preset medium -profile:v high -level 4.0 -crf 23 -c:a aac -b:a 128k -pix_fmt yuv420p -movflags +faststart -t ${maxDuration} -y "${outputPath}"`;
-    } else {
-      // Add silent audio track for LinkedIn compatibility
-      command = `ffmpeg ${inputArgs} ${silentAudioInput} -filter_complex "${filterComplex}" -map "[outv]" -map ${silentAudioIndex}:a -c:v libx264 -preset medium -profile:v high -level 4.0 -crf 23 -c:a aac -b:a 128k -pix_fmt yuv420p -movflags +faststart -t ${maxDuration} -y "${outputPath}"`;
-    }
-    
+    // Build ffmpeg argument list. If no audio, add a silent audio track
+    // (LinkedIn requires one). Values like maxDuration/filterComplex are passed
+    // as discrete args — never through a shell.
+    const codecArgs = [
+      '-c:v', 'libx264', '-preset', 'medium', '-profile:v', 'high', '-level', '4.0',
+      '-crf', '23', '-c:a', 'aac', '-b:a', '128k', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
+    ];
+    const args: string[] = hasAnyAudio
+      ? [...inputArgs, '-filter_complex', filterComplex, '-map', '[outv]', '-map', '[outa]', ...codecArgs, '-t', String(maxDuration), '-y', outputPath]
+      : [...inputArgs, ...silentAudioArgs, '-filter_complex', filterComplex, '-map', '[outv]', '-map', `${silentAudioIndex}:a`, ...codecArgs, '-t', String(maxDuration), '-y', outputPath];
+
     log.info('Running ffmpeg combine command');
-    
+
     // Execute ffmpeg with longer timeout for video combining
-    await execAsync(command, {
+    await runFfmpeg(args, {
       maxBuffer: 100 * 1024 * 1024, // 100MB buffer
       timeout: 600000, // 10 minute timeout
     });
@@ -245,10 +260,10 @@ export async function combineVideos(
  */
 async function getVideoMetadata(inputPath: string): Promise<VideoMetadata> {
   try {
-    const { stdout } = await execAsync(
-      `ffprobe -v quiet -print_format json -show_format -show_streams "${inputPath}"`
+    const { stdout } = await runFfprobe(
+      ['-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', inputPath]
     );
-    
+
     const data = JSON.parse(stdout);
     const videoStream = data.streams?.find((s: { codec_type: string }) => s.codec_type === 'video');
     const audioStream = data.streams?.find((s: { codec_type: string }) => s.codec_type === 'audio');
@@ -316,7 +331,7 @@ export async function processVideoForLinkedIn(
     
     // Build ffmpeg command
     const ffmpegArgs: string[] = [
-      '-i', `"${inputPath}"`,
+      '-i', inputPath,
       '-y', // Overwrite output
     ];
     
@@ -336,9 +351,10 @@ export async function processVideoForLinkedIn(
     // Scale down if needed (maintain aspect ratio)
     const needsResize = metadata.width > LINKEDIN_MAX_WIDTH || metadata.height > LINKEDIN_MAX_HEIGHT;
     if (needsResize) {
-      // Scale to fit within max dimensions while maintaining aspect ratio
-      // Wrap in double quotes to prevent shell from interpreting parentheses
-      ffmpegArgs.push('-vf', `"scale='min(${LINKEDIN_MAX_WIDTH},iw)':'min(${LINKEDIN_MAX_HEIGHT},ih)':force_original_aspect_ratio=decrease,scale=trunc(iw/2)*2:trunc(ih/2)*2"`);
+      // Scale to fit within max dimensions while maintaining aspect ratio.
+      // No shell quoting needed (execFile) — the single quotes that remain are
+      // ffmpeg's own expression quoting.
+      ffmpegArgs.push('-vf', `scale='min(${LINKEDIN_MAX_WIDTH},iw)':'min(${LINKEDIN_MAX_HEIGHT},ih)':force_original_aspect_ratio=decrease,scale=trunc(iw/2)*2:trunc(ih/2)*2`);
       log.info('Resizing video', { fromWidth: metadata.width, fromHeight: metadata.height });
     }
     
@@ -361,13 +377,12 @@ export async function processVideoForLinkedIn(
     ffmpegArgs.push('-movflags', '+faststart');
     
     // Output file
-    ffmpegArgs.push(`"${outputPath}"`);
-    
-    const command = `ffmpeg ${ffmpegArgs.join(' ')}`;
-    log.info('Running ffmpeg command', { command });
+    ffmpegArgs.push(outputPath);
+
+    log.info('Running ffmpeg command', { args: ffmpegArgs.join(' ') });
 
     // Execute ffmpeg
-    const { stderr } = await execAsync(command, {
+    const { stderr } = await runFfmpeg(ffmpegArgs, {
       maxBuffer: 50 * 1024 * 1024, // 50MB buffer for ffmpeg output
     });
 
@@ -432,8 +447,8 @@ export async function processImageForLinkedIn(
     if (currentSizeMB <= MAX_IMAGE_SIZE_MB && (mimeType.includes('jpeg') || mimeType.includes('jpg'))) {
       // Check dimensions using ffprobe
       try {
-        const { stdout } = await execAsync(
-          `ffprobe -v quiet -print_format json -show_streams "${inputPath}"`
+        const { stdout } = await runFfprobe(
+          ['-v', 'quiet', '-print_format', 'json', '-show_streams', inputPath]
         );
         const data = JSON.parse(stdout);
         const stream = data.streams?.[0];
@@ -452,9 +467,12 @@ export async function processImageForLinkedIn(
     }
     
     // Process image with ffmpeg
-    const command = `ffmpeg -i "${inputPath}" -vf "scale='min(${MAX_IMAGE_WIDTH},iw)':-1" -q:v 2 -y "${outputPath}"`;
-    
-    await execAsync(command);
+    await runFfmpeg([
+      '-i', inputPath,
+      '-vf', `scale='min(${MAX_IMAGE_WIDTH},iw)':-1`,
+      '-q:v', '2',
+      '-y', outputPath,
+    ]);
     
     const outputBuffer = await readFile(outputPath);
     
@@ -480,7 +498,7 @@ export async function processImageForLinkedIn(
  */
 export async function checkFfmpegAvailable(): Promise<boolean> {
   try {
-    await execAsync('ffmpeg -version');
+    await runFfmpeg(['-version']);
     return true;
   } catch {
     return false;
