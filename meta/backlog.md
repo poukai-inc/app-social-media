@@ -40,7 +40,7 @@ Each task: ID — severity — file(s) — problem → fix.
 - [x] **M7** — unsanitized prompts — `lib/openai.ts:880 analyzePost`, `283 improvePost(instructions)`. → sanitize+delimit.
 - [x] **M8 — central auth gate via edge-safe auth.config.ts + proxy.ts (Next 16 proxy convention)** — missing `middleware.ts` — per-page auth fragile. → central NextAuth v5 middleware for `/dashboard`,`/api`.
 - [x] **M9** — missing CSP + `X-Frame-Options: DENY` — `vercel.json`. → add headers.
-- [-] **M10 (deferred — client logout depends on session.idToken; needs refactor)** — tokens in client session — `lib/auth.ts:102-104` accessToken/idToken to client. → server-side only.
+- [x] **M10 — removed accessToken/linkedinId from client session (idToken kept for RP-logout, lower sensitivity)** — tokens in client session — `lib/auth.ts:102-104` accessToken/idToken to client. → server-side only.
 - [-] **M11 (deferred — approval tokens already single-use; HMAC is enhancement)** — email approval token-only — `posts/[id]/approve` GET. → HMAC + short TTL (single-use already ok).
 - [-] **M12 (deferred — pure refactor, no behaviour/security change)** — oversized files >800 — `dashboard/pages/[id]/page.tsx(1068)`, `…/settings(955)`, `pages/new(874)`, `components/post-form.tsx(824)`. → extract components.
 - [x] **M13** — `verifyParity` JSON.stringify — `lib/db/dual-write.ts:103` false mismatch ObjectId/UUID/Date. → custom equals / normalizer.

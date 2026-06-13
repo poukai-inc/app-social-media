@@ -105,8 +105,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth(() => {
       async session({ session, token }) {
         if (session.user) {
           session.user.id = token.sub as string;
-          session.accessToken = token.accessToken as string;
-          session.linkedinId = token.linkedinId as string;
+          // Do NOT expose the LinkedIn accessToken or linkedinId to the client
+          // session — they are unused client-side and the access token grants
+          // posting. They remain on the server-side JWT (token). idToken stays:
+          // it is the id_token_hint for RP-initiated logout. (review M10)
           if (token.idToken) session.idToken = token.idToken as string;
         }
         return session;
