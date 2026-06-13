@@ -19,17 +19,9 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import { monitorAndRespondToConversations, getConversationStats } from '@/lib/engagement/conversation-manager';
 import { logger } from '@/lib/logger';
+import { verifyCronSecret } from '@/lib/cron-auth';
 
 const log = logger.child('cron:conversation-monitor');
-
-// Verify cron secret (same as other cron jobs)
-function verifyCronSecret(request: NextRequest): boolean {
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return true; // Allow if no secret configured (dev)
-
-  const authHeader = request.headers.get('authorization') ?? '';
-  return authHeader === `Bearer ${cronSecret}`;
-}
 
 export async function GET(request: NextRequest) {
   // Verify cron authentication

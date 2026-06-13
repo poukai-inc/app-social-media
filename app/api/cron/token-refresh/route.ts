@@ -16,6 +16,7 @@ import type { IPlatformConnection } from '@/lib/models/Page';
 import Page from '@/lib/models/Page';
 import TokenAlert from '@/lib/models/TokenAlert';
 import { sendEmail } from '@/lib/email';
+import { cronAuthError } from '@/lib/cron-auth';
 import { twitterAdapter } from '@/lib/platforms/twitter-adapter';
 import { facebookAdapter } from '@/lib/platforms/facebook-adapter';
 import { logger } from '@/lib/logger';
@@ -207,13 +208,13 @@ Scheduled posts to ${platformName} will fail to publish, and auto-engagement fea
 
 export async function GET(request: Request) {
   try {
-    // Verify cron secret (supports multiple auth methods for flexibility)
-    const cronSecret = process.env.CRON_SECRET;
-    if (cronSecret) {
-      const authHeader = request.headers.get('authorization') ?? '';
-      if (authHeader !== `Bearer ${cronSecret}`) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
+    // Verify cron secret (fail closed if CRON_SECRET unset)
+    const cronError = cronAuthError(request);
+    if (cronError) {
+      return NextResponse.json(
+        { error: cronError === 'misconfigured' ? 'CRON_SECRET not configured' : 'Unauthorized' },
+        { status: cronError === 'misconfigured' ? 500 : 401 },
+      );
     }
 
     await connectToDatabase();

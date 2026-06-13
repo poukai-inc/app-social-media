@@ -19,6 +19,7 @@ import {
 import { generateComment, generateReply } from '@/lib/openai';
 import { withLock, extendLock } from '@/lib/distributed-lock';
 import { logger } from '@/lib/logger';
+import { cronAuthError } from '@/lib/cron-auth';
 
 const log = logger.child('cron:engage');
 
@@ -29,13 +30,13 @@ const log = logger.child('cron:engage');
 // 2. Auto-replying to comments on user's published posts (CommentReply)
 
 export async function GET(request: Request) {
-  // Verify authorization
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const authHeader = request.headers.get('authorization') ?? '';
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  // Verify authorization (fail closed if CRON_SECRET unset)
+  const cronError = cronAuthError(request);
+  if (cronError) {
+    return NextResponse.json(
+      { error: cronError === 'misconfigured' ? 'CRON_SECRET not configured' : 'Unauthorized' },
+      { status: cronError === 'misconfigured' ? 500 : 401 },
+    );
   }
 
   await connectToDatabase();

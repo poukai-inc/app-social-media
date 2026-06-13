@@ -10,6 +10,7 @@ import { platformRegistry } from '@/lib/platforms';
 import type { PlatformType, PlatformConnection } from '@/lib/platforms/types';
 import type { IPlatformConnection } from '@/lib/models/Page';
 import { logger } from '@/lib/logger';
+import { cronAuthError } from '@/lib/cron-auth';
 
 const log = logger.child('cron:collect-metrics');
 
@@ -135,13 +136,13 @@ function extractHashtags(content: string): string[] {
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret
-    const cronSecret = process.env.CRON_SECRET;
-    if (cronSecret) {
-      const authHeader = request.headers.get('authorization') ?? '';
-      if (authHeader !== `Bearer ${cronSecret}`) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
+    // Verify cron secret (fail closed if CRON_SECRET unset)
+    const cronError = cronAuthError(request);
+    if (cronError) {
+      return NextResponse.json(
+        { error: cronError === 'misconfigured' ? 'CRON_SECRET not configured' : 'Unauthorized' },
+        { status: cronError === 'misconfigured' ? 500 : 401 },
+      );
     }
 
     await connectToDatabase();

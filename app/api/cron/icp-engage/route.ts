@@ -20,17 +20,9 @@ import connectToDatabase from '@/lib/mongodb';
 import Page from '@/lib/models/Page';
 import { runICPEngagementAgent } from '@/lib/engagement/icp-engagement-agent';
 import { logger } from '@/lib/logger';
+import { verifyCronSecret } from '@/lib/cron-auth';
 
 const log = logger.child('cron:icp-engage');
-
-// Verify cron secret
-function verifyCronSecret(request: NextRequest): boolean {
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return true; // Allow if no secret configured (dev)
-
-  const authHeader = request.headers.get('authorization') ?? '';
-  return authHeader === `Bearer ${cronSecret}`;
-}
 
 export async function GET(request: NextRequest) {
   // Verify cron authentication

@@ -15,8 +15,9 @@ import { fetchContentForGeneration } from '@/lib/data-sources/database';
 import type { PlatformType } from '@/lib/platforms/types';
 import type {
   ReviewDecision} from '@/lib/learning';
-import { 
-  getPlatformLearningContext, 
+import { cronAuthError } from '@/lib/cron-auth';
+import {
+  getPlatformLearningContext,
   generateLearningPromptAdditions,
   getRecommendedAngle,
   getOptimalPostingTime,
@@ -57,13 +58,13 @@ function getNextOccurrence(dayOfWeek: number, hour: number, timezone?: string): 
 }
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret for security
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const authHeader = request.headers.get('authorization') ?? '';
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  // Verify cron secret for security (fail closed if CRON_SECRET unset)
+  const cronError = cronAuthError(request);
+  if (cronError) {
+    return NextResponse.json(
+      { error: cronError === 'misconfigured' ? 'CRON_SECRET not configured' : 'Unauthorized' },
+      { status: cronError === 'misconfigured' ? 500 : 401 },
+    );
   }
 
   await connectToDatabase();
