@@ -21,13 +21,15 @@ export const engagementTargetsRepo = {
     orgId: string,
     userId: string,
     status: EngagementTarget['status'],
+    opts: { limit?: number } = {},
   ): Promise<EngagementTarget[]> =>
     withOrg(orgId, (tx) =>
       tx
         .select()
         .from(engagementTargets)
         .where(and(eq(engagementTargets.userId, userId), eq(engagementTargets.status, status)))
-        .orderBy(desc(engagementTargets.createdAt)),
+        .orderBy(desc(engagementTargets.createdAt))
+        .limit(opts.limit ?? 200), // bounded (review M3)
     ),
 
   findById: (orgId: string, id: string): Promise<EngagementTarget | null> =>

@@ -67,9 +67,16 @@ export async function getFromS3(key: string): Promise<Buffer> {
     throw new Error('No body in response');
   }
 
-  // Convert stream to buffer
+  // Convert stream to buffer with a hard size cap so a large/malicious object
+  // cannot exhaust process memory. (review L9)
+  const MAX_BYTES = 250 * 1024 * 1024; // 250MB (above the 200MB upload ceiling)
   const chunks: Uint8Array[] = [];
+  let total = 0;
   for await (const chunk of stream as AsyncIterable<Uint8Array>) {
+    total += chunk.byteLength;
+    if (total > MAX_BYTES) {
+      throw new Error(`S3 object ${key} exceeds maximum allowed size of ${MAX_BYTES} bytes`);
+    }
     chunks.push(chunk);
   }
 

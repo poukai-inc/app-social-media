@@ -20,22 +20,25 @@ import connectToDatabase from '@/lib/mongodb';
 import Page from '@/lib/models/Page';
 import { runICPEngagementAgent } from '@/lib/engagement/icp-engagement-agent';
 import { logger } from '@/lib/logger';
+import { verifyCronSecret } from '@/lib/cron-auth';
+import { acquireLock, releaseLock } from '@/lib/distributed-lock';
+
+const LOCK_NAME = 'cron:icp-engage';
 
 const log = logger.child('cron:icp-engage');
-
-// Verify cron secret
-function verifyCronSecret(request: NextRequest): boolean {
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return true; // Allow if no secret configured (dev)
-
-  const authHeader = request.headers.get('authorization') ?? '';
-  return authHeader === `Bearer ${cronSecret}`;
-}
 
 export async function GET(request: NextRequest) {
   // Verify cron authentication
   if (!verifyCronSecret(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Distributed lock prevents overlapping runs from double-replying to the same
+  // tweets when one run outlasts the cron interval. (review H6)
+  const lock = await acquireLock({ lockName: LOCK_NAME, ttlSeconds: 900 });
+  if (!lock.acquired) {
+    log.info('Skipped — another icp-engage run holds the lock');
+    return NextResponse.json({ success: true, skipped: true, reason: 'Another run in progress' });
   }
 
   const startTime = Date.now();
@@ -150,6 +153,8 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 }
     );
+  } finally {
+    await releaseLock(LOCK_NAME);
   }
 }
 

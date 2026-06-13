@@ -21,12 +21,22 @@ const log = logger.child('api:ai:usage');
 
 export async function GET(_request: Request) {
   try {
-    // Optional: Require authentication
+    // Require authentication. This endpoint exposes global AI model usage and
+    // cost telemetry (AIUsage rows are keyed by date+model, not per user), so
+    // when ADMIN_EMAILS is configured restrict it to those operators. When
+    // unset, any authenticated user may read it (dev/default). (review C4)
     const session = await auth();
-    if (!session) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
+    const adminEmails = (process.env.ADMIN_EMAILS ?? '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    if (adminEmails.length > 0 && !adminEmails.includes(session.user.email.toLowerCase())) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     await connectDB();
     
     // getUsageStatus() was called here and its result discarded — removed the
@@ -90,10 +100,9 @@ export async function GET(_request: Request) {
   } catch (error) {
     log.error('AI usage API error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to fetch AI usage data',
-        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

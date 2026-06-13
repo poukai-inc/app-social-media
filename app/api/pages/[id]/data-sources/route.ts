@@ -8,10 +8,23 @@ import Page from '@/lib/models/Page';
 import {
   testConnection,
 } from '@/lib/data-sources/database';
+import { encryptSecret } from '@/lib/crypto-secret';
 import { v4 as uuidv4 } from 'uuid';
+import { z } from 'zod';
+import { parseOr400 } from '@/lib/validation';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('api:pages:[id]:data-sources');
+
+const dataSourceCreateSchema = z.object({
+  name: z.string().min(1),
+  type: z.enum(['mysql', 'postgresql', 'mongodb']),
+  connectionString: z.string().min(1),
+  query: z.string().min(1),
+  description: z.string().optional(),
+  refreshInterval: z.number().int().min(0).optional(),
+  fieldMapping: z.any().optional(),
+});
 
 // GET /api/pages/[id]/data-sources - List all data sources
 export async function GET(
@@ -83,31 +96,9 @@ export async function POST(
     }
 
     const { id } = await params;
-    const body = await request.json();
-    const {
-      name,
-      type,
-      connectionString,
-      query,
-      description,
-      refreshInterval,
-      fieldMapping,
-    } = body;
-
-    if (!name || !type || !connectionString || !query) {
-      return NextResponse.json(
-        { error: 'Missing required fields: name, type, connectionString, query' },
-        { status: 400 }
-      );
-    }
-
-    // Validate type
-    if (!['mysql', 'postgresql', 'mongodb'].includes(type)) {
-      return NextResponse.json(
-        { error: 'Invalid database type. Supported: mysql, postgresql, mongodb' },
-        { status: 400 }
-      );
-    }
+    const parsed = parseOr400(dataSourceCreateSchema, await request.json());
+    if (!parsed.ok) return parsed.response;
+    const { name, type, connectionString, query, description, refreshInterval, fieldMapping } = parsed.data;
 
     await connectToDatabase();
     const user = await User.findOne({ email: session.user.email });
@@ -129,17 +120,18 @@ export async function POST(
       );
     }
 
-    // Create new data source
+    // Create new data source. Connection string is encrypted at rest (the
+    // connect path decrypts at the driver chokepoint). (review H5)
     const newSource: DatabaseSource = {
       id: uuidv4(),
       name,
       type,
-      connectionString,
+      connectionString: encryptSecret(connectionString),
       query,
-      description,
       refreshInterval: refreshInterval || 0,
       isActive: true,
-      fieldMapping,
+      ...(description !== undefined && { description }),
+      ...(fieldMapping !== undefined && { fieldMapping }),
     };
 
     // Use native MongoDB updateOne for reliable nested updates
@@ -249,8 +241,18 @@ export async function PUT(
       }
     }
 
-    // Update the source
-    Object.assign(existingSource, updates);
+    // Update only allowlisted fields — never spread the raw body, which could
+    // carry internal keys (id, _id, __proto__, userId). (review M4)
+    // Connection string is re-encrypted at rest. (review H5)
+    const ALLOWED_FIELDS = ['name', 'type', 'query', 'description', 'refreshInterval', 'isActive', 'fieldMapping'] as const;
+    for (const field of ALLOWED_FIELDS) {
+      if (updates[field] !== undefined) {
+        (existingSource as unknown as Record<string, unknown>)[field] = updates[field];
+      }
+    }
+    if (updates.connectionString !== undefined) {
+      existingSource.connectionString = encryptSecret(updates.connectionString);
+    }
     page.markModified('dataSources');
     await page.save();
 

@@ -10,8 +10,12 @@ import { platformRegistry } from '@/lib/platforms';
 import type { PlatformType, PlatformConnection } from '@/lib/platforms/types';
 import type { IPlatformConnection } from '@/lib/models/Page';
 import { logger } from '@/lib/logger';
+import { cronAuthError } from '@/lib/cron-auth';
+import { acquireLock, releaseLock } from '@/lib/distributed-lock';
 
 const log = logger.child('cron:collect-metrics');
+
+const LOCK_NAME = 'cron:collect-metrics';
 
 /**
  * Metrics Collection Cron Job
@@ -134,15 +138,25 @@ function extractHashtags(content: string): string[] {
 }
 
 export async function GET(request: NextRequest) {
+  let acquired = false;
   try {
-    // Verify cron secret
-    const cronSecret = process.env.CRON_SECRET;
-    if (cronSecret) {
-      const authHeader = request.headers.get('authorization') ?? '';
-      if (authHeader !== `Bearer ${cronSecret}`) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
+    // Verify cron secret (fail closed if CRON_SECRET unset)
+    const cronError = cronAuthError(request);
+    if (cronError) {
+      return NextResponse.json(
+        { error: cronError === 'misconfigured' ? 'CRON_SECRET not configured' : 'Unauthorized' },
+        { status: cronError === 'misconfigured' ? 500 : 401 },
+      );
     }
+
+    // Distributed lock prevents concurrent runs from double-counting metric
+    // snapshots and double-calling platform APIs. (review H6)
+    const lock = await acquireLock({ lockName: LOCK_NAME, ttlSeconds: 900 });
+    if (!lock.acquired) {
+      log.info('Skipped — another collect-metrics run holds the lock');
+      return NextResponse.json({ success: true, skipped: true, reason: 'Another run in progress' });
+    }
+    acquired = true;
 
     await connectToDatabase();
 
@@ -407,5 +421,7 @@ export async function GET(request: NextRequest) {
       { error: error instanceof Error ? error.message : 'Cron job failed' },
       { status: 500 }
     );
+  } finally {
+    if (acquired) await releaseLock(LOCK_NAME);
   }
 }

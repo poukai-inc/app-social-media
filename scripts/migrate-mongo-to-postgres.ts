@@ -236,7 +236,11 @@ export async function migrate(db: Db): Promise<MigrationCounts> {
   for (const i of await ICPEngagement.find({}).lean()) {
     const pageUuid = oidToUuid(i.pageId);
     const orgId = pageOrg.get(pageUuid);
-    if (!orgId) continue; // orphan page reference — skip
+    if (!orgId) {
+      // orphan page reference — log instead of silently dropping. (review M14)
+      console.warn(`Skipping orphan ICP engagement ${String(i._id)} (page ${pageUuid} not migrated)`);
+      continue;
+    }
     await db.insert(schema.icpEngagements).values(defined({
       id: oidToUuid(i._id),
       organizationId: orgId,
@@ -344,7 +348,9 @@ async function main(): Promise<void> {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   const db = drizzle(pool, { schema });
   try {
-    const counts = await migrate(db);
+    // Run the whole migration in one transaction so a partial failure rolls
+    // back instead of leaving the target DB half-populated. (review M14)
+    const counts = await db.transaction(async (tx) => migrate(tx as unknown as Db));
     console.log('Migration complete:', counts);
   } finally {
     await pool.end();

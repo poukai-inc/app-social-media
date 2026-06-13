@@ -161,14 +161,19 @@ docker-compose down
 
 ## Cron Jobs
 
+Scheduled via `vercel.json` (`crons`):
+
 | Schedule | Job | Description |
 |----------|-----|-------------|
 | `*/5 * * * *` | publish | Publish scheduled posts |
-| `*/15 * * * *` | engage | LinkedIn auto-engagement |
-| `0 */12 * * *` | icp-engage | Twitter ICP engagement (2x/day) |
-| `0 * * * *` | token-refresh | Check and refresh expiring tokens |
 | `0 6 * * *` | auto-generate | Daily AI content generation |
+| `*/15 * * * *` | engage | LinkedIn auto-engagement |
 | `0 */6 * * *` | collect-metrics | Gather platform analytics |
+| `0 */6 * * *` | conversation-monitor | Monitor & reply to Twitter conversations |
+
+Additional jobs (`/api/cron/icp-engage`, `/api/cron/token-refresh`) exist but are
+triggered externally rather than by Vercel cron. All cron endpoints require
+`Authorization: Bearer $CRON_SECRET` and reject requests when `CRON_SECRET` is unset.
 
 ## API Routes
 

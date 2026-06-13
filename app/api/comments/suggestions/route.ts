@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const rawStatus = searchParams.get('status') || 'pending';
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20', 10) || 20, 1), 200); // clamp (review M2)
 
     // Validate against allowed CommentStatus values before passing to Mongoose query
     const ALLOWED_COMMENT_STATUSES: ReadonlyArray<CommentStatus> = ['pending', 'approved', 'posted', 'skipped'];

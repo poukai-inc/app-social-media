@@ -11,7 +11,8 @@ export type NewPage = Omit<InferInsertModel<typeof pages>, 'organizationId'>;
  * isolation is enforced by Postgres, not by these queries.
  */
 export const pagesRepo = {
-  list: (orgId: string): Promise<Page[]> => withOrg(orgId, (tx) => tx.select().from(pages)),
+  list: (orgId: string, opts: { limit?: number } = {}): Promise<Page[]> =>
+    withOrg(orgId, (tx) => tx.select().from(pages).limit(opts.limit ?? 200)), // bounded (review M3)
 
   findById: (orgId: string, id: string): Promise<Page | null> =>
     withOrg(orgId, async (tx) => {

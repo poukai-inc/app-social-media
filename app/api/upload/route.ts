@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
 import { uploadToS3 } from '@/lib/s3';
+import { uploadOwnerToken, uploadKeyPrefix } from '@/lib/upload-owner';
 import { logger } from '@/lib/logger';
 
 const log = logger.child('api:upload');
@@ -16,6 +17,12 @@ export async function POST(request: NextRequest) {
     const session = await auth();
     
     if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Namespace uploads by owner so deletion can verify ownership. (review H1)
+    const ownerToken = uploadOwnerToken(session);
+    if (!ownerToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -51,7 +58,7 @@ export async function POST(request: NextRequest) {
       // Generate unique filename
       const ext = file.name.includes('.') ? `.${file.name.split('.').pop()}` : '';
       const id = uuidv4();
-      const key = `media/${id}${ext}`;
+      const key = `${uploadKeyPrefix(ownerToken)}${id}${ext}`;
 
       // Upload to S3/MinIO
       const bytes = await file.arrayBuffer();

@@ -24,7 +24,7 @@ export async function GET(
     const { id } = await params;
     const { searchParams } = new URL(request.url);
     const sourceId = searchParams.get('sourceId');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '10', 10) || 10, 1), 100); // clamp (review M2)
 
     await connectToDatabase();
     const user = await User.findOne({ email: session.user.email });

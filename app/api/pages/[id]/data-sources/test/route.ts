@@ -122,14 +122,13 @@ export async function POST(
         
         const transformed = transformResults(result.data, source.fieldMapping);
         
-        // Update lastFetchedAt
-        const sourceIndex = page.dataSources.databases.findIndex(
-          (db: DatabaseSource) => db.id === sourceId
+        // Update lastFetchedAt. `page` is a native POJO (fetched via the raw
+        // collection), so page.save() would throw — use a native positional
+        // update instead. (review H7)
+        await mongoose.connection.db?.collection('pages').updateOne(
+          { _id: page._id, 'dataSources.databases.id': sourceId },
+          { $set: { 'dataSources.databases.$.lastFetchedAt': new Date() } }
         );
-        if (sourceIndex >= 0) {
-          page.dataSources.databases[sourceIndex].lastFetchedAt = new Date();
-          await page.save();
-        }
         
         return NextResponse.json({
           ...result,
