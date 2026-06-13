@@ -38,7 +38,7 @@ Each task: ID — severity — file(s) — problem → fix.
 - [x] **M5** — fail-open quality gate — `lib/engagement/conversation-manager.ts:229` scoring failure → 0.7 (= threshold). → default below threshold / fail closed.
 - [x] **M6** — no per-run AI budget — `lib/engagement/icp-engagement-agent.ts:1040`. → `maxAICallsPerRun` counter.
 - [x] **M7** — unsanitized prompts — `lib/openai.ts:880 analyzePost`, `283 improvePost(instructions)`. → sanitize+delimit.
-- [-] **M8 (deferred — lib/auth imports mongoose/pg; needs edge auth-config split)** — missing `middleware.ts` — per-page auth fragile. → central NextAuth v5 middleware for `/dashboard`,`/api`.
+- [x] **M8 — central auth gate via edge-safe auth.config.ts + proxy.ts (Next 16 proxy convention)** — missing `middleware.ts` — per-page auth fragile. → central NextAuth v5 middleware for `/dashboard`,`/api`.
 - [x] **M9** — missing CSP + `X-Frame-Options: DENY` — `vercel.json`. → add headers.
 - [-] **M10 (deferred — client logout depends on session.idToken; needs refactor)** — tokens in client session — `lib/auth.ts:102-104` accessToken/idToken to client. → server-side only.
 - [-] **M11 (deferred — approval tokens already single-use; HMAC is enhancement)** — email approval token-only — `posts/[id]/approve` GET. → HMAC + short TTL (single-use already ok).
