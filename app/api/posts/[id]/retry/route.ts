@@ -78,9 +78,8 @@ export async function POST(
 
   } catch (error) {
     log.error('Error retrying post', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }

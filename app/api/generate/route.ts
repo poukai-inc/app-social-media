@@ -4,11 +4,12 @@ import { auth } from '@/lib/auth';
 import type { PageContentStrategy } from '@/lib/openai';
 import { generateLinkedInPost, improvePost, generatePostWithStrategy } from '@/lib/openai';
 import type { StructuredInput, PostAngle } from '@/lib/models/Post';
+import type { PlatformType } from '@/lib/platforms/types';
 import connectToDatabase from '@/lib/mongodb';
 import Post from '@/lib/models/Post';
 import User from '@/lib/models/User';
 import type { DatabaseSource } from '@/lib/models/Page';
-import mongoose from 'mongoose';
+import { findOwnedPage } from '@/lib/page-access';
 import type { ContentItem } from '@/lib/data-sources/database';
 import { fetchContentForGeneration } from '@/lib/data-sources/database';
 import { logger } from '@/lib/logger';
@@ -59,10 +60,10 @@ export async function POST(request: NextRequest) {
       
       const { pageId, topic, angle, inspiration, createDraft, useDataSource, dataSourceId, contentItemId } = body as GenerateWithPageRequest;
       
-      // Fetch the page using native MongoDB to get dataSources
-      const page = await mongoose.connection.db?.collection('pages').findOne({
-        _id: new mongoose.Types.ObjectId(pageId),
-      });
+      // Fetch the page scoped to the authenticated user. Resolving by _id alone
+      // is a cross-tenant IDOR — any user could generate on / read another
+      // tenant's page strategy, connections and data sources. (review C3)
+      const page = await findOwnedPage(session, pageId);
 
       if (!page) {
         return NextResponse.json({ error: 'Page not found' }, { status: 404 });
@@ -141,7 +142,7 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
 
       // Get active platform connections to determine target platforms
       const activeConnections = page.connections?.filter((c: { isActive: boolean; platform: string }) => c.isActive) || [];
-      const targetPlatforms = activeConnections.map((c: { isActive: boolean; platform: string }) => c.platform);
+      const targetPlatforms = activeConnections.map((c: { isActive: boolean; platform: string }) => c.platform as PlatformType);
       
       // Default to LinkedIn if no connections (shouldn't happen, but safety)
       if (targetPlatforms.length === 0) {
@@ -163,7 +164,7 @@ Transform this blog post into an engaging LinkedIn post. Extract the key insight
           status: 'pending_approval',
           mode: 'ai',
           postAs: page.type === 'organization' ? 'organization' : 'person',
-          organizationId: page.organizationId,
+          ...(page.organizationId !== undefined && { organizationId: page.organizationId }),
           targetPlatforms: targetPlatforms,
           aiAnalysis: {
             angle: result.angle as PostAngle,

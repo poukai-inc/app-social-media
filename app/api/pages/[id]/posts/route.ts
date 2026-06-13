@@ -33,13 +33,24 @@ export async function GET(
       return NextResponse.json({ error: 'Page not found' }, { status: 404 });
     }
 
+    const ALLOWED_STATUSES = [
+      'draft',
+      'pending_approval',
+      'scheduled',
+      'published',
+      'partially_published',
+      'failed',
+      'rejected',
+    ];
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const skip = parseInt(searchParams.get('skip') || '0');
+    // Clamp limit to a sane max so a client cannot dump the collection. (review M2)
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20', 10) || 20, 1), 100);
+    const skip = Math.max(parseInt(searchParams.get('skip') || '0', 10) || 0, 0);
 
     const query: Record<string, unknown> = { pageId: page._id };
-    if (status) {
+    // Allowlist status (defense-in-depth against unexpected filter values). (review H2)
+    if (status && ALLOWED_STATUSES.includes(status)) {
       query.status = status;
     }
 

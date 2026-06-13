@@ -35,13 +35,52 @@ export interface ConnectionTestResult {
 }
 
 /**
+ * Returns true for hostnames that resolve to (or literally are) loopback,
+ * link-local, or RFC1918/CGNAT private ranges — the targets an SSRF attacker
+ * would use to reach internal services and cloud metadata (169.254.169.254).
+ */
+function isPrivateOrLocalHost(hostname: string): boolean {
+  const h = hostname.toLowerCase().replace(/^\[|\]$/g, ''); // strip IPv6 brackets
+  if (h === 'localhost' || h.endsWith('.localhost') || h.endsWith('.local')) return true;
+  if (h === '::1' || h === '::') return true;
+  // IPv6 link-local (fe80::/10) and unique-local (fc00::/7)
+  if (h.startsWith('fe8') || h.startsWith('fe9') || h.startsWith('fea') || h.startsWith('feb')) return true;
+  if (h.startsWith('fc') || h.startsWith('fd')) return true;
+  const m = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (m) {
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    if (a === 0 || a === 10 || a === 127) return true;
+    if (a === 169 && b === 254) return true; // link-local + cloud metadata
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT
+  }
+  return false;
+}
+
+/**
+ * SSRF guard for user-supplied connection strings. Rejects internal/private
+ * network targets. Bypass with ALLOW_PRIVATE_DATA_SOURCES=true for local dev
+ * against a localhost database. Note: checks the literal host only — it does
+ * not defend against DNS rebinding (see backlog). (review C7)
+ */
+function assertSafeDbHost(url: URL): void {
+  if (process.env.ALLOW_PRIVATE_DATA_SOURCES === 'true') return;
+  if (isPrivateOrLocalHost(url.hostname)) {
+    throw new Error('Connections to private or local network addresses are not allowed.');
+  }
+}
+
+/**
  * Create a MySQL connection with SSL support for cloud databases
  * TiDB Cloud, PlanetScale, AWS RDS, etc. require SSL
  */
 async function createMySQLConnection(connectionString: string) {
   // Parse the connection string to add SSL options
   const url = new URL(connectionString);
-  
+  assertSafeDbHost(url);
+
   // Check if this is a cloud database that requires SSL
   const host = url.hostname.toLowerCase();
   const requiresSSL = 

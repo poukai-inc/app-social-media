@@ -47,7 +47,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth(() => {
               type: 'oidc' as const,
               issuer: process.env.POUK_ISSUER ?? 'https://id.pouk.ai',
               clientId: process.env.POUK_CLIENT_ID,
-              clientSecret: process.env.POUK_CLIENT_SECRET ?? '',
+              // Fail fast: an empty client secret silently disables client
+              // authentication at the token endpoint. (review H4)
+              clientSecret:
+                process.env.POUK_CLIENT_SECRET ??
+                (() => {
+                  throw new Error('POUK_CLIENT_SECRET is required when POUK_CLIENT_ID is set');
+                })(),
               checks: ['pkce', 'state'] as ('pkce' | 'state')[],
               // pouk-auth's id_token is minimal (sub/iss only) — email/name live
               // on the userinfo endpoint (/me). next-auth's default OIDC profile
